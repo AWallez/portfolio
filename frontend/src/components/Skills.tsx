@@ -79,7 +79,7 @@ const GROUPS: {
 function Tag({ children }: { children: string }) {
   return (
     <span
-      className="px-2.5 py-1 rounded-md text-xs font-medium font-mono
+      className="px-3 py-1.5 rounded-md text-sm font-medium font-mono
                      bg-accent/10 text-accent border border-accent/30"
     >
       {children}
@@ -104,24 +104,24 @@ export default function Skills() {
         {t("skills", "command", lang)}
       </p>
 
-      <div className="flex flex-wrap justify-center gap-4">
+      <div className="flex flex-wrap justify-center gap-6">
         {GROUPS.map((group, i) => (
           <Reveal
             key={group.key}
             delay={i * 100}
             variant="zoom"
-            className="w-full sm:w-[calc(50%-0.5rem)] lg:w-87 flex"
+            className="w-full sm:w-[calc(50%-0.75rem)] flex"
           >
             <div
               {...spotlight}
-              className="spotlight w-full rounded-xl border border-line bg-base/45 backdrop-blur-[2px] p-5 shadow-sm
+              className="spotlight w-full rounded-2xl border border-line bg-base/45 backdrop-blur-[2px] p-7 sm:p-8 shadow-sm
                             hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
             >
-              <h3 className="font-mono text-sm text-ink mb-3 flex items-center justify-center gap-2">
-                <group.Icon size={16} className="text-accent" />
+              <h3 className="font-mono text-base text-ink mb-5 flex items-center justify-center gap-2.5">
+                <group.Icon size={20} className="text-accent" />
                 {t("skills", group.key, lang)}
               </h3>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-2.5">
                 {group.items.map((item) => (
                   <Tag key={item}>{item}</Tag>
                 ))}

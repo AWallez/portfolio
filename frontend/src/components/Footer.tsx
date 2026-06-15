@@ -52,10 +52,10 @@ export default function Footer() {
         {/* colonne gauche : identité + signature DevOps */}
         <div className="flex flex-col items-center text-center">
           <p className="font-mono text-accent text-lg mb-1">// alexis.wallez</p>
-          <p className="text-sm text-ink mb-3">
+          <p className="text-sm text-muted mb-3">
             {t("footer", "tagline", lang)}
           </p>
-          <p className="flex items-center gap-2 text-xs text-muted mb-6">
+          <p className="flex items-center gap-2 text-xs text-muted mb-3">
             <MapPin size={14} className="text-accent" />
             Savigny-le-Temple (77), France
           </p>

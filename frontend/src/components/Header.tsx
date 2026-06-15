@@ -62,12 +62,13 @@ export default function Header() {
 
             <a
               href="#"
-              className="group font-mono text-accent inline-flex items-center
-                         hover:opacity-100 transition"
+              aria-current={active === "" ? "true" : undefined}
+              className={
+                "group font-mono inline-flex items-center transition " +
+                (active === "" ? "text-accent" : "text-muted hover:text-accent")
+              }
             >
-              <span className="text-muted group-hover:text-accent transition mr-1">
-                //
-              </span>
+              <span className="mr-1">//</span>
               <span className="relative">
                 alexis.wallez
                 {/* soulignement animé qui se déploie au survol */}
@@ -114,7 +115,7 @@ export default function Header() {
           </nav>
 
           {/* actions à droite */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="text-muted flex flex-wrap items-center gap-2">
             <a
               href="/cv-alexis-wallez.pdf"
               download
