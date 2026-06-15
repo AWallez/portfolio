@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Anti-flash : applique le thème avant le rendu (évite le clignotement) -->
     <script>
       (function () {
         const t =
@@ -11,12 +12,51 @@
         if (t === "dark") document.documentElement.classList.add("dark");
       })();
     </script>
+
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portfolio.V1</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Titre & description (SEO) -->
+    <title>Alexis Wallez — Développeur Full-Stack & DevOps</title>
+    <meta
+      name="description"
+      content="Portfolio d'Alexis Wallez, développeur full-stack orienté DevOps : développement web, infrastructure, self-hosting et montage PC. Disponible pour missions freelance et alternance."
+    />
+    <meta name="author" content="Alexis Wallez" />
+
+    <!-- Open Graph (aperçu sur LinkedIn, Discord, messageries…) -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Alexis Wallez — Développeur Full-Stack & DevOps"
+    />
+    <meta
+      property="og:description"
+      content="Développement web, infrastructure & self-hosting. Disponible pour missions freelance et alternance DevOps."
+    />
+    <meta property="og:url" content="https://alexiswallez.fr" />
+    <meta property="og:image" content="https://alexiswallez.fr/og-image.png" />
+    <meta property="og:locale" content="fr_FR" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Alexis Wallez — Développeur Full-Stack & DevOps"
+    />
+    <meta
+      name="twitter:description"
+      content="Développement web, infrastructure & self-hosting. Disponible pour missions freelance et alternance DevOps."
+    />
+    <meta name="twitter:image" content="https://alexiswallez.fr/og-image.png" />
+
+    <!-- Couleur de la barre du navigateur (mobile) -->
+    <meta name="theme-color" content="#0d1418" />
   </head>
-  <body class="">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
