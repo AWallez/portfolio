@@ -1,0 +1,48 @@
+# Postgres + ntfy pour le portfolio — à déployer sur le NAS.
+# Démarrage :
+#   1. cp .env.example .env  (puis remplir .env)
+#   2. docker compose up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: portfolio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      # host 5433 (5432 est déjà pris par le Postgres interne d'UGOS) → conteneur 5432.
+      # exposé sur le LAN pour que l'API de dev (PC) s'y connecte.
+      # En prod, l'API tournera sur le NAS et parlera à Postgres via le réseau interne.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: portfolio-ntfy
+    command: serve
+    restart: unless-stopped
+    environment:
+      NTFY_BASE_URL: ${NTFY_BASE_URL}
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+      NTFY_CACHE_DURATION: "12h"
+    ports:
+      - "8080:80"
+    volumes:
+      - ntfy_data:/var/cache/ntfy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/v1/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+  ntfy_data:
