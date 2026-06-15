@@ -1,0 +1,20 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- fond -->
+  <rect width="1200" height="630" fill="#0d1418"/>
+  <!-- halos d'accent -->
+  <circle cx="1060" cy="110" r="270" fill="#2dd4bf" opacity="0.10"/>
+  <circle cx="150" cy="560" r="220" fill="#2dd4bf" opacity="0.08"/>
+  <!-- fenêtre terminal -->
+  <rect x="60" y="70" width="1080" height="490" rx="18" fill="#121c20" stroke="#1f2a30" stroke-width="2"/>
+  <!-- pastilles de la barre de titre -->
+  <circle cx="112" cy="122" r="8" fill="#f87171"/>
+  <circle cx="144" cy="122" r="8" fill="#fbbf24"/>
+  <circle cx="176" cy="122" r="8" fill="#34d399"/>
+  <text x="215" y="131" font-family="Consolas" font-size="24" fill="#8b98a5">alexis@wallez:~/portfolio$</text>
+  <line x1="60" y1="162" x2="1140" y2="162" stroke="#1f2a30" stroke-width="2"/>
+  <!-- corps -->
+  <text x="108" y="252" font-family="Consolas" font-size="32" fill="#2dd4bf">$ whoami</text>
+  <text x="105" y="348" font-family="Arial" font-weight="bold" font-size="80" fill="#e6edf3">Alexis Wallez</text>
+  <text x="110" y="418" font-family="Arial" font-size="40" fill="#2dd4bf">Développeur Full-Stack &amp; DevOps</text>
+  <text x="110" y="508" font-family="Consolas" font-size="26" fill="#8b98a5">Linux · Docker · Kubernetes · React · TypeScript · Node.js</text>
+</svg>

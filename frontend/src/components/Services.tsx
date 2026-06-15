@@ -1,9 +1,11 @@
+import { Globe, Cpu, Server, type LucideIcon } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 
 type Service = {
-  icon: string;
+  Icon: LucideIcon;
   folder: string;
   name: { fr: string; en: string };
   desc: { fr: string; en: string };
@@ -12,7 +14,7 @@ type Service = {
 
 const SERVICES: Service[] = [
   {
-    icon: "🌐",
+    Icon: Globe,
     folder: "dev-web/",
     name: { fr: "Développement Web", en: "Web Development" },
     desc: {
@@ -35,7 +37,7 @@ const SERVICES: Service[] = [
     },
   },
   {
-    icon: "🖥️",
+    Icon: Cpu,
     folder: "pc-assembly/",
     name: { fr: "Montage PC", en: "PC Assembly" },
     desc: {
@@ -58,7 +60,7 @@ const SERVICES: Service[] = [
     },
   },
   {
-    icon: "🔧",
+    Icon: Server,
     folder: "web-hosting-consulting/",
     name: {
       fr: "Conseil hébergement & infra",
@@ -91,7 +93,7 @@ export default function Services() {
   return (
     <section
       id="services"
-      className="section-screen max-w-300 mx-auto px-5 sm:px-6 lg:px-8 py-7"
+      className="section-screen max-w-300 container-page py-7"
     >
       <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
         <span className="text-muted">//</span> {t("services", "title", lang)}
@@ -110,11 +112,16 @@ export default function Services() {
             variant={i % 2 === 0 ? "left" : "right"}
             className="w-full sm:w-[calc(50%-0.625rem)] lg:w-87 flex"
           >
-           <article className="w-full flex flex-col rounded-xl border border-line 
-                                bg-base/45 backdrop-blur-[2px] p-5 shadow-sm overflow-hidden 
-                                hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition">
+           <article
+              {...spotlight}
+              className="spotlight w-full flex flex-col rounded-xl border border-line
+                                bg-base/45 backdrop-blur-[2px] p-5 shadow-sm overflow-hidden
+                                hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
+            >
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">{s.icon}</span>
+                <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 text-accent">
+                  <s.Icon size={20} />
+                </span>
                 <span className="font-mono text-xs text-muted">{s.folder}</span>
               </div>
 

@@ -46,7 +46,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-line mt-10 bg-base/50 backdrop-blur">
       <div
-        className="max-w-200 mx-auto px-5 sm:px-6 lg:px-8 py-12
+        className="max-w-200 container-page py-12
                       grid gap-8 sm:grid-cols-2"
       >
         {/* colonne gauche : identité + signature DevOps */}
@@ -100,7 +100,7 @@ export default function Footer() {
 
       <div className="border-t border-line">
         <p
-          className="max-w-300 mx-auto px-5 sm:px-6 lg:px-8 py-4
+          className="max-w-300 container-page py-4
                       font-mono text-xs text-muted text-center"
         >
           © {year} Alexis Wallez — {t("footer", "rights", lang)}

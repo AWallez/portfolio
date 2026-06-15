@@ -13,6 +13,12 @@ export const translations = {
       fr: "Sapeur-pompier volontaire : rigueur, sang-froid et esprit d'équipe.",
       en: "Volunteer firefighter: rigor, composure and teamwork.",
     },
+    factExp: { fr: "~3 ans d'expérience", en: "~3 years of experience" },
+    factStatus: {
+      fr: "Dispo alternance & freelance",
+      en: "Open to work-study & freelance",
+    },
+    factLang: { fr: "Français / Anglais", en: "French / English" },
   },
   skills: {
     title: { fr: "Compétences", en: "Skills" },
@@ -57,6 +63,40 @@ export const translations = {
     success: {
       fr: "Message envoyé, merci ! Je reviens vers vous vite.",
       en: "Message sent, thank you! I’ll get back to you soon.",
+    },
+    error: {
+      fr: "Oups, l’envoi a échoué. Réessayez ou écrivez-moi directement par email.",
+      en: "Oops, sending failed. Please try again or email me directly.",
+    },
+    retry: { fr: "Réessayer", en: "Try again" },
+    errRequired: { fr: "Ce champ est requis.", en: "This field is required." },
+    errEmail: {
+      fr: "Adresse email invalide.",
+      en: "Invalid email address.",
+    },
+    errType: {
+      fr: "Sélectionnez un type de demande.",
+      en: "Please select a request type.",
+    },
+    sendingStatus: { fr: "Envoi du message en cours…", en: "Sending message…" },
+  },
+  a11y: {
+    skip: { fr: "Aller au contenu", en: "Skip to content" },
+    backToTop: { fr: "Retour en haut", en: "Back to top" },
+    openMenu: { fr: "Ouvrir le menu", en: "Open menu" },
+    closeMenu: { fr: "Fermer le menu", en: "Close menu" },
+    toLight: { fr: "Activer le thème clair", en: "Switch to light theme" },
+    toDark: { fr: "Activer le thème sombre", en: "Switch to dark theme" },
+    switchLang: { fr: "Switch to English", en: "Passer en français" },
+    primaryNav: { fr: "Navigation principale", en: "Main navigation" },
+    downloadCV: {
+      fr: "Télécharger le CV (PDF)",
+      en: "Download résumé (PDF)",
+    },
+    available: { fr: "Disponible", en: "Available" },
+    availableLong: {
+      fr: "Disponible pour mission freelance & alternance",
+      en: "Available for freelance & work-study",
     },
   },
   footer: {

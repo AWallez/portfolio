@@ -1,5 +1,6 @@
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 
 type Project = {
@@ -70,7 +71,7 @@ export default function Projects() {
   return (
     <section
       id="projects"
-      className="section-screen max-w-300 mx-auto px-5 sm:px-6 lg:px-8 py-7"
+      className="section-screen max-w-300 container-page py-7"
     >
       <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
         <span className="text-muted">//</span> {t("projects", "title", lang)}
@@ -89,9 +90,12 @@ export default function Projects() {
             variant="up-lg"
             className="w-full sm:w-[calc(50%-0.625rem)] lg:w-87 flex"
           >
-            <article className="w-full flex flex-col rounded-xl border border-line 
-                                bg-base/45 backdrop-blur-[2px] p-5 shadow-sm overflow-hidden 
-                                hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition">
+            <article
+              {...spotlight}
+              className="spotlight w-full flex flex-col rounded-xl border border-line
+                                bg-base/45 backdrop-blur-[2px] p-5 shadow-sm overflow-hidden
+                                hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
+            >
               {p.image && (
                 <div className="-m-5 mb-4 border-b border-line overflow-hidden">
                   <img

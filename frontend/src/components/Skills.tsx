@@ -1,13 +1,24 @@
+import {
+  Server,
+  Network,
+  Cloud,
+  Code2,
+  Database,
+  type LucideIcon,
+} from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 
 const GROUPS: {
   key: "systems" | "network" | "cloud" | "dev" | "data";
+  Icon: LucideIcon;
   items: string[];
 }[] = [
   {
     key: "systems",
+    Icon: Server,
     items: [
       "Linux",
       "Debian",
@@ -21,6 +32,7 @@ const GROUPS: {
   },
   {
     key: "network",
+    Icon: Network,
     items: [
       "WireGuard",
       "DNS",
@@ -33,6 +45,7 @@ const GROUPS: {
   },
   {
     key: "cloud",
+    Icon: Cloud,
     items: [
       "AWS",
       "Git",
@@ -45,6 +58,7 @@ const GROUPS: {
   },
   {
     key: "dev",
+    Icon: Code2,
     items: [
       "Python",
       "TypeScript",
@@ -55,7 +69,11 @@ const GROUPS: {
       "PHP",
     ],
   },
-  { key: "data", items: ["PostgreSQL", "MySQL", "SQL Server", "MongoDB"] },
+  {
+    key: "data",
+    Icon: Database,
+    items: ["PostgreSQL", "MySQL", "SQL Server", "MongoDB"],
+  },
 ];
 
 function Tag({ children }: { children: string }) {
@@ -75,7 +93,7 @@ export default function Skills() {
   return (
     <section
       id="skills"
-      className="section-screen max-w-300 mx-auto px-5 sm:px-6 lg:px-8 py-7 "
+      className="section-screen max-w-300 container-page py-7 "
     >
       <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
         <span className="text-muted">//</span> {t("skills", "title", lang)}
@@ -94,9 +112,13 @@ export default function Skills() {
             variant="zoom"
             className="w-full sm:w-[calc(50%-0.5rem)] lg:w-87 flex"
           >
-            <div className="w-full rounded-xl border border-line bg-base/45 backdrop-blur-[2px] p-5 shadow-sm
-                            hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition">
-              <h3 className="font-mono text-sm text-ink mb-3 text-center">
+            <div
+              {...spotlight}
+              className="spotlight w-full rounded-xl border border-line bg-base/45 backdrop-blur-[2px] p-5 shadow-sm
+                            hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
+            >
+              <h3 className="font-mono text-sm text-ink mb-3 flex items-center justify-center gap-2">
+                <group.Icon size={16} className="text-accent" />
                 {t("skills", group.key, lang)}
               </h3>
               <div className="flex flex-wrap justify-center gap-2">

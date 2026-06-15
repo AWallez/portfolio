@@ -19,6 +19,9 @@ export default function Background() {
       raf = 0;
     type P = { x: number; y: number; vx: number; vy: number };
     const points: P[] = [];
+    // position du curseur (coordonnées viewport = coordonnées canvas, plein écran)
+    const mouse = { x: -9999, y: -9999, active: false };
+    const MOUSE_DIST = 190;
 
     const accent = () =>
       getComputedStyle(document.documentElement)
@@ -99,6 +102,25 @@ export default function Background() {
         }
       }
 
+      // connexions vers le curseur : plus marquées que les liens entre particules
+      if (mouse.active) {
+        for (const p of points) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < MOUSE_DIST) {
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = (1 - dist / MOUSE_DIST) * 0.55 * boost;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
       ctx.globalAlpha = 0.7 * boost;
       ctx.fillStyle = color;
       for (const p of points) {
@@ -111,12 +133,25 @@ export default function Background() {
       raf = requestAnimationFrame(draw);
     }
 
+    const onMove = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    };
+    const onLeave = () => {
+      mouse.active = false;
+    };
+
     resize();
     draw();
     window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    document.addEventListener("mouseleave", onLeave);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
     };
   }, []);
 

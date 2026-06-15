@@ -143,7 +143,7 @@ export default function Hero() {
   const { ref, height } = useMeasuredHeight<HTMLDivElement>();
 
   return (
-    <section className="items-center max-w-210 mx-auto px-5 sm:px-6 lg:px-8 py-7 w-full">
+    <section className="items-center max-w-210 container-page py-7 w-full">
       <div className="rounded-xl border border-line bg-base/45 backdrop-blur-[2px] shadow-lg overflow-hidden">
         {/* Barre de titre */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-line">

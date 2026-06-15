@@ -17,7 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
 
     <!-- Titre & description (SEO) -->
     <title>Alexis Wallez — Développeur Full-Stack & DevOps</title>
@@ -26,6 +26,7 @@
       content="Portfolio d'Alexis Wallez, développeur full-stack orienté DevOps : développement web, infrastructure, self-hosting et montage PC. Disponible pour missions freelance et alternance."
     />
     <meta name="author" content="Alexis Wallez" />
+    <link rel="canonical" href="https://alexiswallez.fr/" />
 
     <!-- Open Graph (aperçu sur LinkedIn, Discord, messageries…) -->
     <meta property="og:type" content="website" />
@@ -40,6 +41,7 @@
     <meta property="og:url" content="https://alexiswallez.fr" />
     <meta property="og:image" content="https://alexiswallez.fr/og-image.png" />
     <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
 
     <!-- Twitter / X card -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -53,11 +55,67 @@
     />
     <meta name="twitter:image" content="https://alexiswallez.fr/og-image.png" />
 
-    <!-- Couleur de la barre du navigateur (mobile) -->
-    <meta name="theme-color" content="#0d1418" />
+    <!-- Couleur de la barre du navigateur (mobile), adaptée au thème -->
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#eef3f2"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0d1418"
+    />
+
+    <!-- Données structurées (Person) pour les moteurs de recherche -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Alexis Wallez",
+        "url": "https://alexiswallez.fr",
+        "jobTitle": "Développeur Full-Stack & DevOps",
+        "email": "mailto:wallezalexis@gmail.com",
+        "address": {
+          "@type": "PostalPlace",
+          "addressLocality": "Savigny-le-Temple",
+          "addressRegion": "Île-de-France",
+          "addressCountry": "FR"
+        },
+        "knowsAbout": [
+          "DevOps",
+          "Linux",
+          "Docker",
+          "Kubernetes",
+          "React",
+          "TypeScript",
+          "Node.js",
+          "PostgreSQL",
+          "Self-hosting"
+        ],
+        "sameAs": [
+          "https://github.com/AWallez",
+          "https://www.linkedin.com/in/alexis-wallez/"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="max-width: 40rem; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui, sans-serif;">
+        <h1>Alexis Wallez — Développeur Full-Stack &amp; DevOps</h1>
+        <p>
+          Développeur full-stack orienté DevOps : développement web,
+          infrastructure, self-hosting et montage PC. Disponible pour missions
+          freelance et alternance.
+        </p>
+        <p>
+          Ce site nécessite JavaScript. Contact :
+          <a href="mailto:wallezalexis@gmail.com">wallezalexis@gmail.com</a>.
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

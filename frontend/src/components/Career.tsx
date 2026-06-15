@@ -1,5 +1,7 @@
+import { Briefcase, GraduationCap } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { useScrollProgress } from "../hooks/useScrollProgress";
 import Reveal from "./Reveal";
 
 type Item = {
@@ -87,11 +89,12 @@ const TIMELINE: Item[] = [
 
 export default function Career() {
   const { lang } = useLang();
+  const { ref, progress } = useScrollProgress<HTMLOListElement>();
 
   return (
     <section
       id="career"
-      className="section-screen max-w-300 mx-auto px-5 sm:px-6 lg:px-8 py-7 "
+      className="section-screen max-w-300 container-page py-7 "
     >
       <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
         <span className="text-muted">//</span> {t("career", "title", lang)}
@@ -103,9 +106,14 @@ export default function Career() {
       </p>
 
       <div className="max-w-250 mx-auto">
-        <ol className="relative">
-          {/* la ligne verticale centrale */}
+        <ol ref={ref} className="relative">
+          {/* la ligne verticale centrale (rail gris) */}
           <div className="absolute left-35 sm:left-40 top-0 bottom-0 w-px bg-line" />
+          {/* la ligne d'accent qui se dessine au scroll */}
+          <div
+            className="absolute left-35 sm:left-40 top-0 w-px bg-accent origin-top h-full"
+            style={{ transform: `scaleY(${progress})` }}
+          />
 
           {TIMELINE.map((item, i) => (
             <Reveal
@@ -131,9 +139,15 @@ export default function Career() {
                   </span>
                 </div>
 
-                {/* le point sur la ligne */}
+                {/* le badge sur la ligne (icône exp / formation) */}
                 <div className="relative shrink-0 w-5 flex justify-center">
-                  <span className="w-3.5 h-3.5 rounded-full bg-accent border-2 border-base mt-1" />
+                  <span className="z-10 flex items-center justify-center w-7 h-7 -mt-0.5 rounded-full bg-base border-2 border-accent text-accent">
+                    {item.type === "exp" ? (
+                      <Briefcase size={13} />
+                    ) : (
+                      <GraduationCap size={14} />
+                    )}
+                  </span>
                 </div>
 
                 {/* côté droit : contenu */}
