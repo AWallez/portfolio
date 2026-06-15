@@ -5,8 +5,8 @@ Stack de données et de notifications du portfolio, à faire tourner sur le NAS 
 - **postgres** : stocke les messages du formulaire de contact (table `contacts`).
 - **ntfy** : serveur de notifications push → tu reçois chaque message sur ton téléphone.
 
-> **Ports** : Postgres est publié sur **5433** côté NAS (le 5432 est déjà pris par la base
-> interne d'UGOS), ntfy sur **8080**. Depuis le PC de dev : `postgres://...@IP_NAS:5433/...`.
+> **Ports** : Postgres est publié sur **55432** côté NAS (5432 et 5433 sont déjà pris par
+> UGOS), ntfy sur **8080**. Depuis le PC de dev : `postgres://...@IP_NAS:55432/...`.
 
 ## Déploiement
 
@@ -43,6 +43,12 @@ curl http://localhost:8080/v1/health
    curl -d "Test depuis le NAS" http://localhost:8080/MON_TOPIC_SECRET
    ```
    → la notif doit arriver sur le téléphone.
+
+## iOS
+
+Sur iPhone, un serveur ntfy auto-hébergé ne peut pas pousser en arrière-plan sans relais
+APNs. D'où `NTFY_UPSTREAM_BASE_URL=https://ntfy.sh` dans le compose : seul un « réveil »
+anonyme transite par ntfy.sh, le message reste sur le NAS. (Android n'en a pas besoin.)
 
 ## Sécurité (à garder en tête)
 

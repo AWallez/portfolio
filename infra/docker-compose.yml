@@ -12,10 +12,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      # host 5433 (5432 est déjà pris par le Postgres interne d'UGOS) → conteneur 5432.
+      # host 55432 (5432 ET 5433 sont déjà pris sur le NAS par UGOS) → conteneur 5432.
       # exposé sur le LAN pour que l'API de dev (PC) s'y connecte.
       # En prod, l'API tournera sur le NAS et parlera à Postgres via le réseau interne.
-      - "5433:5432"
+      - "55432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,6 +33,9 @@ services:
       NTFY_BASE_URL: ${NTFY_BASE_URL}
       NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
       NTFY_CACHE_DURATION: "12h"
+      # Relais APNs pour les notifs push iOS (app fermée).
+      # Seul un "réveil" anonyme passe par ntfy.sh ; le message reste sur le NAS.
+      NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
     ports:
       - "8080:80"
     volumes:

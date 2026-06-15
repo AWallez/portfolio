@@ -21,6 +21,9 @@ const EMPTY: Fields = {
 };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// URL de l'API : vide en prod (même origine) ; http://localhost:3001 en dev (.env.development)
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+
 export default function Contact() {
   const { lang } = useLang();
   const [status, setStatus] = useState<Status>("idle");
@@ -66,9 +69,12 @@ export default function Contact() {
     }
     setStatus("sending");
     try {
-      // TODO Phase 2 : remplacer par l'appel réel à l'API Node → PostgreSQL
-      // await fetch("/api/contact", { method: "POST", headers: {...}, body: JSON.stringify(values) })
-      await new Promise((r) => setTimeout(r, 1000)); // simulation
+      const res = await fetch(`${API_URL}/api/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setStatus("sent");
     } catch {
       setStatus("error");
