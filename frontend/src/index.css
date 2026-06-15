@@ -1,0 +1,162 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* thème clair */
+  --base: #eef3f2;
+  --surface: #ffffff;
+  --ink: #0a2229;
+  --muted: #486169;
+  --line: #c8d6d2;
+  --accent: #0f766e;
+}
+.dark {
+  /* thème sombre */
+  --base: #0d1418;
+  --surface: #121c20;
+  --ink: #e6edf3;
+  --muted: #8b98a5;
+  --line: #1f2a30;
+  --accent: #2dd4bf;
+}
+
+@theme inline {
+  /* expose en classes Tailwind */
+  --color-base: var(--base);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", monospace;
+  --breakpoint-nav: 950px;
+  --breakpoint-xs: 370px;
+}
+
+@layer base {
+  body {
+    @apply bg-base text-ink font-sans antialiased;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  /* décale l'ancre pour que le header sticky ne cache pas le haut de la section */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+}
+
+/* ---- Fond aurora ---- */
+.aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  opacity: 0.18;
+  background: var(--accent);
+  will-change: transform;
+}
+.aurora-1 {
+  width: clamp(300px, 40vw, 550px);
+  height: clamp(300px, 40vw, 550px);
+  top: -10%;
+  left: -5%;
+  animation: drift1 22s ease-in-out infinite alternate;
+}
+.aurora-2 {
+  width: clamp(260px, 35vw, 480px);
+  height: clamp(260px, 35vw, 480px);
+  top: 30%;
+  right: -10%;
+  opacity: 0.13;
+  animation: drift2 28s ease-in-out infinite alternate;
+}
+.aurora-3 {
+  width: clamp(320px, 45vw, 600px);
+  height: clamp(320px, 45vw, 600px);
+  bottom: -20%;
+  left: 25%;
+  opacity: 0.1;
+  animation: drift3 32s ease-in-out infinite alternate;
+}
+
+/* aurora plus présente en thème clair (sinon trop diluée sur fond pâle) */
+:root .aurora-1 {
+  opacity: 0.3;
+}
+:root .aurora-2 {
+  opacity: 0.24;
+}
+:root .aurora-3 {
+  opacity: 0.2;
+}
+.dark .aurora-1 {
+  opacity: 0.18;
+}
+.dark .aurora-2 {
+  opacity: 0.13;
+}
+.dark .aurora-3 {
+  opacity: 0.1;
+}
+
+@keyframes drift1 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(15vw, 10vh) scale(1.2);
+  }
+}
+@keyframes drift2 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-12vw, 8vh) scale(1.1);
+  }
+}
+@keyframes drift3 {
+  from {
+    transform: translate(0, 0) scale(1.1);
+  }
+  to {
+    transform: translate(10vw, -10vh) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora {
+    animation: none;
+  }
+}
+
+@layer utilities {
+  .text-readable {
+    position: relative;
+  }
+  .text-readable::before {
+    content: "";
+    position: absolute;
+    inset: -0.75rem -1rem; /* déborde autour du texte */
+    z-index: -1;
+    backdrop-filter: blur(8px); /* floute le fond derrière */
+    /* fond fondu sur les bords → pas de rectangle visible */
+    -webkit-mask: radial-gradient(
+      ellipse at center,
+      black 55%,
+      transparent 100%
+    );
+    mask: radial-gradient(ellipse at center, black 55%, transparent 100%);
+    pointer-events: none;
+  }
+  .section-screen {
+    min-height: calc(100vh - 4rem);   /* 100vh moins le header */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
