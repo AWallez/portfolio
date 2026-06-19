@@ -1,5 +1,10 @@
 import { useState } from "react";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInput, {
+  isValidPhoneNumber,
+  type Country,
+} from "react-phone-number-input";
+import { getExampleNumber } from "libphonenumber-js";
+import examples from "libphonenumber-js/examples.mobile.json";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 
@@ -34,6 +39,9 @@ export default function Contact() {
   const [errors, setErrors] = useState<Errors>({});
   // honeypot : champ invisible que seuls les bots remplissent
   const [trap, setTrap] = useState("");
+  // pays courant du champ tél. → placeholder d'exemple correspondant à la région
+  const [country, setCountry] = useState<Country>("FR");
+  const phonePlaceholder = getExampleNumber(country, examples)?.formatNational();
 
   // styles réutilisés pour les champs
   const field =
@@ -138,19 +146,28 @@ export default function Contact() {
               />
             </div>
 
+            {/* légende des champs requis */}
+            <p className="font-mono text-xs text-muted">
+              <span aria-hidden="true" className="text-accent">*</span>{" "}
+              {t("contact", "required", lang)}
+            </p>
+
             {/* Prénom + Nom côte à côte */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={label} htmlFor="firstname">
                   {t("contact", "firstname", lang)}
+                  <span aria-hidden="true" className="text-accent"> *</span>
                 </label>
                 <input
                   id="firstname"
                   name="firstname"
                   type="text"
                   autoComplete="given-name"
+                  placeholder={t("contact", "phFirst", lang)}
                   value={values.firstname}
                   onChange={(e) => setField("firstname", e.target.value)}
+                  aria-required="true"
                   aria-invalid={!!errors.firstname}
                   aria-describedby={
                     errors.firstname ? "err-firstname" : undefined
@@ -168,14 +185,17 @@ export default function Contact() {
               <div>
                 <label className={label} htmlFor="lastname">
                   {t("contact", "lastname", lang)}
+                  <span aria-hidden="true" className="text-accent"> *</span>
                 </label>
                 <input
                   id="lastname"
                   name="lastname"
                   type="text"
                   autoComplete="family-name"
+                  placeholder={t("contact", "phLast", lang)}
                   value={values.lastname}
                   onChange={(e) => setField("lastname", e.target.value)}
+                  aria-required="true"
                   aria-invalid={!!errors.lastname}
                   aria-describedby={
                     errors.lastname ? "err-lastname" : undefined
@@ -195,14 +215,17 @@ export default function Contact() {
               <div>
                 <label className={label} htmlFor="email">
                   {t("contact", "email", lang)}
+                  <span aria-hidden="true" className="text-accent"> *</span>
                 </label>
                 <input
                   id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
+                  placeholder={t("contact", "phEmail", lang)}
                   value={values.email}
                   onChange={(e) => setField("email", e.target.value)}
+                  aria-required="true"
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? "err-email" : undefined}
                   className={fieldClass("email")}
@@ -218,12 +241,12 @@ export default function Contact() {
                   {t("contact", "phone", lang)}
                 </label>
                 <PhoneInput
-                  international
                   defaultCountry="FR"
-                  countryCallingCodeEditable={false}
                   limitMaxLength
+                  placeholder={phonePlaceholder}
                   value={values.phone || undefined}
                   onChange={(v) => setField("phone", v ?? "")}
+                  onCountryChange={(c) => c && setCountry(c)}
                   numberInputProps={{
                     id: "phone",
                     "aria-invalid": !!errors.phone,
@@ -242,12 +265,14 @@ export default function Contact() {
             <div>
               <label className={label} htmlFor="type">
                 {t("contact", "reqType", lang)}
+                <span aria-hidden="true" className="text-accent"> *</span>
               </label>
               <select
                 id="type"
                 name="type"
                 value={values.type}
                 onChange={(e) => setField("type", e.target.value)}
+                aria-required="true"
                 aria-invalid={!!errors.type}
                 aria-describedby={errors.type ? "err-type" : undefined}
                 className={fieldClass("type", "min-h-10.5")}
@@ -274,12 +299,15 @@ export default function Contact() {
             <div>
               <label className={label} htmlFor="message">
                 {t("contact", "message", lang)}
+                <span aria-hidden="true" className="text-accent"> *</span>
               </label>
               <textarea
                 id="message"
                 name="message"
+                placeholder={t("contact", "phMessage", lang)}
                 value={values.message}
                 onChange={(e) => setField("message", e.target.value)}
+                aria-required="true"
                 aria-invalid={!!errors.message}
                 aria-describedby={errors.message ? "err-message" : undefined}
                 className={fieldClass("message") + " resize-y min-h-50"}

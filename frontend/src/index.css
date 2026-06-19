@@ -50,6 +50,11 @@
     scroll-behavior: smooth;
     overflow-x: clip;
   }
+  /* Tailwind v4 ne met plus cursor:pointer sur les <button> par défaut.
+     En @layer base, les utilitaires cursor-* (ex. cursor-zoom-in) restent prioritaires. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
   /* décale l'ancre pour que le header sticky ne cache pas le haut de la section */
   section[id] {
     scroll-margin-top: 5rem;
@@ -197,7 +202,8 @@
     border-radius: 2rem;
   }
   .section-screen {
-    min-height: calc(100vh - 4rem); /* 100vh moins le header */
+    min-height: calc(100vh - 4rem); /* fallback */
+    min-height: calc(100dvh - 4rem); /* dvh : exclut la barre d'URL mobile → pas de dépassement vertical */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -288,6 +294,14 @@
 .PhoneInputCountrySelect option {
   background: var(--surface);
   color: var(--ink);
+}
+/* drapeau arrondi */
+.PhoneInputCountryIcon,
+.PhoneInputCountryIconImg {
+  border-radius: 3px;
+}
+.PhoneInputCountryIcon {
+  overflow: hidden;
 }
 
 /* ---- Scrollbar assortie au thème (teal/accent, s'adapte clair/sombre) ---- */

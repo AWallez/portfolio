@@ -29,7 +29,7 @@ export default function App() {
       <Background />
       <Header />
       <main id="main">
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col justify-center gap-8">
+        <div className="min-h-[calc(100dvh-4rem)] flex flex-col justify-center gap-8">
           <Hero key={lang} />
           <Reveal variant="zoom">
             <About key={`about-${lang}`} />
@@ -39,7 +39,7 @@ export default function App() {
         <Career key={`career-${lang}`} />
         <Projects key={`projects-${lang}`} />
         <Services key={`services-${lang}`} />
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col">
+        <div className="min-h-[calc(100dvh-4rem)] flex flex-col">
           <div className="grow flex flex-col justify-center">
             <Reveal variant="up">
               <Contact key={`contact-${lang}`} />
