@@ -33,7 +33,7 @@ export default function About() {
       <div
         {...spotlight}
         className="spotlight rounded-xl border-l-2 border-l-accent border-y border-r border-line
-                   bg-base/45 backdrop-blur-[2px] p-6 shadow-sm"
+                   bg-base/60 backdrop-blur-[3px] p-6 shadow-sm"
       >
         <div className="space-y-4 text-ink leading-relaxed">
           <p>{t("about", "body", lang)}</p>
@@ -45,7 +45,7 @@ export default function About() {
           {facts.map(({ Icon, label }) => (
             <span
               key={label}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono
+              className="badge-hover inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono
                          bg-accent/10 text-accent border border-accent/30"
             >
               <Icon size={13} />

@@ -15,49 +15,68 @@ type Project = {
 
 const PROJECTS: Project[] = [
   {
-    name: "mon-ancien-site",
-    title: { fr: "Projet web (démo)", en: "Web project (demo)" },
-    desc: { fr: "Carte de test avec image.", en: "Test card with image." },
-    tags: ["React", "Node.js"],
-    image: "https://placehold.co/1200x675",
-  },
-  {
-    name: "homelab-nas",
-    title: {
-      fr: "Infrastructure auto-hébergée (NAS)",
-      en: "Self-hosted infrastructure (NAS)",
-    },
+    name: "clients",
+    title: { fr: "Projets web clients", en: "Client web projects" },
     desc: {
-      fr: "Serveur NAS sous Linux : déploiement de services conteneurisés via Docker / docker-compose (VPN WireGuard, serveurs de jeux multijoueurs, stockage, services réseau).",
-      en: "Linux NAS server: containerized services deployed with Docker / docker-compose (WireGuard VPN, multiplayer game servers, storage, network services).",
+      fr: "Sites vitrines et applications web sur mesure pour artisans et indépendants : du front-end au déploiement. Dashboards de gestion (CRM, stock, réservations), espaces client et formulaires.",
+      en: "Showcase sites and custom web apps for craftspeople and freelancers: from front-end to deployment. Management dashboards (CRM, stock, bookings), client areas and forms.",
     },
-    tags: ["Docker", "docker-compose", "Linux", "WireGuard", "self-hosting"],
-  },
-  {
-    name: "home-network",
-    title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
-    desc: {
-      fr: "Segmentation réseau, VPN, DNS, pare-feu et SSH ; liaison 10 GbE et stockage iSCSI ; administration et durcissement Linux.",
-      en: "Network segmentation, VPN, DNS, firewall and SSH; 10 GbE link and iSCSI storage; Linux administration and hardening.",
-    },
-    tags: ["Networking", "10 GbE", "iSCSI", "DNS", "iptables"],
+    tags: ["React", "Node.js", "PostgreSQL", "Responsive", "Docker"],
+    image: "/projects/web-clients.png",
   },
   {
     name: "portfolio",
     title: { fr: "Ce portfolio", en: "This portfolio" },
     desc: {
-      fr: "Site full-stack React + TypeScript, conteneurisé avec Docker et auto-hébergé sur mon NAS (API Node + PostgreSQL pour le formulaire de contact).",
-      en: "Full-stack React + TypeScript site, containerized with Docker and self-hosted on my NAS (Node API + PostgreSQL for the contact form).",
+      fr: "Site full-stack React + TypeScript, API Node (Fastify) + PostgreSQL pour le formulaire de contact, conteneurisé (Docker) et auto-hébergé sur mon NAS. Accessibilité, SEO, tests et CI/CD.",
+      en: "Full-stack React + TypeScript site, Node (Fastify) API + PostgreSQL for the contact form, containerized (Docker) and self-hosted on my NAS. Accessibility, SEO, tests and CI/CD.",
     },
-    tags: ["React", "TypeScript", "Node.js", "PostgreSQL", "Docker"],
-    code: "https://github.com/AWallez",
+    tags: ["React", "TypeScript", "Fastify", "PostgreSQL", "Docker"],
+    image: "/projects/portfolio.png",
+    code: "https://github.com/AWallez/portfolio",
+  },
+  {
+    name: "reseau",
+    title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
+    desc: {
+      fr: "Segmentation VLAN, pare-feu, DNS, VPN et SSH ; liaison 10 GbE et stockage iSCSI ; administration et durcissement Linux.",
+      en: "VLAN segmentation, firewall, DNS, VPN and SSH; 10 GbE link and iSCSI storage; Linux administration and hardening.",
+    },
+    tags: ["Réseau", "VLAN", "10 GbE", "iSCSI", "iptables"],
+    image: "/projects/reseau.png",
+  },
+  {
+    name: "homelab",
+    title: {
+      fr: "Infrastructure auto-hébergée (NAS)",
+      en: "Self-hosted infrastructure (NAS)",
+    },
+    desc: {
+      fr: "Serveur NAS Linux : services conteneurisés via Docker / docker-compose — PostgreSQL, ntfy, VPN WireGuard, serveurs de jeux, reverse proxy et stockage.",
+      en: "Linux NAS server: containerized services via Docker / docker-compose — PostgreSQL, ntfy, WireGuard VPN, game servers, reverse proxy and storage.",
+    },
+    tags: ["Docker", "Linux", "WireGuard", "self-hosting"],
+    image: "/projects/homelab.png",
+  },
+  {
+    name: "lab",
+    title: {
+      fr: "Projets perso & lab DevOps",
+      en: "Personal projects & DevOps lab",
+    },
+    desc: {
+      fr: "Serveurs de jeux multijoueurs auto-hébergés (Docker) et lab DevOps pour monter en compétences : Kubernetes, Terraform et Ansible en environnement de test.",
+      en: "Self-hosted multiplayer game servers (Docker) and a DevOps lab to level up: Kubernetes, Terraform and Ansible in a test environment.",
+    },
+    tags: ["Docker", "Kubernetes", "Terraform", "Ansible", "Bash"],
+    image: "/projects/perso.png",
   },
 ];
 
 function Tag({ children }: { children: string }) {
   return (
     <span
-      className="px-2 py-0.5 rounded text-xs font-mono
+      className="badge-hover px-2 py-0.5 rounded text-xs font-mono
                      bg-accent/10 text-accent border border-accent/30"
     >
       {children}
@@ -88,12 +107,12 @@ export default function Projects() {
             key={p.name}
             delay={i * 100}
             variant="up-lg"
-            className="w-full sm:w-[calc(50%-0.625rem)] lg:w-87 flex"
+            className="w-full sm:w-[calc(50%-0.625rem)] flex"
           >
             <article
               {...spotlight}
               className="spotlight w-full flex flex-col rounded-xl border border-line
-                                bg-base/45 backdrop-blur-[2px] p-5 shadow-sm overflow-hidden
+                                bg-base/60 backdrop-blur-[3px] p-5 shadow-sm overflow-hidden
                                 hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
             >
               {p.image && (
@@ -102,7 +121,7 @@ export default function Projects() {
                     src={p.image}
                     alt={p.title[lang]}
                     loading="lazy"
-                    className="w-full h-44 object-cover"
+                    className="w-full aspect-video object-cover"
                   />
                 </div>
               )}

@@ -144,7 +144,7 @@ export default function Hero() {
 
   return (
     <section className="items-center max-w-210 container-page py-7 w-full">
-      <div className="rounded-xl border border-line bg-base/45 backdrop-blur-[2px] shadow-lg overflow-hidden">
+      <div className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] shadow-lg overflow-hidden">
         {/* Barre de titre */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
           <span className="w-3 h-3 rounded-full bg-red-400" />

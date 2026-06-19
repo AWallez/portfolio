@@ -19,8 +19,8 @@ const TIMELINE: Item[] = [
     place: "Indépendant · Savigny-le-Temple (77)",
     role: { fr: "Développeur freelance", en: "Freelance Developer" },
     desc: {
-      fr: "Applications web full-stack pour des clients (front, back, base de données, mise en ligne) ; montage de configurations PC et petits services auto-hébergés.",
-      en: "Full-stack web apps for clients (front, back, database, deployment); PC builds and small self-hosted services.",
+      fr: "Applications web full-stack (front, back, base de données, SEO, mise en ligne) ; conseils techniques montage de PC.",
+      en: "Full-stack web apps (front, back, database, SEO, deployment); technical advice and PC builds.",
     },
   },
   {
@@ -29,7 +29,7 @@ const TIMELINE: Item[] = [
     place: "Caserne de Savigny-le-Temple (77)",
     role: { fr: "Sapeur-pompier volontaire", en: "Volunteer Firefighter" },
     desc: {
-      fr: "Interventions de secours et d'urgence : rigueur, sang-froid, gestion du stress et esprit d'équipe.",
+      fr: "Interventions de secours et d'assistance : rigueur, sang-froid, gestion du stress et esprit d'équipe.",
       en: "Emergency and rescue operations: rigor, composure, stress management and teamwork.",
     },
   },
@@ -42,8 +42,8 @@ const TIMELINE: Item[] = [
       en: "BTS SIO SLAM — Software Solutions & Business Applications",
     },
     desc: {
-      fr: "Conception et développement d'applications, bases de données et programmation orientée objet. Formation suivie, examen non présenté.",
-      en: "Application design and development, databases and object-oriented programming. Coursework completed, exam not taken.",
+      fr: "Conception et développement d'applications, bases de données et programmation orientée objet.",
+      en: "Application design and development, databases and object-oriented programming.",
     },
   },
   {
@@ -105,13 +105,13 @@ export default function Career() {
         {t("career", "command", lang)}
       </p>
 
-      <div className="max-w-250 mx-auto">
+      <div className="max-w-250">
         <ol ref={ref} className="relative">
           {/* la ligne verticale centrale (rail gris) */}
-          <div className="absolute left-35 sm:left-40 top-0 bottom-0 w-px bg-line" />
+          <div className="absolute left-27.5 sm:left-32.5 top-0 bottom-0 w-px bg-line" />
           {/* la ligne d'accent qui se dessine au scroll */}
           <div
-            className="absolute left-35 sm:left-40 top-0 w-px bg-accent origin-top h-full"
+            className="absolute left-27.5 sm:left-32.5 top-0 w-px bg-accent origin-top h-full"
             style={{ transform: `scaleY(${progress})` }}
           />
 
@@ -124,14 +124,14 @@ export default function Career() {
             >
               <li className="flex">
                 {/* côté gauche : date + badge */}
-                <div className="w-32.5 sm:w-37.5 shrink-0 text-right pr-5 pt-0.5">
+                <div className="flex flex-col items-center w-25 sm:w-30 shrink-0 pt-1">
                   {" "}
-                  <span className="font-mono text-xs text-muted block mb-1 text-readable w-fit ml-auto">
+                  <span className="font-mono text-xs text-muted block mb-1.25 text-center w-fit">
                     {item.date[lang]}
                   </span>
                   <span
-                    className="font-mono text-[10px] px-1.5 py-0.5 rounded
-                             bg-accent/10 text-accent border border-accent/30 text-readable"
+                    className="badge-hover font-mono text-[10px] px-1.5 py-0.5  rounded
+                             bg-accent/10 text-accent border border-accent/30 text-center"
                   >
                     {item.type === "exp"
                       ? t("career", "exp", lang)

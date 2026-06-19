@@ -26,7 +26,7 @@ export default function BackToTop() {
       aria-label={t("a11y", "backToTop", lang)}
       title={t("a11y", "backToTop", lang)}
       className={
-        "fixed bottom-5 right-5 z-50 p-2.5 rounded-lg border border-line " +
+        "fixed bottom-14 right-5 z-50 p-2.5 rounded-lg border border-line " +
         "bg-base/70 backdrop-blur-md text-accent shadow-lg " +
         "hover:border-accent hover:-translate-y-0.5 transition " +
         (visible

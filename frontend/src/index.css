@@ -37,12 +37,17 @@
 @layer base {
   body {
     @apply bg-base text-ink font-sans antialiased;
+    /* évite le scroll horizontal créé par les translations des animations de révélation
+       (translate-x sur les cartes en w-full). 'clip' ne crée pas de conteneur de scroll,
+       donc le header sticky continue de fonctionner. */
+    overflow-x: clip;
   }
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
   /* décale l'ancre pour que le header sticky ne cache pas le haut de la section */
   section[id] {
@@ -188,6 +193,7 @@
     );
     mask: radial-gradient(ellipse at center, black 55%, transparent 100%);
     pointer-events: none;
+    border-radius: 2rem;
   }
   .section-screen {
     min-height: calc(100vh - 4rem);   /* 100vh moins le header */
@@ -206,12 +212,32 @@
       transparent 62%
     );
   }
+
+  /* animation de survol partagée par tous les badges (Skills, Projets, faits-clés, Parcours) */
+  .badge-hover {
+    transition:
+      transform 0.18s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  .badge-hover:hover {
+    transform: translateY(-2px) scale(1.06);
+    background-color: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .badge-hover:hover {
+      transform: none;
+    }
+  }
 }
 
 /* ---- Transition de thème : révélation circulaire (View Transitions API) ---- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none; /* on désactive le fondu par défaut, on anime nous-mêmes le cercle */
+  animation: none;
   mix-blend-mode: normal;
 }
 ::view-transition-old(root) {
@@ -219,4 +245,68 @@
 }
 ::view-transition-new(root) {
   z-index: 1;
+}
+
+/* ---- Champ téléphone international (react-phone-number-input) ---- */
+.PhoneInput {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s;
+}
+.PhoneInput--focus {
+  border-color: var(--accent);
+}
+.PhoneInput.phone-invalid {
+  border-color: #ef4444; /* red-500 */
+}
+.PhoneInputInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font: inherit;
+}
+.PhoneInputInput::placeholder {
+  color: var(--muted);
+}
+.PhoneInputCountrySelectArrow {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.PhoneInputCountrySelect {
+  color: var(--ink);
+}
+.PhoneInputCountrySelect option {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* ---- Scrollbar assortie au thème (teal/accent, s'adapte clair/sombre) ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 55%, transparent) transparent;
+}
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 9999px;
+  /* la bordure transparente + background-clip crée un padding → thumb plus fin et inset */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

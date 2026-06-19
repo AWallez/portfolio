@@ -23,7 +23,7 @@ export default function ScrollProgress() {
   return (
     <div
       aria-hidden
-      className="fixed top-0 left-0 right-0 h-0.5 z-[60] pointer-events-none"
+      className="fixed top-0 left-0 right-0 h-0.5 z-60 pointer-events-none"
     >
       <div
         className="h-full bg-accent origin-left"

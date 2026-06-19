@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 
@@ -8,6 +9,7 @@ type Fields = {
   lastname: string;
   email: string;
   type: string;
+  phone: string; // optionnel (non requis dans validate)
   message: string;
 };
 type Errors = Partial<Record<keyof Fields, string>>;
@@ -17,6 +19,7 @@ const EMPTY: Fields = {
   lastname: "",
   email: "",
   type: "",
+  phone: "",
   message: "",
 };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,6 +48,9 @@ export default function Contact() {
     if (!v.email.trim()) e.email = t("contact", "errRequired", lang);
     else if (!EMAIL_RE.test(v.email)) e.email = t("contact", "errEmail", lang);
     if (!v.type) e.type = t("contact", "errType", lang);
+    // téléphone optionnel : on ne valide que s'il est renseigné
+    if (v.phone && !isValidPhoneNumber(v.phone))
+      e.phone = t("contact", "errPhone", lang);
     if (!v.message.trim()) e.message = t("contact", "errRequired", lang);
     return e;
   }
@@ -81,11 +87,12 @@ export default function Contact() {
     }
   }
 
-  const fieldClass = (name: keyof Fields) =>
+  const fieldClass = (name: keyof Fields, extra = "") =>
     field +
     (errors[name]
       ? " border-red-500/70 focus:border-red-500"
-      : " border-line focus:border-accent");
+      : " border-line focus:border-accent") +
+    (extra ? ` ${extra}` : "");
 
   return (
     <section id="contact" className="max-w-300 container-page py-7">
@@ -115,10 +122,10 @@ export default function Contact() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="rounded-xl border border-line bg-base/45 backdrop-blur-[2px] p-6 space-y-4 shadow-sm"
+            className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] p-6 space-y-4 shadow-sm"
           >
             {/* honeypot anti-spam : hors écran et hors tabulation */}
-            <div aria-hidden className="absolute -left-[9999px]" >
+            <div aria-hidden className="absolute left-[-9999px]">
               <label htmlFor="company">Company</label>
               <input
                 id="company"
@@ -145,7 +152,9 @@ export default function Contact() {
                   value={values.firstname}
                   onChange={(e) => setField("firstname", e.target.value)}
                   aria-invalid={!!errors.firstname}
-                  aria-describedby={errors.firstname ? "err-firstname" : undefined}
+                  aria-describedby={
+                    errors.firstname ? "err-firstname" : undefined
+                  }
                   className={fieldClass("firstname")}
                 />
                 {errors.firstname && (
@@ -154,6 +163,8 @@ export default function Contact() {
                   </p>
                 )}
               </div>
+
+              {/* Type de demande */}
               <div>
                 <label className={label} htmlFor="lastname">
                   {t("contact", "lastname", lang)}
@@ -166,7 +177,9 @@ export default function Contact() {
                   value={values.lastname}
                   onChange={(e) => setField("lastname", e.target.value)}
                   aria-invalid={!!errors.lastname}
-                  aria-describedby={errors.lastname ? "err-lastname" : undefined}
+                  aria-describedby={
+                    errors.lastname ? "err-lastname" : undefined
+                  }
                   className={fieldClass("lastname")}
                 />
                 {errors.lastname && (
@@ -177,30 +190,55 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Email */}
-            <div>
-              <label className={label} htmlFor="email">
-                {t("contact", "email", lang)}
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={values.email}
-                onChange={(e) => setField("email", e.target.value)}
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? "err-email" : undefined}
-                className={fieldClass("email")}
-              />
-              {errors.email && (
-                <p id="err-email" className="mt-1 text-xs text-red-500">
-                  {errors.email}
-                </p>
-              )}
+            {/* Email + Téléphone (optionnel) côte à côte */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={label} htmlFor="email">
+                  {t("contact", "email", lang)}
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  value={values.email}
+                  onChange={(e) => setField("email", e.target.value)}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "err-email" : undefined}
+                  className={fieldClass("email")}
+                />
+                {errors.email && (
+                  <p id="err-email" className="mt-1 text-xs text-red-500">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className={label} htmlFor="phone">
+                  {t("contact", "phone", lang)}
+                </label>
+                <PhoneInput
+                  international
+                  defaultCountry="FR"
+                  countryCallingCodeEditable={false}
+                  limitMaxLength
+                  value={values.phone || undefined}
+                  onChange={(v) => setField("phone", v ?? "")}
+                  numberInputProps={{
+                    id: "phone",
+                    "aria-invalid": !!errors.phone,
+                    "aria-describedby": errors.phone ? "err-phone" : undefined,
+                  }}
+                  className={errors.phone ? "phone-invalid" : ""}
+                />
+                {errors.phone && (
+                  <p id="err-phone" className="mt-1 text-xs text-red-500">
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Type de demande */}
             <div>
               <label className={label} htmlFor="type">
                 {t("contact", "reqType", lang)}
@@ -212,7 +250,7 @@ export default function Contact() {
                 onChange={(e) => setField("type", e.target.value)}
                 aria-invalid={!!errors.type}
                 aria-describedby={errors.type ? "err-type" : undefined}
-                className={fieldClass("type")}
+                className={fieldClass("type", "min-h-10.5")}
               >
                 <option value="" disabled>
                   —

@@ -150,12 +150,18 @@ export default function Header() {
         </div>
       </header>
 
-      {/* menu mobile déroulant — SORTI du header, frère de celui-ci */}
-      {open && (
-        <nav
+      {/* menu mobile déroulant — toujours monté pour animer ouverture ET fermeture */}
+      <nav
           id="mobile-menu"
           aria-label={t("a11y", "primaryNav", lang)}
-          className="nav:hidden absolute left-0 right-0 top-full border-t border-line bg-base/60 backdrop-blur-md shadow-lg"
+          aria-hidden={!open}
+          className={
+            "nav:hidden absolute left-0 right-0 top-full border-t border-line bg-base/60 backdrop-blur-md shadow-lg " +
+            "origin-top transition-all duration-200 ease-out motion-reduce:transition-none " +
+            (open
+              ? "opacity-100 translate-y-0 visible"
+              : "opacity-0 -translate-y-3 invisible pointer-events-none")
+          }
         >
           <div className="max-w-300 container-page py-4 flex flex-col gap-1">
             {SECTIONS.map((s, i) => (
@@ -217,7 +223,6 @@ export default function Header() {
             </div>
           </div>
         </nav>
-      )}
     </div>
   );
 }

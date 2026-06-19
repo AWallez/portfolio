@@ -1,4 +1,4 @@
-import { Globe, Cpu, Server, type LucideIcon } from "lucide-react";
+import { Globe, Cpu, Server, Lightbulb, type LucideIcon } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
@@ -16,23 +16,51 @@ const SERVICES: Service[] = [
   {
     Icon: Globe,
     folder: "dev-web/",
-    name: { fr: "Développement Web", en: "Web Development" },
+    name: { fr: "Développement web", en: "Web Development" },
     desc: {
       fr: "Conception et développement d'applications web sur mesure, du front-end au back-end.",
       en: "Design and development of custom web applications, from front-end to back-end.",
     },
     highlights: {
       fr: [
-        "Sites vitrines & landing pages",
-        "Applications full-stack",
-        "API & back-end Node.js",
-        "Intégration & responsive design",
+        "Sites vitrines",
+        "Applications full-stack sur mesure",
+        "API & back-end (Node.js)",
+        "Intégration responsive (maquette → code)",
+        "Refonte & modernisation de site",
       ],
       en: [
-        "Landing pages & showcase sites",
-        "Full-stack applications",
-        "API & Node.js back-end",
-        "Integration & responsive design",
+        "Showcase websites",
+        "Custom full-stack applications",
+        "API & back-end (Node.js)",
+        "Responsive integration (design → code)",
+        "Website redesign & modernization",
+      ],
+    },
+  },
+  {
+    Icon: Server,
+    folder: "deploiement/",
+    name: {
+      fr: "Déploiement & mise en ligne",
+      en: "Deployment & go-live",
+    },
+    desc: {
+      fr: "Je vous oriente vers un hébergement reconnu et adapté, puis je vous accompagne — ou je m'occupe de tout — pour la mise en ligne.",
+      en: "I guide you toward a reputable hosting solution that fits your needs, then assist you — or handle everything — to take it live.",
+    },
+    highlights: {
+      fr: [
+        "Conseil au choix de l'hébergement",
+        "Mise en ligne (accompagnée ou clé en main)",
+        "Conteneurisation (Docker)",
+        "Maintenance & support (TMA)",
+      ],
+      en: [
+        "Hosting selection advice",
+        "Go-live (assisted or turnkey)",
+        "Containerization (Docker)",
+        "Maintenance & support",
       ],
     },
   },
@@ -46,13 +74,13 @@ const SERVICES: Service[] = [
     },
     highlights: {
       fr: [
-        "Sélection des composants",
+        "Conseil & choix des composants",
         "Assemblage & câble management",
-        "Installation OS & drivers",
+        "Installation OS & pilotes",
         "Optimisation & tests",
       ],
       en: [
-        "Component selection",
+        "Advice & component selection",
         "Assembly & cable management",
         "OS & driver installation",
         "Optimization & testing",
@@ -60,28 +88,26 @@ const SERVICES: Service[] = [
     },
   },
   {
-    Icon: Server,
-    folder: "web-hosting-consulting/",
+    Icon: Lightbulb,
+    folder: "conseil/",
     name: {
-      fr: "Conseil hébergement & infra",
-      en: "Hosting & infrastructure consulting",
+      fr: "Conseil & accompagnement",
+      en: "Consulting & guidance",
     },
     desc: {
-      fr: "Accompagnement pour l'hébergement web, le self-hosting et la mise en place d'infrastructure conteneurisée.",
-      en: "Guidance on web hosting, self-hosting and containerized infrastructure setup.",
+      fr: "Accompagnement technique et optimisation pour donner vie à vos projets web.",
+      en: "Technical guidance and optimization to bring your web projects to life.",
     },
     highlights: {
       fr: [
-        "Choix d'hébergement adapté",
-        "Self-hosting & Docker",
-        "Mise en place VPN & réseau",
-        "Déploiement & maintenance",
+        "Conseil & accompagnement technique",
+        "Optimisation SEO & performance",
+        "Aide aux choix techniques (stack, archi)",
       ],
       en: [
-        "Hosting solution selection",
-        "Self-hosting & Docker",
-        "VPN & network setup",
-        "Deployment & maintenance",
+        "Technical guidance & support",
+        "SEO & performance optimization",
+        "Help with technical choices (stack, architecture)",
       ],
     },
   },
@@ -110,12 +136,12 @@ export default function Services() {
             key={s.folder}
             delay={i * 100}
             variant={i % 2 === 0 ? "left" : "right"}
-            className="w-full sm:w-[calc(50%-0.625rem)] lg:w-87 flex"
+            className="w-full sm:w-[calc(50%-0.625rem)] flex"
           >
            <article
               {...spotlight}
               className="spotlight w-full flex flex-col rounded-xl border border-line
-                                bg-base/45 backdrop-blur-[2px] p-5 shadow-sm overflow-hidden
+                                bg-base/60 backdrop-blur-[3px] p-5 shadow-sm overflow-hidden
                                 hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
             >
               <div className="flex items-center gap-3 mb-3">
