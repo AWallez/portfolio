@@ -5,6 +5,7 @@ export type ContactNotification = {
   lastname: string;
   email: string;
   type: string;
+  phone?: string | null;
   message: string;
 };
 
@@ -24,7 +25,7 @@ export async function notifyContact(c: ContactNotification): Promise<void> {
     body: JSON.stringify({
       topic: config.ntfy.topic,
       title: `Nouveau message de ${c.firstname} ${c.lastname}`,
-      message: `${when} · ${c.type}\n${c.email}\n\n${c.message}`,
+      message: `${when} · ${c.type}\n${c.email}${c.phone ? " · " + c.phone : ""}\n\n${c.message}`,
       priority: 4,
       tags: ["envelope"],
     }),

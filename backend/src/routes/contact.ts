@@ -7,6 +7,7 @@ type ContactBody = {
   lastname: string;
   email: string;
   type: string;
+  phone?: string; // optionnel
   message: string;
   company?: string; // honeypot anti-spam (doit rester vide)
 };
@@ -25,6 +26,7 @@ const bodySchema = {
       maxLength: 200,
     },
     type: { type: "string", enum: ["project", "hiring", "other"] },
+    phone: { type: "string", maxLength: 40 }, // optionnel
     message: { type: "string", minLength: 1, maxLength: 5000 },
     company: { type: "string" }, // honeypot
   },
@@ -39,21 +41,25 @@ export async function contactRoutes(app: FastifyInstance) {
       config: { rateLimit: { max: 5, timeWindow: "1 minute" } },
     },
     async (req: FastifyRequest<{ Body: ContactBody }>, reply) => {
-      const { firstname, lastname, email, type, message, company } = req.body;
+      const { firstname, lastname, email, type, phone, message, company } =
+        req.body;
 
       // honeypot rempli → bot : on répond OK sans rien enregistrer ni notifier
       if (company && company.trim() !== "") {
         return reply.code(201).send({ ok: true });
       }
 
+      const cleanPhone = phone?.trim() || null;
+
       await pool.query(
-        `INSERT INTO contacts (firstname, lastname, email, type, message, ip, user_agent)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        `INSERT INTO contacts (firstname, lastname, email, type, phone, message, ip, user_agent)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
           firstname,
           lastname,
           email,
           type,
+          cleanPhone,
           message,
           req.ip,
           req.headers["user-agent"] ?? null,
@@ -62,7 +68,14 @@ export async function contactRoutes(app: FastifyInstance) {
 
       // la notif ne doit pas faire échouer la requête si ntfy est indisponible
       try {
-        await notifyContact({ firstname, lastname, email, type, message });
+        await notifyContact({
+          firstname,
+          lastname,
+          email,
+          type,
+          phone: cleanPhone,
+          message,
+        });
       } catch (err) {
         req.log.error({ err }, "notification ntfy échouée");
       }
