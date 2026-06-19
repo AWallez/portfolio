@@ -57,7 +57,7 @@ export default function Header() {
               aria-controls="mobile-menu"
               className="nav:hidden p-1.5 rounded border border-line hover:border-accent text-ink transition"
             >
-              {open ? <X size={18} /> : <Menu size={18} />}
+              {open ? <X size={18} aria-hidden /> : <Menu size={18} aria-hidden />}
             </button>
 
             <a
@@ -123,7 +123,7 @@ export default function Header() {
               title={t("a11y", "downloadCV", lang)}
               className="hidden nav:inline-flex items-center gap-1.5 font-mono text-sm px-3 py-1 rounded border border-line hover:border-accent hover:text-accent transition"
             >
-              <Download size={14} />
+              <Download size={14} aria-hidden />
               CV
             </a>
             <button
@@ -217,7 +217,7 @@ export default function Header() {
                 aria-label={t("a11y", "downloadCV", lang)}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 font-mono text-sm px-3 py-2 rounded-lg border border-line text-ink hover:border-accent hover:text-accent transition"
               >
-                <Download size={15} className="text-accent" />
+                <Download size={15} className="text-accent" aria-hidden />
                 CV
               </a>
             </div>

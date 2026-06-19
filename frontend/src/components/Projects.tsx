@@ -133,12 +133,13 @@ export default function Projects() {
               {p.image && (
                 <div className="relative -m-5 mb-4 border-b border-line overflow-hidden">
                   <ProjectVisual light={p.image.light} dark={p.image.dark} />
-                  {/* badge d'agrandissement, visible au survol de la carte */}
+                  {/* badge d'agrandissement, visible au survol ou focus clavier de la carte */}
                   <span
+                    aria-hidden
                     className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8
                                place-items-center rounded-lg border border-line bg-base/80
                                text-ink opacity-0 backdrop-blur-sm transition
-                               group-hover:opacity-100"
+                               group-hover:opacity-100 group-focus-within:opacity-100"
                   >
                     <Maximize2 size={15} aria-hidden />
                   </span>

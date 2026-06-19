@@ -144,6 +144,9 @@ export default function Hero() {
 
   return (
     <section className="items-center max-w-210 container-page py-7 w-full">
+      {/* titre principal (h1) pour lecteurs d'écran & SEO ; le terminal animé
+          ci-dessous reste le rendu visuel. lines[0].output = nom + rôle localisés */}
+      <h1 className="sr-only">{lines[0].output}</h1>
       <div className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] shadow-lg overflow-hidden">
         {/* Barre de titre */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
