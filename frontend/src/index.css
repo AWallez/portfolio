@@ -210,15 +210,14 @@
   }
 
   /* halo « spotlight » qui suit le curseur sur les cartes.
-     Posé en background-image → toujours derrière le texte, clippé par le border-radius.
-     --si (0 au centre → 1 au bord) module l'intensité : discret au centre, marqué aux bords. */
-  /* .spotlight {
+     Posé en background-image → toujours derrière le texte, clippé par le border-radius. */
+  .spotlight {
     background-image: radial-gradient(
-      125px circle at var(--mx, 50%) var(--my, -200%),
-      color-mix(in srgb, var(--accent) calc(var(--si, 0) * 20%), transparent),
+      75px circle at var(--mx, 50%) var(--my, -200%),
+      color-mix(in srgb, var(--accent) 20%, transparent),
       transparent 62%
     );
-  } */
+  }
 
   /* animation de survol partagée par tous les badges (Skills, Projets, faits-clés, Parcours) */
   .badge-hover {

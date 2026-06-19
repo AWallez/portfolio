@@ -126,23 +126,32 @@ export default function Projects() {
           >
             <article
               {...spotlight}
-              className="spotlight group relative w-full flex flex-col rounded-xl border border-line
+              className="spotlight w-full flex flex-col rounded-xl border border-line
                                 bg-base/60 backdrop-blur-[3px] p-5 shadow-sm overflow-hidden
                                 hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
             >
               {p.image && (
-                <div className="relative -m-5 mb-4 border-b border-line overflow-hidden">
-                  <ProjectVisual light={p.image.light} dark={p.image.dark} />
-                  {/* badge d'agrandissement, visible au survol ou focus clavier de la carte */}
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8
-                               place-items-center rounded-lg border border-line bg-base/80
-                               text-ink opacity-0 backdrop-blur-sm transition
-                               group-hover:opacity-100 group-focus-within:opacity-100"
+                <div className="-m-5 mb-4 border-b border-line overflow-hidden">
+                  {/* clic sur l'image (ou le badge) -> agrandir */}
+                  <button
+                    type="button"
+                    onClick={() => setZoomed(p)}
+                    aria-label={`${t("projects", "zoom", lang)} — ${p.title[lang]}`}
+                    className="group/img relative block w-full cursor-zoom-in p-0"
                   >
-                    <Maximize2 size={15} aria-hidden />
-                  </span>
+                    <ProjectVisual light={p.image.light} dark={p.image.dark} />
+                    {/* badge d'agrandissement : toujours visible, accentué au survol */}
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute right-2 top-2 grid h-8 w-8
+                                 place-items-center rounded-lg border border-line bg-base/80
+                                 text-muted backdrop-blur-sm transition
+                                 group-hover/img:border-accent group-hover/img:text-accent
+                                 group-hover/img:scale-110"
+                    >
+                      <Maximize2 size={15} />
+                    </span>
+                  </button>
                 </div>
               )}
               {/* nom de dossier en mono, clin d'œil terminal */}
@@ -158,16 +167,6 @@ export default function Projects() {
                   <Tag key={tag}>{tag}</Tag>
                 ))}
               </div>
-
-              {/* clic n'importe où sur la carte -> agrandir l'image */}
-              {p.image && (
-                <button
-                  type="button"
-                  onClick={() => setZoomed(p)}
-                  aria-label={`${t("projects", "zoom", lang)} — ${p.title[lang]}`}
-                  className="absolute inset-0 z-10 cursor-zoom-in"
-                />
-              )}
             </article>
           </Reveal>
         ))}
