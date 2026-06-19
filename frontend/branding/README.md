@@ -19,17 +19,36 @@ npm un @resvg/resvg-js
 
 ## Images des projets
 
-Sources éditables des visuels de la section Projets (chacune rendue en
-`public/projects/*.png`, 1200×675) :
+Les 5 visuels de la section Projets (1200×675) sont **générés par script** à partir des
+tokens de couleur du site (`--base`, `--surface`, `--ink`, `--muted`, `--line`, `--accent`,
+cf. `:root` et `.dark` dans `src/index.css`). Chaque carte est dessinée **une seule fois**
+puis rendue avec la palette claire **et** la palette sombre : les images partagent donc
+exactement les couleurs du site (« comme si elles en faisaient partie »).
 
-| Source (`branding/`)     | Sortie (`public/projects/`) | Carte                      |
-| ------------------------ | --------------------------- | -------------------------- |
-| `projects-web.svg`       | `web-clients.png`           | Projets web clients (Figma)|
-| `projects-nas.svg`       | `homelab.png`               | Infrastructure NAS (schéma)|
-| `projects-reseau.svg`    | `reseau.png`                | Réseau domestique (schéma) |
-| `projects-portfolio.svg` | `portfolio.png`             | Ce portfolio (Figma)       |
-| `projects-perso.svg`     | `perso.png`                 | Perso & lab (terminal)     |
+Sortie en **SVG vectoriel** (≈10× plus léger que du PNG, net à n'importe quel zoom).
+Les SVG sont **inlinés** dans `Projects.tsx` (importés en `?raw`, injectés dans le DOM —
+pas de `<img>`), `*-light.svg` en thème clair et `*-dark.svg` en sombre via la variante
+`dark:`. Étant inlinés, ils **héritent des webfonts du site** (`JetBrains Mono` / `Inter`)
+→ rendu identique pour tous les visiteurs et cohérent avec le reste du site. Les ids
+internes (`dots`/`sh`/`thumb`/`arrow`) sont préfixés par fichier pour éviter les collisions
+entre SVG inlinés.
 
-Régénération : même principe que l'og-image (installer `@resvg/resvg-js`,
-rendre le SVG voulu en PNG avec les polices Arial + Consolas, `fitTo` width 1200).
+| Carte                          | Builder (`generate-projects.mjs`) | Sorties (`src/assets/projects/`)      |
+| ------------------------------ | --------------------------------- | ------------------------------------- |
+| Projets web clients (vitrine)  | `clients`                         | `web-clients-light.svg` / `-dark.svg` |
+| Ce portfolio (le site lui-même)| `portfolio`                       | `portfolio-light.svg` / `-dark.svg`   |
+| Réseau domestique (topologie)  | `reseau`                          | `reseau-light.svg` / `-dark.svg`      |
+| Infrastructure NAS (services)  | `homelab`                         | `homelab-light.svg` / `-dark.svg`     |
+| Perso & lab (terminal DevOps)  | `lab`                             | `perso-light.svg` / `-dark.svg`       |
+
+### Régénérer
+
+```bash
+node branding/generate-projects.mjs   # écrit les 10 SVG dans src/assets/projects/
+```
+
+Aucune dépendance (pas de rastérisation). Pour modifier un visuel ou la palette : éditer le
+builder correspondant (ou les objets `LIGHT` / `DARK`) dans `generate-projects.mjs`, puis
+relancer. Comme les visuels reprennent les polices du site, les colonnes mono (terminal
+*perso*, tableaux *kubectl*/StockApp) sont calées sur les métriques de JetBrains Mono.
 

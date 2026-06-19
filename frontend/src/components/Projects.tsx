@@ -1,14 +1,29 @@
+import { useState } from "react";
+import { Maximize2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
+import Lightbox from "./Lightbox";
+// Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
+// Générés par branding/generate-projects.mjs.
+import clientsLight from "../assets/projects/web-clients-light.svg?raw";
+import clientsDark from "../assets/projects/web-clients-dark.svg?raw";
+import portfolioLight from "../assets/projects/portfolio-light.svg?raw";
+import portfolioDark from "../assets/projects/portfolio-dark.svg?raw";
+import reseauLight from "../assets/projects/reseau-light.svg?raw";
+import reseauDark from "../assets/projects/reseau-dark.svg?raw";
+import homelabLight from "../assets/projects/homelab-light.svg?raw";
+import homelabDark from "../assets/projects/homelab-dark.svg?raw";
+import persoLight from "../assets/projects/perso-light.svg?raw";
+import persoDark from "../assets/projects/perso-dark.svg?raw";
 
 type Project = {
   name: string;
   title: { fr: string; en: string };
   desc: { fr: string; en: string };
   tags: string[];
-  image?: string; // WebP · 16:9 · 1200×675px
+  image?: { light: string; dark: string }; // SVG inline brut · 16:9 1200×675 · une version par thème
   code?: string;
   live?: string;
 };
@@ -22,7 +37,7 @@ const PROJECTS: Project[] = [
       en: "Showcase sites and custom web apps for craftspeople and freelancers: from front-end to deployment. Management dashboards (CRM, stock, bookings), client areas and forms.",
     },
     tags: ["React", "Node.js", "PostgreSQL", "Responsive", "Docker"],
-    image: "/projects/web-clients.png",
+    image: { light: clientsLight, dark: clientsDark },
   },
   {
     name: "portfolio",
@@ -32,8 +47,7 @@ const PROJECTS: Project[] = [
       en: "Full-stack React + TypeScript site, Node (Fastify) API + PostgreSQL for the contact form, containerized (Docker) and self-hosted on my NAS. Accessibility, SEO, tests and CI/CD.",
     },
     tags: ["React", "TypeScript", "Fastify", "PostgreSQL", "Docker"],
-    image: "/projects/portfolio.png",
-    code: "https://github.com/AWallez/portfolio",
+    image: { light: portfolioLight, dark: portfolioDark },
   },
   {
     name: "reseau",
@@ -43,7 +57,7 @@ const PROJECTS: Project[] = [
       en: "VLAN segmentation, firewall, DNS, VPN and SSH; 10 GbE link and iSCSI storage; Linux administration and hardening.",
     },
     tags: ["Réseau", "VLAN", "10 GbE", "iSCSI", "iptables"],
-    image: "/projects/reseau.png",
+    image: { light: reseauLight, dark: reseauDark },
   },
   {
     name: "homelab",
@@ -56,7 +70,7 @@ const PROJECTS: Project[] = [
       en: "Linux NAS server: containerized services via Docker / docker-compose — PostgreSQL, ntfy, WireGuard VPN, game servers, reverse proxy and storage.",
     },
     tags: ["Docker", "Linux", "WireGuard", "self-hosting"],
-    image: "/projects/homelab.png",
+    image: { light: homelabLight, dark: homelabDark },
   },
   {
     name: "lab",
@@ -69,7 +83,7 @@ const PROJECTS: Project[] = [
       en: "Self-hosted multiplayer game servers (Docker) and a DevOps lab to level up: Kubernetes, Terraform and Ansible in a test environment.",
     },
     tags: ["Docker", "Kubernetes", "Terraform", "Ansible", "Bash"],
-    image: "/projects/perso.png",
+    image: { light: persoLight, dark: persoDark },
   },
 ];
 
@@ -86,6 +100,7 @@ function Tag({ children }: { children: string }) {
 
 export default function Projects() {
   const { lang } = useLang();
+  const [zoomed, setZoomed] = useState<Project | null>(null);
 
   return (
     <section
@@ -106,23 +121,38 @@ export default function Projects() {
           <Reveal
             key={p.name}
             delay={i * 100}
-            variant="up-lg"
+            variant="zoom-out"
             className="w-full sm:w-[calc(50%-0.625rem)] flex"
           >
             <article
               {...spotlight}
-              className="spotlight w-full flex flex-col rounded-xl border border-line
+              className="spotlight group relative w-full flex flex-col rounded-xl border border-line
                                 bg-base/60 backdrop-blur-[3px] p-5 shadow-sm overflow-hidden
                                 hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
             >
               {p.image && (
-                <div className="-m-5 mb-4 border-b border-line overflow-hidden">
-                  <img
-                    src={p.image}
-                    alt={p.title[lang]}
-                    loading="lazy"
-                    className="w-full aspect-video object-cover"
+                <div className="relative -m-5 mb-4 border-b border-line overflow-hidden">
+                  {/* SVG inline : hérite des webfonts du site. Une version par thème,
+                      clair masqué en sombre et inversement. */}
+                  <div
+                    aria-hidden
+                    className="dark:hidden [&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
+                    dangerouslySetInnerHTML={{ __html: p.image.light }}
                   />
+                  <div
+                    aria-hidden
+                    className="hidden dark:block [&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
+                    dangerouslySetInnerHTML={{ __html: p.image.dark }}
+                  />
+                  {/* badge d'agrandissement, visible au survol de la carte */}
+                  <span
+                    className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8
+                               place-items-center rounded-lg border border-line bg-base/80
+                               text-ink opacity-0 backdrop-blur-sm transition
+                               group-hover:opacity-100"
+                  >
+                    <Maximize2 size={15} aria-hidden />
+                  </span>
                 </div>
               )}
               {/* nom de dossier en mono, clin d'œil terminal */}
@@ -139,32 +169,28 @@ export default function Projects() {
                 ))}
               </div>
 
-              <div className="flex gap-4 text-sm font-mono">
-                {p.code && (
-                  <a
-                    href={p.code}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent hover:underline underline-offset-4"
-                  >
-                    → {t("projects", "code", lang)}
-                  </a>
-                )}
-                {p.live && (
-                  <a
-                    href={p.live}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent hover:underline underline-offset-4"
-                  >
-                    → {t("projects", "live", lang)}
-                  </a>
-                )}
-              </div>
+              {/* clic n'importe où sur la carte -> agrandir l'image */}
+              {p.image && (
+                <button
+                  type="button"
+                  onClick={() => setZoomed(p)}
+                  aria-label={`${t("projects", "zoom", lang)} — ${p.title[lang]}`}
+                  className="absolute inset-0 z-10 cursor-zoom-in"
+                />
+              )}
             </article>
           </Reveal>
         ))}
       </div>
+
+      {zoomed?.image && (
+        <Lightbox
+          light={zoomed.image.light}
+          dark={zoomed.image.dark}
+          title={zoomed.title[lang]}
+          onClose={() => setZoomed(null)}
+        />
+      )}
     </section>
   );
 }

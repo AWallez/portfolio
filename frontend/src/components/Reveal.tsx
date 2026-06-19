@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { useReveal } from "../hooks/useReveal";
 
-type Variant = "up" | "fade" | "zoom" | "left" | "right" | "up-lg";
+type Variant = "up" | "fade" | "zoom" | "left" | "right" | "up-lg" | "zoom-out"; // zoom-out = zoom-in mais avec un léger décalage vers le bas
 
 const HIDDEN: Record<Variant, string> = {
   up: "opacity-0 translate-y-8",
   "up-lg": "opacity-0 translate-y-16", // montée plus ample
+  "zoom-out": "opacity-0 scale-107", // zoom-in mais avec un léger décalage vers le bas
   fade: "opacity-0",
   zoom: "opacity-0 scale-90",
   left: "opacity-0 -translate-x-12",

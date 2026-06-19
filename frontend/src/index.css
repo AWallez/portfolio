@@ -1,3 +1,4 @@
+/* @tailwindcss */
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -196,7 +197,7 @@
     border-radius: 2rem;
   }
   .section-screen {
-    min-height: calc(100vh - 4rem);   /* 100vh moins le header */
+    min-height: calc(100vh - 4rem); /* 100vh moins le header */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -205,13 +206,13 @@
   /* halo « spotlight » qui suit le curseur sur les cartes.
      Posé en background-image → toujours derrière le texte, clippé par le border-radius.
      --si (0 au centre → 1 au bord) module l'intensité : discret au centre, marqué aux bords. */
-  .spotlight {
+  /* .spotlight {
     background-image: radial-gradient(
-      150px circle at var(--mx, 50%) var(--my, -200%),
+      125px circle at var(--mx, 50%) var(--my, -200%),
       color-mix(in srgb, var(--accent) calc(var(--si, 0) * 20%), transparent),
       transparent 62%
     );
-  }
+  } */
 
   /* animation de survol partagée par tous les badges (Skills, Projets, faits-clés, Parcours) */
   .badge-hover {
@@ -220,12 +221,14 @@
       background-color 0.18s ease,
       border-color 0.18s ease,
       box-shadow 0.18s ease;
+    cursor: default;
   }
   .badge-hover:hover {
     transform: translateY(-2px) scale(1.06);
-    background-color: color-mix(in srgb, var(--accent) 22%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 65%, transparent);
-    box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent) 35%, transparent);
+    background-color: color-mix(in srgb, var(--accent) 20%, transparent);
+    border-color: color-mix(in srgb, var(--accent), transparent);
+    box-shadow: 0 6px 16px -4px
+      color-mix(in srgb, var(--accent) 35%, transparent);
   }
   @media (prefers-reduced-motion: reduce) {
     .badge-hover:hover {
@@ -286,8 +289,9 @@
 
 /* ---- Scrollbar assortie au thème (teal/accent, s'adapte clair/sombre) ---- */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--accent) 55%, transparent) transparent;
+  scrollbar-width: 25px;
+  scrollbar-color: color-mix(in srgb, var(--accent) 55%, transparent)
+    transparent;
 }
 ::-webkit-scrollbar {
   width: 11px;
@@ -309,4 +313,9 @@
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+html {
+  max-height: 100%;
+  max-width: 100%;
 }
