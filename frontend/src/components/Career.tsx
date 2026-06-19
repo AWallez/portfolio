@@ -105,8 +105,8 @@ export default function Career() {
         {t("career", "command", lang)}
       </p>
 
-      <div className="max-w-250">
-        <ol ref={ref} className="relative">
+      <div className="lex justify-center items-center">
+        <ol ref={ref} className="relative w-fit mx-auto">
           {/* la ligne verticale centrale (rail gris) */}
           <div className="absolute left-27.5 sm:left-32.5 top-0 bottom-0 w-px bg-line" />
           {/* la ligne d'accent qui se dessine au scroll */}
@@ -120,9 +120,9 @@ export default function Career() {
               key={i}
               delay={i * 120}
               variant="right"
-              className="w-full block pb-8 last:pb-0"
+              className="pb-8 last:pb-0 "
             >
-              <li className="flex">
+              <li className="flex items-center">
                 {/* côté gauche : date + badge */}
                 <div className="flex flex-col items-center w-25 sm:w-30 shrink-0 pt-1">
                   {" "}
@@ -151,7 +151,7 @@ export default function Career() {
                 </div>
 
                 {/* côté droit : contenu */}
-                <div className="pl-4 grow">
+                <div className="pl-4">
                   <h3 className="text-ink font-semibold text-readable w-fit">
                     {item.role[lang]}
                   </h3>

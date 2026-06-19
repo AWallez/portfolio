@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import ProjectVisual from "./ProjectVisual";
 
 type Props = {
   /** SVG bruts inline (mêmes que la carte), une version par thème */
@@ -67,16 +68,7 @@ export default function Lightbox({ light, dark, title, onClose }: Props) {
         </button>
 
         <div className="overflow-hidden rounded-xl border border-line shadow-2xl">
-          <div
-            aria-hidden
-            className="dark:hidden [&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
-            dangerouslySetInnerHTML={{ __html: light }}
-          />
-          <div
-            aria-hidden
-            className="hidden dark:block [&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
-            dangerouslySetInnerHTML={{ __html: dark }}
-          />
+          <ProjectVisual light={light} dark={dark} />
         </div>
       </div>
     </div>,

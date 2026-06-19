@@ -57,6 +57,9 @@ export function useTheme() {
           {
             duration: 450,
             easing: "ease-in-out",
+            // garde le calque neuf plein à la fin (la base CSS est circle(0),
+            // sans 'forwards' on aurait un flash inverse en fin d'animation)
+            fill: "forwards",
             pseudoElement: "::view-transition-new(root)",
           },
         );

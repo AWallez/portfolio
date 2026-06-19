@@ -89,12 +89,17 @@ function tagRow(x, y, labels, p, gap = 8, fs = 11) {
     .join("");
 }
 function frame(p, inner) {
+  // n'émet thumb/arrow que si le visuel les référence (évite des defs morts)
+  const thumb = inner.includes("url(#thumb)")
+    ? `<linearGradient id="thumb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.accent}" stop-opacity="0.30"/><stop offset="1" stop-color="${p.accent}" stop-opacity="0.06"/></linearGradient>`
+    : "";
+  const arrow = inner.includes("url(#arrow)")
+    ? `<marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="${p.muted}"/></marker>`
+    : "";
   return `<svg width="1200" height="675" viewBox="0 0 1200 675" xmlns="http://www.w3.org/2000/svg" ${SANS}>
   <defs>
     <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="${p.line}" fill-opacity="${p.dotOp}"/></pattern>
-    <filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="11" flood-color="${p.shadow}" flood-opacity="${p.shadowOp}"/></filter>
-    <linearGradient id="thumb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.accent}" stop-opacity="0.30"/><stop offset="1" stop-color="${p.accent}" stop-opacity="0.06"/></linearGradient>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="${p.muted}"/></marker>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="11" flood-color="${p.shadow}" flood-opacity="${p.shadowOp}"/></filter>${thumb}${arrow}
   </defs>
   <rect width="1200" height="675" fill="${p.base}"/>
   <rect width="1200" height="675" fill="url(#dots)"/>
@@ -142,12 +147,12 @@ function clients(p) {
     (s += T(70, 508 + i * 28, 10.5, p.muted, m)),
   );
   const stat = [
-    [184, "Revenue", "€8,240"],
-    [342, "Orders", "32"],
-    [500, "Items in stock", "1,320"],
+    [184, 146, "Revenue", "€8,240"],
+    [342, 146, "Orders", "32"],
+    [500, 150, "Items in stock", "1,320"],
   ];
-  stat.forEach(([x, k, v]) => {
-    s += `<rect x="${x}" y="462" width="${x === 500 ? 150 : 146}" height="64" rx="8" fill="${p.surface}" stroke="${p.line}"/>`;
+  stat.forEach(([x, w, k, v]) => {
+    s += `<rect x="${x}" y="462" width="${w}" height="64" rx="8" fill="${p.surface}" stroke="${p.line}"/>`;
     s += T(x + 12, 484, 10, p.muted, k);
     s += T(x + 12, 510, 17, p.ink, v, { w: "bold" });
   });

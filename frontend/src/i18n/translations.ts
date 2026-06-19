@@ -40,8 +40,6 @@ export const translations = {
   projects: {
     title: { fr: "Projets & Homelab", en: "Projects & Homelab" },
     command: { fr: "ls -la ~/projects", en: "ls -la ~/projects" },
-    code: { fr: "Code", en: "Code" },
-    live: { fr: "Voir", en: "Live" },
     zoom: { fr: "Agrandir l’image", en: "Enlarge image" },
     close: { fr: "Fermer", en: "Close" },
   },

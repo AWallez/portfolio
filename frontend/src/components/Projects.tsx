@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 import Lightbox from "./Lightbox";
+import ProjectVisual from "./ProjectVisual";
 // Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
 // Générés par branding/generate-projects.mjs.
 import clientsLight from "../assets/projects/web-clients-light.svg?raw";
@@ -24,8 +25,6 @@ type Project = {
   desc: { fr: string; en: string };
   tags: string[];
   image?: { light: string; dark: string }; // SVG inline brut · 16:9 1200×675 · une version par thème
-  code?: string;
-  live?: string;
 };
 
 const PROJECTS: Project[] = [
@@ -101,6 +100,7 @@ function Tag({ children }: { children: string }) {
 export default function Projects() {
   const { lang } = useLang();
   const [zoomed, setZoomed] = useState<Project | null>(null);
+  const closeZoom = useCallback(() => setZoomed(null), []);
 
   return (
     <section
@@ -132,18 +132,7 @@ export default function Projects() {
             >
               {p.image && (
                 <div className="relative -m-5 mb-4 border-b border-line overflow-hidden">
-                  {/* SVG inline : hérite des webfonts du site. Une version par thème,
-                      clair masqué en sombre et inversement. */}
-                  <div
-                    aria-hidden
-                    className="dark:hidden [&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
-                    dangerouslySetInnerHTML={{ __html: p.image.light }}
-                  />
-                  <div
-                    aria-hidden
-                    className="hidden dark:block [&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
-                    dangerouslySetInnerHTML={{ __html: p.image.dark }}
-                  />
+                  <ProjectVisual light={p.image.light} dark={p.image.dark} />
                   {/* badge d'agrandissement, visible au survol de la carte */}
                   <span
                     className="pointer-events-none absolute right-2 top-2 z-20 grid h-8 w-8
@@ -188,7 +177,7 @@ export default function Projects() {
           light={zoomed.image.light}
           dark={zoomed.image.dark}
           title={zoomed.title[lang]}
-          onClose={() => setZoomed(null)}
+          onClose={closeZoom}
         />
       )}
     </section>

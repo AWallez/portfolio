@@ -248,6 +248,9 @@
 }
 ::view-transition-new(root) {
   z-index: 1;
+  /* masqué avant le démarrage de l'animation JS : évite un flash du nouveau thème
+     sur la 1re frame (le temps que .animate() applique le clip-path circulaire). */
+  clip-path: circle(0);
 }
 
 /* ---- Champ téléphone international (react-phone-number-input) ---- */
