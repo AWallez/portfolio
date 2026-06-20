@@ -1,0 +1,10 @@
+# Réduit le contexte de build (surtout node_modules ~265 Mo) → build rapide.
+node_modules
+dist
+.git
+.env*
+*.log
+.DS_Store
+.vscode
+Dockerfile
+.dockerignore

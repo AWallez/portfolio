@@ -1,26 +1,41 @@
-# Infra — Postgres + ntfy (sur le NAS)
+# Infra — stack complète du portfolio (sur le NAS)
 
-Stack de données et de notifications du portfolio, à faire tourner sur le NAS via Docker.
+Toute la stack du portfolio via Docker Compose.
 
+- **web** : Nginx qui sert le SPA (build du `frontend/`) et proxy `/api` → `api`.
+- **api** : API Fastify (`backend/`) — enregistre les messages et publie sur ntfy.
 - **postgres** : stocke les messages du formulaire de contact (table `contacts`).
-- **ntfy** : serveur de notifications push → tu reçois chaque message sur ton téléphone.
+- **ntfy** : serveur de notifications push → chaque message arrive sur ton téléphone.
 
-> **Ports** : Postgres est publié sur **55432** côté NAS (5432 et 5433 sont déjà pris par
-> UGOS), ntfy sur **8080**. Depuis le PC de dev : `postgres://...@IP_NAS:55432/...`.
+> **Ports** : `web` est publié sur **`${WEB_PORT}` (8088 par défaut)** — c'est là qu'on
+> branche le reverse proxy + HTTPS d'UGOS (→ `alexiswallez.fr`). `api` n'est **pas exposé**
+> (joignable seulement par Nginx → même origine, zéro CORS). Postgres reste sur **55432**
+> (dev), ntfy sur **8080**.
 
 ## Déploiement
 
-1. Copier le dossier `infra/` sur le NAS (ou cloner le repo).
-2. Créer le `.env` à partir de l'exemple et le remplir :
+> Le compose build `../frontend` et `../backend` → **cloner le repo entier** sur le NAS
+> (pas seulement `infra/`).
+
+1. Sur le NAS : `git clone <repo> && cd portfolio/infra`
+2. Créer le `.env` et le remplir :
    ```bash
    cp .env.example .env
-   nano .env   # mot de passe Postgres fort + NTFY_BASE_URL avec l'IP du NAS
+   nano .env   # Postgres fort, NTFY_BASE_URL + NTFY_TOPIC, SITE_URL, WEB_PORT
    ```
-3. Lancer :
+3. Build + démarrage :
    ```bash
-   docker compose up -d
-   docker compose ps      # vérifier que les 2 services sont "healthy"
+   docker compose up -d --build
    ```
+4. **Une seule fois** — créer le schéma Postgres (table `contacts`) :
+   ```bash
+   docker compose run --rm api npm run migrate
+   ```
+5. Vérifier que tout est sain :
+   ```bash
+   docker compose ps      # postgres / ntfy / api / web → "healthy"
+   ```
+6. Brancher le reverse proxy + HTTPS d'UGOS sur `http://IP_NAS:${WEB_PORT}`.
 
 ## Vérifications
 

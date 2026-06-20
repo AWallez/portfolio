@@ -1,0 +1,9 @@
+# ⚠️ .env contient des secrets → JAMAIS dans l'image (les vars viennent de compose)
+node_modules
+.git
+.env
+.env.*
+*.log
+.DS_Store
+Dockerfile
+.dockerignore

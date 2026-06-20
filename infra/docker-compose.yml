@@ -1,7 +1,10 @@
-# Postgres + ntfy pour le portfolio — à déployer sur le NAS.
+# Stack complète du portfolio — à déployer sur le NAS.
 # Démarrage :
 #   1. cp .env.example .env  (puis remplir .env)
-#   2. docker compose up -d
+#   2. docker compose up -d --build
+#   3. (1re fois) docker compose run --rm api npm run migrate
+# Le service `web` (Nginx) sert le SPA et proxy /api → `api` (même origine).
+# Brancher le reverse proxy + HTTPS d'UGOS sur ${WEB_PORT}.
 services:
   postgres:
     image: postgres:17-alpine
@@ -45,6 +48,42 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  # --- API Fastify (containerisée). Aucun port hôte : joignable seulement via `web`. ---
+  api:
+    build: ../backend
+    container_name: portfolio-api
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      HOST: 0.0.0.0
+      # Postgres via le réseau interne (nom de service), pas le port 55432 du LAN
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      NTFY_URL: http://ntfy:80
+      NTFY_TOPIC: ${NTFY_TOPIC}
+      CORS_ORIGIN: ${SITE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ntfy:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3001/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # --- Frontend : Nginx sert dist/ et proxy /api → api (même origine, zéro CORS). ---
+  web:
+    build: ../frontend
+    container_name: portfolio-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # exposé sur le LAN ; le reverse proxy + HTTPS d'UGOS pointera ici
+      - "${WEB_PORT:-8088}:80"
 
 volumes:
   postgres_data:

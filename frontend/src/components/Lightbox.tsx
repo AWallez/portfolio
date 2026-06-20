@@ -93,7 +93,7 @@ export default function Lightbox({ light, dark, title, onClose }: Props) {
       className="fixed inset-0 z-100 flex items-center justify-center overscroll-contain
                  touch-manipulation p-4 sm:p-8 bg-base/80 backdrop-blur-sm"
     >
-      <div className="relative w-full max-w-5xl">
+      <div className="relative w-full max-w-7xl">
         <button
           ref={closeRef}
           type="button"
