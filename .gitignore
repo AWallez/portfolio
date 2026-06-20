@@ -27,5 +27,6 @@ Thumbs.db
 !.vscode/settings.json
 !.vscode/extensions.json
 
+
 # Divers
 *.local
