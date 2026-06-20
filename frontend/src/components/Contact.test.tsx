@@ -20,8 +20,11 @@ describe("<Contact />", () => {
 
     await user.click(screen.getByRole("button", { name: /envoyer|send/i }));
 
-    // au moins une erreur "champ requis" doit apparaître
-    const errors = await screen.findAllByText(/requis|required/i);
+    // cible le MESSAGE d'erreur complet, pas la légende "champs obligatoires"
+    // (sinon le test passerait même sans validation)
+    const errors = await screen.findAllByText(
+      /ce champ est requis|this field is required/i,
+    );
     expect(errors.length).toBeGreaterThan(0);
   });
 

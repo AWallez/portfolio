@@ -1,11 +1,12 @@
-import { useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
-import Lightbox from "./Lightbox";
 import ProjectVisual from "./ProjectVisual";
+// chargée à la demande : seulement quand on agrandit une image
+const Lightbox = lazy(() => import("./Lightbox"));
 // Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
 // Générés par branding/generate-projects.mjs.
 import clientsLight from "../assets/projects/web-clients-light.svg?raw";
@@ -173,12 +174,14 @@ export default function Projects() {
       </div>
 
       {zoomed?.image && (
-        <Lightbox
-          light={zoomed.image.light}
-          dark={zoomed.image.dark}
-          title={zoomed.title[lang]}
-          onClose={closeZoom}
-        />
+        <Suspense fallback={null}>
+          <Lightbox
+            light={zoomed.image.light}
+            dark={zoomed.image.dark}
+            title={zoomed.title[lang]}
+            onClose={closeZoom}
+          />
+        </Suspense>
       )}
     </section>
   );

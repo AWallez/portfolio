@@ -80,6 +80,7 @@ const FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "
 function Spinner() {
   const [f, setF] = useState(0);
   useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => setF((p) => (p + 1) % FRAMES.length), 80);
     return () => clearInterval(id);
   }, []);

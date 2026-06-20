@@ -37,7 +37,7 @@ export default function Reveal({
         transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
       }}
       className={
-        "transition-all duration-1500 " +
+        "transition-[opacity,transform] duration-1500 " +
         (visible ? SHOWN : HIDDEN[variant]) +
         " " +
         className

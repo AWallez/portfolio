@@ -16,10 +16,8 @@ export function useReveal<T extends HTMLElement>() {
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true); // ici c'est OK : appelé dans un callback, pas dans le corps de l'effet
-          io.disconnect();
-        }
+        // reversible : ré-anime à la remontée du scroll (pas de disconnect)
+        setVisible(entry.isIntersecting);
       },
       { threshold: 0, rootMargin: "-150px 0px -150px 0px" },
     );

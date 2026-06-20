@@ -79,6 +79,17 @@ export default function Contact() {
     const found = validate(values);
     if (Object.keys(found).length > 0) {
       setErrors(found);
+      // focus le premier champ invalide (ordre visuel)
+      const order: (keyof Fields)[] = [
+        "firstname",
+        "lastname",
+        "email",
+        "phone",
+        "type",
+        "message",
+      ];
+      const first = order.find((k) => found[k]);
+      if (first) document.getElementById(first)?.focus();
       return;
     }
     setStatus("sending");
@@ -222,6 +233,7 @@ export default function Contact() {
                   name="email"
                   type="email"
                   autoComplete="email"
+                  spellCheck={false}
                   placeholder={t("contact", "phEmail", lang)}
                   value={values.email}
                   onChange={(e) => setField("email", e.target.value)}

@@ -157,7 +157,7 @@ export default function Header() {
           aria-hidden={!open}
           className={
             "nav:hidden absolute left-0 right-0 top-full border-t border-line bg-base/60 backdrop-blur-md shadow-lg " +
-            "origin-top transition-all duration-200 ease-out motion-reduce:transition-none " +
+            "origin-top transition-[opacity,transform,visibility] duration-200 ease-out motion-reduce:transition-none " +
             (open
               ? "opacity-100 translate-y-0 visible"
               : "opacity-0 -translate-y-3 invisible pointer-events-none")

@@ -1,5 +1,9 @@
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
+import * as axeMatchers from "vitest-axe/matchers";
+
+// enregistre le matcher toHaveNoViolations (axe) sur l'expect de Vitest
+expect.extend(axeMatchers);
 
 // jsdom ne fournit pas ces API utilisées par certains composants → on les simule.
 if (!window.matchMedia) {

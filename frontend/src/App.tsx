@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { useLang } from "./i18n/LangContext";
 import { t } from "./i18n/translations";
 import Header from "./components/Header";
@@ -7,7 +8,9 @@ import Skills from "./components/Skills";
 import Career from "./components/Career";
 import Projects from "./components/Projects";
 import Services from "./components/Services";
-import Contact from "./components/Contact";
+// Contact (formulaire + react-phone-number-input ~155 ko de métadonnées) chargé
+// à la demande : sous la ligne de flottaison → hors du bundle initial.
+const Contact = lazy(() => import("./components/Contact"));
 import Footer from "./components/Footer";
 import Background from "./components/Background";
 import Reveal from "./components/Reveal";
@@ -41,9 +44,11 @@ export default function App() {
         <Services key={`services-${lang}`} />
         <div className="min-h-[calc(100dvh-4rem)] flex flex-col">
           <div className="grow flex flex-col justify-center">
-            <Reveal variant="up">
-              <Contact key={`contact-${lang}`} />
-            </Reveal>
+            <Suspense fallback={<div className="min-h-125" />}>
+              <Reveal variant="up">
+                <Contact key={`contact-${lang}`} />
+              </Reveal>
+            </Suspense>
           </div>
           <Footer key={`footer-${lang}`} />
         </div>

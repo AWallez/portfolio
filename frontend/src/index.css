@@ -4,6 +4,7 @@
 
 :root {
   /* thème clair */
+  color-scheme: light;
   --base: #eef3f2;
   --surface: #ffffff;
   --ink: #0a2229;
@@ -13,6 +14,7 @@
 }
 .dark {
   /* thème sombre */
+  color-scheme: dark;
   --base: #0d1418;
   --surface: #121c20;
   --ink: #e6edf3;

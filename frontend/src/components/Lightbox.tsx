@@ -90,8 +90,8 @@ export default function Lightbox({ light, dark, title, onClose }: Props) {
       onClick={(e) => {
         if (e.target === e.currentTarget && pressedBackdrop.current) onClose();
       }}
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-8
-                 bg-base/80 backdrop-blur-sm"
+      className="fixed inset-0 z-100 flex items-center justify-center overscroll-contain
+                 touch-manipulation p-4 sm:p-8 bg-base/80 backdrop-blur-sm"
     >
       <div className="relative w-full max-w-5xl">
         <button
