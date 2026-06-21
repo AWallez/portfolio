@@ -109,7 +109,7 @@ export default function CvModal({ onClose }: Props) {
       const vw = window.innerWidth;
       const vh = window.visualViewport?.height ?? window.innerHeight;
       const availW = Math.min(vw * 0.95, 896) - 28; // - padding viewer (p-3.5)
-      const availH = Math.min(vh * 0.92, 1000) - 56 - 28; // - barre - padding
+      const availH = Math.min(vh * 0.92, 1200) - 56 - 28; // - barre - padding
       if (availW <= 0 || availH <= 0) return;
 
       for (let n = 1; n <= pdf.numPages; n++) {
