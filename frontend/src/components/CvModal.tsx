@@ -307,6 +307,8 @@ export default function CvModal({ onClose }: Props) {
             {/* contrôles de zoom flottants */}
             {!error && (
               <div
+                onPointerDown={(e) => e.stopPropagation()}
+                onDoubleClick={(e) => e.stopPropagation()}
                 className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1
                            rounded-lg border border-line bg-base/90 px-1.5 py-1 shadow-md backdrop-blur-xs"
               >
