@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import PhoneInput, {
   isValidPhoneNumber,
   type Country,
@@ -32,6 +32,39 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // URL de l'API : vide en prod (même origine) ; http://localhost:3001 en dev (.env.development)
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
+// Clé de site Turnstile (publique) — widget anti-bot protégeant l'envoi du formulaire.
+const TURNSTILE_SITE_KEY = "0x4AAAAAADouXa_GUdi-_H_E";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+      remove: (id: string) => void;
+      reset: (id: string) => void;
+    };
+  }
+}
+
+// Charge le script Turnstile une seule fois (à la demande, quand Contact est monté).
+function loadTurnstile(): Promise<void> {
+  if (window.turnstile) return Promise.resolve();
+  const existing = document.querySelector<HTMLScriptElement>(
+    "script[data-turnstile]",
+  );
+  if (existing)
+    return new Promise((r) => existing.addEventListener("load", () => r()));
+  return new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    s.async = true;
+    s.defer = true;
+    s.dataset.turnstile = "true";
+    s.addEventListener("load", () => resolve());
+    document.head.appendChild(s);
+  });
+}
+
 export default function Contact() {
   const { lang } = useLang();
   const [status, setStatus] = useState<Status>("idle");
@@ -42,6 +75,31 @@ export default function Contact() {
   // pays courant du champ tél. → placeholder d'exemple correspondant à la région
   const [country, setCountry] = useState<Country>("FR");
   const phonePlaceholder = getExampleNumber(country, examples)?.formatNational();
+  // anti-bot Turnstile : token récupéré quand le widget se valide (managed → auto)
+  const [captchaToken, setCaptchaToken] = useState("");
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadTurnstile().then(() => {
+      if (cancelled || !widgetRef.current || !window.turnstile) return;
+      widgetIdRef.current = window.turnstile.render(widgetRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        theme: "auto",
+        callback: (token: string) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, []);
 
   // styles réutilisés pour les champs
   const field =
@@ -97,12 +155,16 @@ export default function Contact() {
       const res = await fetch(`${API_URL}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, cfTurnstileToken: captchaToken }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setStatus("sent");
     } catch {
       setStatus("error");
+      // réarme le widget anti-bot pour permettre une nouvelle tentative
+      if (widgetIdRef.current && window.turnstile)
+        window.turnstile.reset(widgetIdRef.current);
+      setCaptchaToken("");
     }
   }
 
@@ -340,6 +402,9 @@ export default function Contact() {
                 {t("contact", "error", lang)}
               </p>
             )}
+
+            {/* widget anti-bot Turnstile (invisible la plupart du temps) */}
+            <div ref={widgetRef} className="flex justify-center empty:hidden" />
 
             {/* Bouton */}
             <button
