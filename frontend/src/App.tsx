@@ -6,10 +6,11 @@ import Hero from "./components/Hero";
 import About from "./components/About";
 import Skills from "./components/Skills";
 import Career from "./components/Career";
-import Projects from "./components/Projects";
 import Services from "./components/Services";
-// Contact (formulaire + react-phone-number-input ~155 ko de métadonnées) chargé
-// à la demande : sous la ligne de flottaison → hors du bundle initial.
+// Sous la ligne de flottaison → chargés à la demande, hors du bundle initial :
+// - Projects embarque 10 SVG inline (light+dark) via ?raw,
+// - Contact tire react-phone-number-input (~155 ko de métadonnées).
+const Projects = lazy(() => import("./components/Projects"));
 const Contact = lazy(() => import("./components/Contact"));
 import Footer from "./components/Footer";
 import Background from "./components/Background";
@@ -40,7 +41,9 @@ export default function App() {
         </div>
         <Skills key={`skills-${lang}`} />
         <Career key={`career-${lang}`} />
-        <Projects key={`projects-${lang}`} />
+        <Suspense fallback={<div className="min-h-screen" />}>
+          <Projects key={`projects-${lang}`} />
+        </Suspense>
         <Services key={`services-${lang}`} />
         <div className="min-h-[calc(100dvh-4rem)] flex flex-col">
           <div className="grow flex flex-col justify-center">
