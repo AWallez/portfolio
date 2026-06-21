@@ -12,5 +12,13 @@ www.alexiswallez.fr {
 }
 
 alexiswallez.fr {
+	# En-têtes de sécurité ajoutés à l'edge (HSTS + Permissions-Policy).
+	# X-Frame-Options / X-Content-Type-Options / Referrer-Policy sont déjà posés
+	# par Nginx (web) et traversent Caddy. CSP volontairement omise (script anti-flash inline).
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+		-Server
+	}
 	reverse_proxy web:80
 }
