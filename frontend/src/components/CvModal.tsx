@@ -96,20 +96,27 @@ export default function CvModal({ onClose }: Props) {
       });
       tasks.length = 0;
       container.innerHTML = "";
-      // 1 page → centrée verticalement ; plusieurs → empilées depuis le haut
-      container.classList.toggle("justify-center", pdf.numPages === 1);
-      container.classList.toggle("justify-start", pdf.numPages > 1);
+      const multi = pdf.numPages > 1;
+      // 1 page → wrap serré sans scroll ; plusieurs → empilées + scroll
+      container.classList.toggle("justify-center", !multi);
+      container.classList.toggle("justify-start", multi);
+      container.classList.toggle("overflow-hidden", !multi);
+      container.classList.toggle("overflow-auto", multi);
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const availW = container.clientWidth - 32; // padding p-4 (16px × 2)
-      const availH = container.clientHeight - 32;
-      if (availW <= 0 || availH <= 0) return; // pas encore dimensionné
+      // Taille calculée d'après la FENÊTRE (pas le conteneur) → la modale épouse le
+      // CV, pas l'inverse. Plafonds absolus (896 / 1000) : ne grandit plus au dézoom.
+      const vw = window.innerWidth;
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const availW = Math.min(vw * 0.95, 896) - 28; // - padding viewer (p-3.5)
+      const availH = Math.min(vh * 0.92, 1000) - 56 - 28; // - barre - padding
+      if (availW <= 0 || availH <= 0) return;
 
       for (let n = 1; n <= pdf.numPages; n++) {
         const page = await pdf.getPage(n);
         if (cancelled || myGen !== gen) return;
         const base = page.getViewport({ scale: 1 });
-        // « contain » : la page entière tient dans la zone (pas de scroll par page)
+        // « contain » : la page entière tient dans la zone calculée
         const fit = Math.min(availW / base.width, availH / base.height);
         const viewport = page.getViewport({ scale: fit * dpr });
         const canvas = document.createElement("canvas");
@@ -146,12 +153,13 @@ export default function CvModal({ onClose }: Props) {
         if (!cancelled) console.error("Rendu PDF échoué:", e);
       });
 
-    const ro = new ResizeObserver(schedule);
-    ro.observe(container);
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
 
     return () => {
       cancelled = true;
-      ro.disconnect();
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
       cancelAnimationFrame(raf);
       tasks.forEach((task) => {
         try {
@@ -176,13 +184,12 @@ export default function CvModal({ onClose }: Props) {
       onClick={(e) => {
         if (e.target === e.currentTarget && pressedBackdrop.current) onClose();
       }}
-      className="fixed inset-0 z-100 overscroll-contain touch-manipulation
-                 bg-base/80 backdrop-blur-sm p-0 sm:p-8
-                 sm:flex sm:items-center sm:justify-center"
+      className="fixed inset-0 z-100 flex items-center justify-center overscroll-contain
+                 touch-manipulation bg-base/80 backdrop-blur-sm p-3 sm:p-8"
     >
       <div
-        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-base shadow-2xl
-                   sm:h-[90dvh] sm:max-w-4xl sm:rounded-xl sm:border sm:border-line"
+        className="relative flex max-h-[92dvh] max-w-[95vw] flex-col overflow-hidden
+                   rounded-xl border border-line bg-base shadow-2xl sm:max-w-4xl"
       >
         {/* barre d'outils : (titre + télécharger) à gauche, fermer plaqué à droite */}
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
@@ -217,7 +224,7 @@ export default function CvModal({ onClose }: Props) {
         <div
           ref={viewerRef}
           aria-label={t("a11y", "cvTitle", lang)}
-          className="min-h-0 flex-1 w-full overflow-auto p-4 flex flex-col items-center gap-4"
+          className="flex w-full flex-col items-center gap-4 p-3.5"
         />
       </div>
     </div>,
