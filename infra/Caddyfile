@@ -6,6 +6,11 @@
 	email wallezalexis@gmail.com
 }
 
+# www → domaine principal (canonique)
+www.alexiswallez.fr {
+	redir https://alexiswallez.fr{uri} permanent
+}
+
 alexiswallez.fr {
 	reverse_proxy web:80
 }
