@@ -242,7 +242,7 @@ export default function CvModal({ onClose }: Props) {
                          border border-line text-ink hover:border-accent hover:text-accent transition"
             >
               <Download size={14} aria-hidden />
-              <span className="hidden xs:inline">{t("a11y", "downloadCV", lang)}</span>
+              <span className="hidden sm:inline">{t("a11y", "downloadCV", lang)}</span>
             </a>
           </div>
           <div className="flex shrink-0 items-center gap-2">
