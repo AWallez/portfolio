@@ -97,9 +97,11 @@ services:
       web:
         condition: service_healthy
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp" # HTTP/3 (QUIC)
+      # 80/443 du NAS sont pris par le nginx système d'UGOS → on écoute en ports
+      # hauts ; la box redirige le 80/443 public vers 8080/8443 (NAT).
+      - "8080:80"
+      - "8443:443"
+      - "8443:443/udp" # HTTP/3 (QUIC)
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data # certificats Let's Encrypt — À PERSISTER (rate-limit ACME)
