@@ -80,13 +80,29 @@ export default function Contact() {
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
+  // thème courant, réactif au toggle du header (observe la classe `dark` sur <html>)
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark"),
+  );
+  useEffect(() => {
+    const el = document.documentElement;
+    const obs = new MutationObserver(() =>
+      setDark(el.classList.contains("dark")),
+    );
+    obs.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
+  // (re)rend le widget Turnstile en suivant la langue (i18n) et le thème du site
   useEffect(() => {
     let cancelled = false;
     loadTurnstile().then(() => {
       if (cancelled || !widgetRef.current || !window.turnstile) return;
       widgetIdRef.current = window.turnstile.render(widgetRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
-        theme: "auto",
+        theme: dark ? "dark" : "light", // calé sur le thème clair/sombre du site
+        language: lang, // FR/EN selon le sélecteur du header
+        appearance: "interaction-only", // discret : visible seulement si défi nécessaire
         callback: (token: string) => setCaptchaToken(token),
         "expired-callback": () => setCaptchaToken(""),
         "error-callback": () => setCaptchaToken(""),
@@ -99,7 +115,7 @@ export default function Contact() {
         widgetIdRef.current = null;
       }
     };
-  }, []);
+  }, [lang, dark]);
 
   // styles réutilisés pour les champs
   const field =
