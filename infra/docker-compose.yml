@@ -63,6 +63,7 @@ services:
       NTFY_URL: http://ntfy:80
       NTFY_TOPIC: ${NTFY_TOPIC}
       NTFY_TOKEN: ${NTFY_TOKEN:-} # token de publication ntfy (auth activée)
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-} # secret anti-bot Cloudflare Turnstile
       CORS_ORIGIN: ${SITE_URL}
     depends_on:
       postgres:
