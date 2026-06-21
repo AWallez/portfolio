@@ -68,7 +68,9 @@ services:
       ntfy:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3001/health || exit 1"]
+      # 127.0.0.1 (pas localhost) : dans le conteneur, localhost résout d'abord en
+      # IPv6 ::1, or l'API n'écoute qu'en IPv4 → "connection refused" au healthcheck.
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3001/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
