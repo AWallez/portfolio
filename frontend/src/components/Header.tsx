@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { Menu, X, Download } from "lucide-react";
+import { Menu, X, Eye } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
 import { useLang } from "../i18n/LangContext";
 import { useActiveSection } from "../hooks/useActiveSection";
@@ -127,7 +127,7 @@ export default function Header() {
               title={t("a11y", "viewCV", lang)}
               className="hidden nav:inline-flex items-center gap-1.5 font-mono text-sm px-3 py-1 rounded border border-line hover:border-accent hover:text-accent transition"
             >
-              <Download size={14} aria-hidden />
+              <Eye size={14} aria-hidden />
               CV
             </button>
             <button
@@ -223,7 +223,7 @@ export default function Header() {
                 aria-label={t("a11y", "viewCV", lang)}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 font-mono text-sm px-3 py-2 rounded-lg border border-line text-ink hover:border-accent hover:text-accent transition"
               >
-                <Download size={15} className="text-accent" aria-hidden />
+                <Eye size={15} className="text-accent" aria-hidden />
                 CV
               </button>
             </div>
