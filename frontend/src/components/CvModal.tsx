@@ -1,24 +1,32 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Download } from "lucide-react";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+
+// worker PDF.js (rendu hors thread principal). Bundlé par Vite (?url).
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const CV_URL = "/cv-alexis-wallez.pdf";
 
 type Props = { onClose: () => void };
 
 /**
- * Aperçu plein écran du CV (PDF) avec bouton de téléchargement.
- * Même mécanique que <Lightbox> : portail sur <body>, focus-trap (WCAG 2.4.3),
- * fermeture Échap/clic-fond, et verrouillage du scroll de l'arrière-plan.
+ * Aperçu plein écran du CV (PDF) rendu nous-mêmes via PDF.js sur <canvas> :
+ * aucune barre du lecteur du navigateur, rendu identique partout (iOS compris).
+ * Même mécanique de modale que <Lightbox> (portail, focus-trap, Échap, scroll-lock).
  */
 export default function CvModal({ onClose }: Props) {
   const { lang } = useLang();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
   const pressedBackdrop = useRef(false);
 
+  // --- modale : focus-trap (WCAG 2.4.3), Échap, scroll-lock de l'arrière-plan ---
   useEffect(() => {
     const prevFocus = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
@@ -51,8 +59,6 @@ export default function CvModal({ onClose }: Props) {
     };
     document.addEventListener("keydown", onKey);
 
-    // verrouille le scroll de l'arrière-plan (<html> est le conteneur de scroll),
-    // en compensant la largeur de la scrollbar pour éviter un saut horizontal.
     const docEl = document.documentElement;
     const scrollbarW = window.innerWidth - docEl.clientWidth;
     const prevOverflow = docEl.style.overflow;
@@ -67,6 +73,96 @@ export default function CvModal({ onClose }: Props) {
       prevFocus?.focus?.();
     };
   }, [onClose]);
+
+  // --- rendu du PDF sur canvas (PDF.js), refait à chaque changement de taille ---
+  useEffect(() => {
+    const container = viewerRef.current;
+    if (!container) return;
+    let cancelled = false;
+    let gen = 0;
+    let pdf: PDFDocumentProxy | null = null;
+    let raf = 0;
+    const tasks: RenderTask[] = [];
+
+    const render = async () => {
+      if (!pdf || cancelled) return;
+      const myGen = ++gen;
+      tasks.forEach((task) => {
+        try {
+          task.cancel();
+        } catch {
+          /* noop */
+        }
+      });
+      tasks.length = 0;
+      container.innerHTML = "";
+      // 1 page → centrée verticalement ; plusieurs → empilées depuis le haut
+      container.classList.toggle("justify-center", pdf.numPages === 1);
+      container.classList.toggle("justify-start", pdf.numPages > 1);
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const availW = container.clientWidth - 32; // padding p-4 (16px × 2)
+      const availH = container.clientHeight - 32;
+      if (availW <= 0 || availH <= 0) return; // pas encore dimensionné
+
+      for (let n = 1; n <= pdf.numPages; n++) {
+        const page = await pdf.getPage(n);
+        if (cancelled || myGen !== gen) return;
+        const base = page.getViewport({ scale: 1 });
+        // « contain » : la page entière tient dans la zone (pas de scroll par page)
+        const fit = Math.min(availW / base.width, availH / base.height);
+        const viewport = page.getViewport({ scale: fit * dpr });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        canvas.style.width = `${Math.floor(base.width * fit)}px`;
+        canvas.style.height = `${Math.floor(base.height * fit)}px`;
+        canvas.className = "rounded shadow-md";
+        container.appendChild(canvas);
+        const task = page.render({ canvas, viewport });
+        tasks.push(task);
+        try {
+          await task.promise;
+        } catch {
+          /* rendu annulé (resize/fermeture) */
+        }
+        if (cancelled || myGen !== gen) return;
+      }
+    };
+
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(render);
+    };
+
+    const loadingTask = pdfjsLib.getDocument({ url: CV_URL });
+    loadingTask.promise
+      .then((doc) => {
+        if (cancelled) return;
+        pdf = doc;
+        render();
+      })
+      .catch((e) => {
+        if (!cancelled) console.error("Rendu PDF échoué:", e);
+      });
+
+    const ro = new ResizeObserver(schedule);
+    ro.observe(container);
+
+    return () => {
+      cancelled = true;
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+      tasks.forEach((task) => {
+        try {
+          task.cancel();
+        } catch {
+          /* noop */
+        }
+      });
+      loadingTask.destroy();
+    };
+  }, []);
 
   return createPortal(
     <div
@@ -117,12 +213,11 @@ export default function CvModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* aperçu du PDF (le bouton Télécharger reste le secours si le rendu inline
-            n'est pas supporté, notamment sur certains navigateurs mobiles) */}
-        <iframe
-          src={`${CV_URL}#toolbar=0&navpanes=0&view=Fit`}
-          title={t("a11y", "cvTitle", lang)}
-          className="min-h-0 flex-1 w-full bg-white"
+        {/* aperçu du PDF rendu sur canvas (le bouton Télécharger reste le secours) */}
+        <div
+          ref={viewerRef}
+          aria-label={t("a11y", "cvTitle", lang)}
+          className="min-h-0 flex-1 w-full overflow-auto p-4 flex flex-col items-center gap-4"
         />
       </div>
     </div>,
