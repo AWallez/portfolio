@@ -20,5 +20,7 @@ export const config = {
   ntfy: {
     url: required("NTFY_URL"),
     topic: required("NTFY_TOPIC"),
+    // optionnel : présent quand l'auth ntfy est activée (token de publication)
+    token: process.env.NTFY_TOKEN,
   },
 };

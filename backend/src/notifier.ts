@@ -19,12 +19,18 @@ export async function notifyContact(c: ContactNotification): Promise<void> {
     timeZone: "Europe/Paris",
   }).format(new Date());
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  // ntfy protégé par auth (deny-all) → on s'authentifie avec un token si configuré.
+  if (config.ntfy.token) {
+    headers.Authorization = `Bearer ${config.ntfy.token}`;
+  }
+
   const res = await fetch(config.ntfy.url.replace(/\/$/, ""), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       topic: config.ntfy.topic,
-      title: `Nouveau message de ${c.firstname} ${c.lastname}`,
+      title: `${c.firstname} ${c.lastname}`,
       message: `${when} · ${c.type}\n${c.email}${c.phone ? " · " + c.phone : ""}\n\n${c.message}`,
       priority: 4,
       tags: ["envelope"],
