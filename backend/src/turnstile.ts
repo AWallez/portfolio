@@ -25,9 +25,16 @@ export async function verifyTurnstile(
         body,
       },
     );
-    const data = (await res.json()) as { success?: boolean };
+    const data = (await res.json()) as {
+      success?: boolean;
+      "error-codes"?: string[];
+    };
+    if (data.success !== true) {
+      console.warn("Turnstile refusé:", data["error-codes"] ?? data);
+    }
     return data.success === true;
-  } catch {
+  } catch (err) {
+    console.error("Turnstile injoignable:", (err as Error).message);
     return false;
   }
 }
