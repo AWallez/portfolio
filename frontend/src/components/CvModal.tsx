@@ -53,26 +53,9 @@ export default function CvModal({ onClose }: Props) {
 
   const [size, setSize] = useState(() => computeSizeFor(A4_RATIO));
   const [loading, setLoading] = useState(true);
+  const [pageReady, setPageReady] = useState(false);
 
-  // rend la page 1 dans le canvas à la taille courante
-  const renderPage = useCallback(() => {
-    const page = pageRef.current;
-    const canvas = canvasRef.current;
-    if (!page || !canvas || size.w <= 0) return;
-    taskRef.current?.cancel();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const base = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: (size.w / base.width) * dpr });
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    const task = page.render({ canvas, viewport });
-    taskRef.current = task;
-    task.promise.catch(() => {
-      /* rendu annulé (resize/fermeture) */
-    });
-  }, [size.w]);
-
-  // chargement du PDF (une fois) → lit le ratio réel, puis premier rendu
+  // chargement du PDF (une fois) → lit le ratio réel, ajuste la taille, signale prêt
   useEffect(() => {
     const loadingTask = pdfjsLib.getDocument({ url: CV_URL });
     let cancelled = false;
@@ -84,7 +67,7 @@ export default function CvModal({ onClose }: Props) {
         const base = page.getViewport({ scale: 1 });
         ratioRef.current = base.width / base.height; // ratio exact de la page
         setSize(computeSize());
-        setLoading(false);
+        setPageReady(true);
       })
       .catch((e) => {
         if (!cancelled) console.error("Rendu PDF échoué:", e);
@@ -96,10 +79,23 @@ export default function CvModal({ onClose }: Props) {
     };
   }, [computeSize]);
 
-  // (re)rendu à chaque changement de taille (resize / chargement)
+  // rend la page dès qu'elle est prête, puis à chaque changement de taille
   useEffect(() => {
-    renderPage();
-  }, [renderPage]);
+    const page = pageRef.current;
+    const canvas = canvasRef.current;
+    if (!pageReady || !page || !canvas || size.w <= 0) return;
+    taskRef.current?.cancel();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: (size.w / base.width) * dpr });
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const task = page.render({ canvas, viewport });
+    taskRef.current = task;
+    task.promise.then(() => setLoading(false)).catch(() => {
+      /* rendu annulé (resize/fermeture) */
+    });
+  }, [size.w, size.h, pageReady]);
 
   // recalcule la taille au redimensionnement / zoom / rotation
   useEffect(() => {
