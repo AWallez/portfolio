@@ -221,7 +221,7 @@ export default function Header() {
                   setCvOpen(true);
                 }}
                 aria-label={t("a11y", "viewCV", lang)}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 font-mono text-sm px-3 py-2 rounded-lg border border-line text-ink hover:border-accent hover:text-accent transition"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 font-mono text-sm px-3 py-2 rounded-lg border border-line text-muted hover:border-accent hover:text-accent transition"
               >
                 <Eye size={15} className="text-accent" aria-hidden />
                 CV
