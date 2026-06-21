@@ -4,9 +4,19 @@ import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 
-const CV_PDF = "/cv-alexis-wallez.pdf"; // version téléchargeable (officielle)
-const CV_SVG_LIGHT = "/cv-alexis-wallez.svg"; // version affichée, thème clair
-const CV_SVG_DARK = "/cv-alexis-wallez-dark.svg"; // version affichée, thème sombre
+// Fichiers du CV selon la langue : PDF téléchargeable + SVG affiché (clair/sombre).
+const CV_FILES = {
+  fr: {
+    pdf: "/cv-alexis-wallez.pdf",
+    light: "/cv-alexis-wallez.svg",
+    dark: "/cv-alexis-wallez-dark.svg",
+  },
+  en: {
+    pdf: "/cv-alexis-wallez-en.pdf",
+    light: "/cv-alexis-wallez-en.svg",
+    dark: "/cv-alexis-wallez-en-dark.svg",
+  },
+} as const;
 const A4_RATIO = 0.7071; // largeur / hauteur, avant lecture du ratio réel du SVG
 const MIN_SCALE = 1;
 const MAX_SCALE = 5;
@@ -41,6 +51,7 @@ type Props = { onClose: () => void };
  */
 export default function CvModal({ onClose }: Props) {
   const { lang } = useLang();
+  const cv = CV_FILES[lang]; // CV de la langue courante (FR/EN)
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -224,7 +235,7 @@ export default function CvModal({ onClose }: Props) {
               {t("a11y", "cvTitle", lang)}
             </span>
             <a
-              href={CV_PDF}
+              href={cv.pdf}
               download
               aria-label={t("a11y", "downloadCV", lang)}
               className="inline-flex shrink-0 items-center gap-1.5 font-mono text-sm px-3 py-1.5 rounded
@@ -269,7 +280,7 @@ export default function CvModal({ onClose }: Props) {
             {!error && (
               <>
                 <img
-                  src={CV_SVG_LIGHT}
+                  src={cv.light}
                   alt={t("a11y", "cvTitle", lang)}
                   draggable={false}
                   onLoad={(e) => {
@@ -288,7 +299,7 @@ export default function CvModal({ onClose }: Props) {
                   style={transformStyle}
                 />
                 <img
-                  src={CV_SVG_DARK}
+                  src={cv.dark}
                   alt=""
                   aria-hidden
                   draggable={false}
@@ -311,7 +322,7 @@ export default function CvModal({ onClose }: Props) {
               <div className="absolute inset-0 grid place-items-center p-6 text-center">
                 <p className="font-mono text-sm text-muted">
                   {t("a11y", "cvUnavailable", lang)}{" "}
-                  <a href={CV_PDF} download className="text-accent underline">
+                  <a href={cv.pdf} download className="text-accent underline">
                     {t("a11y", "downloadCV", lang)}
                   </a>
                 </p>
