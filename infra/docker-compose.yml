@@ -97,9 +97,9 @@ services:
       web:
         condition: service_healthy
     ports:
-      # 80/443 du NAS sont pris par le nginx système d'UGOS → on écoute en ports
-      # hauts ; la box redirige le 80/443 public vers 8080/8443 (NAT).
-      - "8080:80"
+      # 80/443 du NAS sont pris par le nginx système d'UGOS, et 8080 par ntfy →
+      # on écoute sur 8081/8443 ; la box redirige le 80/443 public vers eux (NAT).
+      - "8081:80"
       - "8443:443"
       - "8443:443/udp" # HTTP/3 (QUIC)
     volumes:
