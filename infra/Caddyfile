@@ -1,0 +1,11 @@
+# Reverse proxy public + HTTPS automatique (Let's Encrypt).
+# Caddy obtient et renouvelle le certificat tout seul, redirige 80→443,
+# et proxy vers le conteneur `web` (Nginx) via le réseau Docker interne.
+{
+	# e-mail ACME : reçoit les avis d'expiration de certificat
+	email wallezalexis@gmail.com
+}
+
+alexiswallez.fr {
+	reverse_proxy web:80
+}

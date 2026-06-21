@@ -84,9 +84,29 @@ services:
       api:
         condition: service_healthy
     ports:
-      # exposé sur le LAN ; le reverse proxy + HTTPS d'UGOS pointera ici
+      # exposé sur le LAN pour debug ; l'accès public passe par `caddy` (443).
+      # À retirer une fois le HTTPS validé pour ne garder que Caddy en entrée.
       - "${WEB_PORT:-8088}:80"
+
+  # --- Reverse proxy public + HTTPS auto (Let's Encrypt). Seule entrée 80/443. ---
+  caddy:
+    image: caddy:2-alpine
+    container_name: portfolio-caddy
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 (QUIC)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificats Let's Encrypt — À PERSISTER (rate-limit ACME)
+      - caddy_config:/config
 
 volumes:
   postgres_data:
   ntfy_data:
+  caddy_data:
+  caddy_config:
