@@ -1,24 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Download, Loader2 } from "lucide-react";
-import * as pdfjsLib from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import type { PDFPageProxy, RenderTask } from "pdfjs-dist";
+import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 
-// worker PDF.js (rendu hors thread principal). Bundlé par Vite (?url).
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+const CV_PDF = "/cv-alexis-wallez.pdf"; // version téléchargeable (officielle)
+const CV_SVG = "/cv-alexis-wallez.svg"; // version affichée (vectorielle, zoomable)
+const A4_RATIO = 0.7071; // largeur / hauteur, avant lecture du ratio réel du SVG
+const MIN_SCALE = 1;
+const MAX_SCALE = 5;
 
-const CV_URL = "/cv-alexis-wallez.pdf";
-const A4_RATIO = 0.7071; // largeur / hauteur (≈ 1/√2), avant lecture de la page
-
-// Dimensions d'affichage du CV (px CSS) calculées depuis la fenêtre + un ratio donné.
-// Pure (ratio en paramètre) → utilisable à l'init sans lire de ref pendant le rendu.
+// Dimensions d'affichage (px CSS) calculées depuis la fenêtre + un ratio donné.
 function computeSizeFor(ratio: number) {
   const vw = window.innerWidth;
   const vh = window.visualViewport?.height ?? window.innerHeight;
-  const availW = Math.min(vw * 0.95, 896) - 28; // - padding viewer (p-3.5)
+  const availW = Math.min(vw * 0.95, 896) - 28; // - padding (p-3.5)
   const availH = Math.min(vh * 0.92, 1200) - 56 - 28; // - barre - padding
   let h = Math.max(availH, 0);
   let w = h * ratio;
@@ -29,75 +25,111 @@ function computeSizeFor(ratio: number) {
   return { w: Math.floor(w), h: Math.floor(h) };
 }
 
+const clamp = (s: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
+
+type Transform = { scale: number; tx: number; ty: number };
+const IDENTITY: Transform = { scale: 1, tx: 0, ty: 0 };
+
 type Props = { onClose: () => void };
 
 /**
- * Aperçu plein écran du CV (PDF) rendu via PDF.js sur <canvas> : aucune barre du
- * navigateur, rendu identique partout (iOS compris). La taille est calculée en
- * React d'après l'écran (hauteur + largeur) et le ratio réel de la page → la
- * modale épouse le CV au format A4 et s'adapte en temps réel au redimensionnement.
+ * Aperçu plein écran du CV en SVG (vectoriel) : zoom net à l'infini, sans pdfjs.
+ * Zoom à la molette / au pinch / aux boutons, déplacement au drag. La taille de la
+ * modale épouse le format A4 (ratio réel du SVG) et s'adapte à l'écran en temps réel.
  * Même mécanique de modale que <Lightbox> (portail, focus-trap, Échap, scroll-lock).
  */
 export default function CvModal({ onClose }: Props) {
   const { lang } = useLang();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pageRef = useRef<PDFPageProxy | null>(null);
-  const taskRef = useRef<RenderTask | null>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
   const ratioRef = useRef(A4_RATIO);
   const pressedBackdrop = useRef(false);
 
-  // version qui lit le ratio réel (cantonnée aux effets, jamais au rendu)
   const computeSize = useCallback(() => computeSizeFor(ratioRef.current), []);
-
   const [size, setSize] = useState(() => computeSizeFor(A4_RATIO));
-  const [loading, setLoading] = useState(true);
-  const [pageReady, setPageReady] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
 
-  // chargement du PDF (une fois) → lit le ratio réel, ajuste la taille, signale prêt
-  useEffect(() => {
-    const loadingTask = pdfjsLib.getDocument({ url: CV_URL });
-    let cancelled = false;
-    loadingTask.promise
-      .then(async (pdf) => {
-        const page = await pdf.getPage(1);
-        if (cancelled) return;
-        pageRef.current = page;
-        const base = page.getViewport({ scale: 1 });
-        ratioRef.current = base.width / base.height; // ratio exact de la page
-        setSize(computeSize());
-        setPageReady(true);
-      })
-      .catch((e) => {
-        if (!cancelled) console.error("Rendu PDF échoué:", e);
-      });
-    return () => {
-      cancelled = true;
-      taskRef.current?.cancel();
-      loadingTask.destroy();
-    };
-  }, [computeSize]);
+  // transform (zoom/déplacement) : ref = source de vérité, state = rendu
+  const [transform, setTransform] = useState<Transform>(IDENTITY);
+  const transformRef = useRef<Transform>(IDENTITY);
+  const apply = useCallback((next: Transform) => {
+    transformRef.current = next;
+    setTransform(next);
+  }, []);
+  const reset = useCallback(() => apply(IDENTITY), [apply]);
 
-  // rend la page dès qu'elle est prête, puis à chaque changement de taille
-  useEffect(() => {
-    const page = pageRef.current;
-    const canvas = canvasRef.current;
-    if (!pageReady || !page || !canvas || size.w <= 0) return;
-    taskRef.current?.cancel();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const base = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: (size.w / base.width) * dpr });
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    const task = page.render({ canvas, viewport });
-    taskRef.current = task;
-    task.promise.then(() => setLoading(false)).catch(() => {
-      /* rendu annulé (resize/fermeture) */
-    });
-  }, [size.w, size.h, pageReady]);
+  // zoom centré sur un point (coords écran) en le gardant fixe
+  const zoomAt = useCallback(
+    (clientX: number, clientY: number, factor: number) => {
+      const el = viewerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const px = clientX - rect.left - rect.width / 2;
+      const py = clientY - rect.top - rect.height / 2;
+      const cur = transformRef.current;
+      const ns = clamp(cur.scale * factor);
+      if (ns === cur.scale) return;
+      if (ns === 1) {
+        apply(IDENTITY);
+        return;
+      }
+      const r = ns / cur.scale;
+      apply({ scale: ns, tx: px - r * (px - cur.tx), ty: py - r * (py - cur.ty) });
+    },
+    [apply],
+  );
 
-  // recalcule la taille au redimensionnement / zoom / rotation
+  const zoomByCenter = useCallback(
+    (factor: number) => {
+      const el = viewerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      zoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, factor);
+    },
+    [zoomAt],
+  );
+
+  // --- gestes : molette (zoom), drag (déplacement), pinch (zoom tactile) ---
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinchDist = useRef(0);
+
+  const onWheel = (e: React.WheelEvent) => {
+    zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+  };
+  const onPointerDown = (e: React.PointerEvent) => {
+    viewerRef.current?.setPointerCapture(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 2) {
+      const [a, b] = [...pointers.current.values()];
+      pinchDist.current = Math.hypot(a.x - b.x, a.y - b.y);
+    }
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const p = pointers.current.get(e.pointerId);
+    if (!p) return;
+    const dx = e.clientX - p.x;
+    const dy = e.clientY - p.y;
+    p.x = e.clientX;
+    p.y = e.clientY;
+    if (pointers.current.size >= 2) {
+      const [a, b] = [...pointers.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinchDist.current > 0)
+        zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, dist / pinchDist.current);
+      pinchDist.current = dist;
+    } else if (transformRef.current.scale > 1) {
+      const cur = transformRef.current;
+      apply({ ...cur, tx: cur.tx + dx, ty: cur.ty + dy });
+    }
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) pinchDist.current = 0;
+  };
+
+  // --- recalcule la taille au redimensionnement / zoom / rotation ---
   useEffect(() => {
     const onResize = () => setSize(computeSize());
     window.addEventListener("resize", onResize);
@@ -156,6 +188,10 @@ export default function CvModal({ onClose }: Props) {
     };
   }, [onClose]);
 
+  const zoomBtn =
+    "grid h-8 w-8 place-items-center rounded-md text-ink hover:text-accent " +
+    "disabled:opacity-40 disabled:hover:text-ink transition";
+
   return createPortal(
     <div
       ref={dialogRef}
@@ -182,7 +218,7 @@ export default function CvModal({ onClose }: Props) {
               {t("a11y", "cvTitle", lang)}
             </span>
             <a
-              href={CV_URL}
+              href={CV_PDF}
               download
               aria-label={t("a11y", "downloadCV", lang)}
               className="inline-flex shrink-0 items-center gap-1.5 font-mono text-sm px-3 py-1.5 rounded
@@ -204,17 +240,103 @@ export default function CvModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* aperçu : zone dimensionnée au format A4 dès l'ouverture (pas de cadre vide) */}
-        <div className="flex items-center justify-center p-3.5">
+        {/* aperçu : zone A4 dimensionnée dès l'ouverture (pas de cadre vide) */}
+        <div className="p-3.5">
           <div
-            className="relative shrink-0 overflow-hidden rounded shadow-md"
-            style={{ width: size.w, height: size.h }}
+            ref={viewerRef}
+            onWheel={onWheel}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onDoubleClick={(e) =>
+              zoomAt(e.clientX, e.clientY, transform.scale > 1 ? 1 / transform.scale : 2.2)
+            }
+            className="relative touch-none select-none overflow-hidden rounded shadow-md bg-white"
+            style={{
+              width: size.w,
+              height: size.h,
+              cursor: transform.scale > 1 ? "grab" : "auto",
+            }}
           >
-            <canvas ref={canvasRef} className="block h-full w-full" />
-            {loading && (
+            {!error && (
+              <img
+                src={CV_SVG}
+                alt={t("a11y", "cvTitle", lang)}
+                draggable={false}
+                onLoad={(e) => {
+                  const img = e.currentTarget;
+                  if (img.naturalWidth && img.naturalHeight) {
+                    ratioRef.current = img.naturalWidth / img.naturalHeight;
+                    setSize(computeSize());
+                  }
+                  setLoaded(true);
+                }}
+                onError={() => {
+                  setError(true);
+                  setLoaded(true);
+                }}
+                className="h-full w-full object-contain"
+                style={{
+                  transform: `translate(${transform.tx}px, ${transform.ty}px) scale(${transform.scale})`,
+                  transformOrigin: "center",
+                }}
+              />
+            )}
+
+            {/* chargement */}
+            {!loaded && (
               <div className="absolute inset-0 grid place-items-center bg-surface/40">
                 <Loader2 className="h-7 w-7 animate-spin text-accent" aria-hidden />
                 <span className="sr-only">{t("a11y", "loading", lang)}</span>
+              </div>
+            )}
+
+            {/* secours si le SVG est introuvable */}
+            {error && (
+              <div className="absolute inset-0 grid place-items-center p-6 text-center">
+                <p className="font-mono text-sm text-muted">
+                  {t("a11y", "cvUnavailable", lang)}{" "}
+                  <a href={CV_PDF} download className="text-accent underline">
+                    {t("a11y", "downloadCV", lang)}
+                  </a>
+                </p>
+              </div>
+            )}
+
+            {/* contrôles de zoom flottants */}
+            {!error && (
+              <div
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1
+                           rounded-lg border border-line bg-base/90 px-1.5 py-1 shadow-md backdrop-blur-xs"
+              >
+                <button
+                  type="button"
+                  onClick={() => zoomByCenter(1 / 1.3)}
+                  disabled={transform.scale <= MIN_SCALE}
+                  aria-label={t("a11y", "zoomOut", lang)}
+                  className={zoomBtn}
+                >
+                  <ZoomOut size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={reset}
+                  disabled={transform.scale === 1 && transform.tx === 0 && transform.ty === 0}
+                  aria-label={t("a11y", "zoomReset", lang)}
+                  className={zoomBtn}
+                >
+                  <Maximize2 size={15} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => zoomByCenter(1.3)}
+                  disabled={transform.scale >= MAX_SCALE}
+                  aria-label={t("a11y", "zoomIn", lang)}
+                  className={zoomBtn}
+                >
+                  <ZoomIn size={16} aria-hidden />
+                </button>
               </div>
             )}
           </div>

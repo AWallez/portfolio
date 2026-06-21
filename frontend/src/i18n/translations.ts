@@ -110,6 +110,10 @@ export const translations = {
     viewCV: { fr: "Voir le CV", en: "View résumé" },
     cvTitle: { fr: "CV — Alexis Wallez", en: "Résumé — Alexis Wallez" },
     loading: { fr: "Chargement…", en: "Loading…" },
+    zoomIn: { fr: "Zoom avant", en: "Zoom in" },
+    zoomOut: { fr: "Zoom arrière", en: "Zoom out" },
+    zoomReset: { fr: "Réinitialiser le zoom", en: "Reset zoom" },
+    cvUnavailable: { fr: "Aperçu indisponible.", en: "Preview unavailable." },
     available: { fr: "Disponible", en: "Available" },
     availableLong: {
       fr: "Disponible pour mission freelance & alternance",
