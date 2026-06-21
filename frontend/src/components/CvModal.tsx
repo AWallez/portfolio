@@ -80,12 +80,13 @@ export default function CvModal({ onClose }: Props) {
       onClick={(e) => {
         if (e.target === e.currentTarget && pressedBackdrop.current) onClose();
       }}
-      className="fixed inset-0 z-100 flex items-center justify-center overscroll-contain
-                 touch-manipulation p-4 sm:p-8 bg-base/80 backdrop-blur-sm"
+      className="fixed inset-0 z-100 overscroll-contain touch-manipulation
+                 bg-base/80 backdrop-blur-sm p-0 sm:p-8
+                 sm:flex sm:items-center sm:justify-center"
     >
       <div
-        className="relative flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden
-                   rounded-xl border border-line bg-base shadow-2xl"
+        className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-base shadow-2xl
+                   sm:h-[90dvh] sm:max-w-4xl sm:rounded-xl sm:border sm:border-line"
       >
         {/* barre d'outils : titre + télécharger + fermer */}
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
@@ -119,7 +120,7 @@ export default function CvModal({ onClose }: Props) {
         {/* aperçu du PDF (le bouton Télécharger reste le secours si le rendu inline
             n'est pas supporté, notamment sur certains navigateurs mobiles) */}
         <iframe
-          src={`${CV_URL}#view=FitH`}
+          src={`${CV_URL}#toolbar=0&navpanes=0&view=Fit`}
           title={t("a11y", "cvTitle", lang)}
           className="min-h-0 flex-1 w-full bg-white"
         />
