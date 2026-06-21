@@ -5,7 +5,8 @@ import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 
 const CV_PDF = "/cv-alexis-wallez.pdf"; // version téléchargeable (officielle)
-const CV_SVG = "/cv-alexis-wallez.svg"; // version affichée (vectorielle, zoomable)
+const CV_SVG_LIGHT = "/cv-alexis-wallez.svg"; // version affichée, thème clair
+const CV_SVG_DARK = "/cv-alexis-wallez-dark.svg"; // version affichée, thème sombre
 const A4_RATIO = 0.7071; // largeur / hauteur, avant lecture du ratio réel du SVG
 const MIN_SCALE = 1;
 const MAX_SCALE = 5;
@@ -192,6 +193,11 @@ export default function CvModal({ onClose }: Props) {
     "grid h-8 w-8 place-items-center rounded-md text-ink hover:text-accent " +
     "disabled:opacity-40 disabled:hover:text-ink transition";
 
+  const transformStyle = {
+    transform: `translate(${transform.tx}px, ${transform.ty}px) scale(${transform.scale})`,
+    transformOrigin: "center" as const,
+  };
+
   return createPortal(
     <div
       ref={dialogRef}
@@ -252,7 +258,8 @@ export default function CvModal({ onClose }: Props) {
             onDoubleClick={(e) =>
               zoomAt(e.clientX, e.clientY, transform.scale > 1 ? 1 / transform.scale : 2.2)
             }
-            className="relative touch-none select-none overflow-hidden rounded shadow-md bg-white"
+            className="relative touch-none select-none overflow-hidden rounded shadow-md
+                       bg-white dark:bg-[#0d1418]"
             style={{
               width: size.w,
               height: size.h,
@@ -260,28 +267,35 @@ export default function CvModal({ onClose }: Props) {
             }}
           >
             {!error && (
-              <img
-                src={CV_SVG}
-                alt={t("a11y", "cvTitle", lang)}
-                draggable={false}
-                onLoad={(e) => {
-                  const img = e.currentTarget;
-                  if (img.naturalWidth && img.naturalHeight) {
-                    ratioRef.current = img.naturalWidth / img.naturalHeight;
-                    setSize(computeSize());
-                  }
-                  setLoaded(true);
-                }}
-                onError={() => {
-                  setError(true);
-                  setLoaded(true);
-                }}
-                className="h-full w-full object-contain"
-                style={{
-                  transform: `translate(${transform.tx}px, ${transform.ty}px) scale(${transform.scale})`,
-                  transformOrigin: "center",
-                }}
-              />
+              <>
+                <img
+                  src={CV_SVG_LIGHT}
+                  alt={t("a11y", "cvTitle", lang)}
+                  draggable={false}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    if (img.naturalWidth && img.naturalHeight) {
+                      ratioRef.current = img.naturalWidth / img.naturalHeight;
+                      setSize(computeSize());
+                    }
+                    setLoaded(true);
+                  }}
+                  onError={() => {
+                    setError(true);
+                    setLoaded(true);
+                  }}
+                  className="absolute inset-0 h-full w-full object-contain dark:hidden"
+                  style={transformStyle}
+                />
+                <img
+                  src={CV_SVG_DARK}
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  className="absolute inset-0 hidden h-full w-full object-contain dark:block"
+                  style={transformStyle}
+                />
+              </>
             )}
 
             {/* chargement */}
