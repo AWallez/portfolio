@@ -71,8 +71,8 @@ export const translations = {
     send: { fr: "Envoyer", en: "Send" },
     sending: { fr: "Envoi…", en: "Sending…" },
     success: {
-      fr: "Message envoyé, merci ! Je reviens vers vous vite.",
-      en: "Message sent, thank you! I’ll get back to you soon.",
+      fr: "Message envoyé, merci ! Je reviens vers vous au plus vite.",
+      en: "Message sent, thank you! I'll get back to you as soon as possible.",
     },
     error: {
       fr: "Oups, l’envoi a échoué. Réessayez ou écrivez-moi directement par email.",
@@ -109,6 +109,7 @@ export const translations = {
     },
     viewCV: { fr: "Voir le CV", en: "View résumé" },
     cvTitle: { fr: "CV — Alexis Wallez", en: "Résumé — Alexis Wallez" },
+    loading: { fr: "Chargement…", en: "Loading…" },
     available: { fr: "Disponible", en: "Available" },
     availableLong: {
       fr: "Disponible pour mission freelance & alternance",

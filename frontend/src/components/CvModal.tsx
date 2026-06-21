@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Download } from "lucide-react";
+import { X, Download, Loader2 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
+import type { PDFPageProxy, RenderTask } from "pdfjs-dist";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 
@@ -11,20 +11,106 @@ import { t } from "../i18n/translations";
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const CV_URL = "/cv-alexis-wallez.pdf";
+const A4_RATIO = 0.7071; // largeur / hauteur (≈ 1/√2), avant lecture de la page
+
+// Dimensions d'affichage du CV (px CSS) calculées depuis la fenêtre + un ratio donné.
+// Pure (ratio en paramètre) → utilisable à l'init sans lire de ref pendant le rendu.
+function computeSizeFor(ratio: number) {
+  const vw = window.innerWidth;
+  const vh = window.visualViewport?.height ?? window.innerHeight;
+  const availW = Math.min(vw * 0.95, 896) - 28; // - padding viewer (p-3.5)
+  const availH = Math.min(vh * 0.92, 1200) - 56 - 28; // - barre - padding
+  let h = Math.max(availH, 0);
+  let w = h * ratio;
+  if (w > availW) {
+    w = Math.max(availW, 0);
+    h = w / ratio;
+  }
+  return { w: Math.floor(w), h: Math.floor(h) };
+}
 
 type Props = { onClose: () => void };
 
 /**
- * Aperçu plein écran du CV (PDF) rendu nous-mêmes via PDF.js sur <canvas> :
- * aucune barre du lecteur du navigateur, rendu identique partout (iOS compris).
+ * Aperçu plein écran du CV (PDF) rendu via PDF.js sur <canvas> : aucune barre du
+ * navigateur, rendu identique partout (iOS compris). La taille est calculée en
+ * React d'après l'écran (hauteur + largeur) et le ratio réel de la page → la
+ * modale épouse le CV au format A4 et s'adapte en temps réel au redimensionnement.
  * Même mécanique de modale que <Lightbox> (portail, focus-trap, Échap, scroll-lock).
  */
 export default function CvModal({ onClose }: Props) {
   const { lang } = useLang();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const viewerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pageRef = useRef<PDFPageProxy | null>(null);
+  const taskRef = useRef<RenderTask | null>(null);
+  const ratioRef = useRef(A4_RATIO);
   const pressedBackdrop = useRef(false);
+
+  // version qui lit le ratio réel (cantonnée aux effets, jamais au rendu)
+  const computeSize = useCallback(() => computeSizeFor(ratioRef.current), []);
+
+  const [size, setSize] = useState(() => computeSizeFor(A4_RATIO));
+  const [loading, setLoading] = useState(true);
+
+  // rend la page 1 dans le canvas à la taille courante
+  const renderPage = useCallback(() => {
+    const page = pageRef.current;
+    const canvas = canvasRef.current;
+    if (!page || !canvas || size.w <= 0) return;
+    taskRef.current?.cancel();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: (size.w / base.width) * dpr });
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const task = page.render({ canvas, viewport });
+    taskRef.current = task;
+    task.promise.catch(() => {
+      /* rendu annulé (resize/fermeture) */
+    });
+  }, [size.w]);
+
+  // chargement du PDF (une fois) → lit le ratio réel, puis premier rendu
+  useEffect(() => {
+    const loadingTask = pdfjsLib.getDocument({ url: CV_URL });
+    let cancelled = false;
+    loadingTask.promise
+      .then(async (pdf) => {
+        const page = await pdf.getPage(1);
+        if (cancelled) return;
+        pageRef.current = page;
+        const base = page.getViewport({ scale: 1 });
+        ratioRef.current = base.width / base.height; // ratio exact de la page
+        setSize(computeSize());
+        setLoading(false);
+      })
+      .catch((e) => {
+        if (!cancelled) console.error("Rendu PDF échoué:", e);
+      });
+    return () => {
+      cancelled = true;
+      taskRef.current?.cancel();
+      loadingTask.destroy();
+    };
+  }, [computeSize]);
+
+  // (re)rendu à chaque changement de taille (resize / chargement)
+  useEffect(() => {
+    renderPage();
+  }, [renderPage]);
+
+  // recalcule la taille au redimensionnement / zoom / rotation
+  useEffect(() => {
+    const onResize = () => setSize(computeSize());
+    window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
+    };
+  }, [computeSize]);
 
   // --- modale : focus-trap (WCAG 2.4.3), Échap, scroll-lock de l'arrière-plan ---
   useEffect(() => {
@@ -74,104 +160,6 @@ export default function CvModal({ onClose }: Props) {
     };
   }, [onClose]);
 
-  // --- rendu du PDF sur canvas (PDF.js), refait à chaque changement de taille ---
-  useEffect(() => {
-    const container = viewerRef.current;
-    if (!container) return;
-    let cancelled = false;
-    let gen = 0;
-    let pdf: PDFDocumentProxy | null = null;
-    let raf = 0;
-    const tasks: RenderTask[] = [];
-
-    const render = async () => {
-      if (!pdf || cancelled) return;
-      const myGen = ++gen;
-      tasks.forEach((task) => {
-        try {
-          task.cancel();
-        } catch {
-          /* noop */
-        }
-      });
-      tasks.length = 0;
-      container.innerHTML = "";
-      const multi = pdf.numPages > 1;
-      // 1 page → wrap serré sans scroll ; plusieurs → empilées + scroll
-      container.classList.toggle("justify-center", !multi);
-      container.classList.toggle("justify-start", multi);
-      container.classList.toggle("overflow-hidden", !multi);
-      container.classList.toggle("overflow-auto", multi);
-
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      // Taille calculée d'après la FENÊTRE (pas le conteneur) → la modale épouse le
-      // CV, pas l'inverse. Plafonds absolus (896 / 1000) : ne grandit plus au dézoom.
-      const vw = window.innerWidth;
-      const vh = window.visualViewport?.height ?? window.innerHeight;
-      const availW = Math.min(vw * 0.95, 896) - 28; // - padding viewer (p-3.5)
-      const availH = Math.min(vh * 0.92, 1200) - 56 - 28; // - barre - padding
-      if (availW <= 0 || availH <= 0) return;
-
-      for (let n = 1; n <= pdf.numPages; n++) {
-        const page = await pdf.getPage(n);
-        if (cancelled || myGen !== gen) return;
-        const base = page.getViewport({ scale: 1 });
-        // « contain » : la page entière tient dans la zone calculée
-        const fit = Math.min(availW / base.width, availH / base.height);
-        const viewport = page.getViewport({ scale: fit * dpr });
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.floor(viewport.width);
-        canvas.height = Math.floor(viewport.height);
-        canvas.style.width = `${Math.floor(base.width * fit)}px`;
-        canvas.style.height = `${Math.floor(base.height * fit)}px`;
-        canvas.className = "rounded shadow-md";
-        container.appendChild(canvas);
-        const task = page.render({ canvas, viewport });
-        tasks.push(task);
-        try {
-          await task.promise;
-        } catch {
-          /* rendu annulé (resize/fermeture) */
-        }
-        if (cancelled || myGen !== gen) return;
-      }
-    };
-
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(render);
-    };
-
-    const loadingTask = pdfjsLib.getDocument({ url: CV_URL });
-    loadingTask.promise
-      .then((doc) => {
-        if (cancelled) return;
-        pdf = doc;
-        render();
-      })
-      .catch((e) => {
-        if (!cancelled) console.error("Rendu PDF échoué:", e);
-      });
-
-    window.addEventListener("resize", schedule);
-    window.visualViewport?.addEventListener("resize", schedule);
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("resize", schedule);
-      window.visualViewport?.removeEventListener("resize", schedule);
-      cancelAnimationFrame(raf);
-      tasks.forEach((task) => {
-        try {
-          task.cancel();
-        } catch {
-          /* noop */
-        }
-      });
-      loadingTask.destroy();
-    };
-  }, []);
-
   return createPortal(
     <div
       ref={dialogRef}
@@ -220,12 +208,21 @@ export default function CvModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* aperçu du PDF rendu sur canvas (le bouton Télécharger reste le secours) */}
-        <div
-          ref={viewerRef}
-          aria-label={t("a11y", "cvTitle", lang)}
-          className="flex w-full flex-col items-center gap-4 p-3.5"
-        />
+        {/* aperçu : zone dimensionnée au format A4 dès l'ouverture (pas de cadre vide) */}
+        <div className="flex items-center justify-center p-3.5">
+          <div
+            className="relative shrink-0 overflow-hidden rounded shadow-md"
+            style={{ width: size.w, height: size.h }}
+          >
+            <canvas ref={canvasRef} className="block h-full w-full" />
+            {loading && (
+              <div className="absolute inset-0 grid place-items-center bg-surface/40">
+                <Loader2 className="h-7 w-7 animate-spin text-accent" aria-hidden />
+                <span className="sr-only">{t("a11y", "loading", lang)}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>,
     document.body,
