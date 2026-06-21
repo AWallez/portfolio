@@ -236,7 +236,7 @@ export default function Contact() {
             </div>
 
             {/* légende des champs requis */}
-            <p className="font-mono text-xs text-muted">
+            <p className="font-mono text-xs text-muted text-right">
               <span aria-hidden="true" className="text-accent">*</span>{" "}
               {t("contact", "required", lang)}
             </p>
