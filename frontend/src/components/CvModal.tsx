@@ -88,33 +88,33 @@ export default function CvModal({ onClose }: Props) {
         className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-base shadow-2xl
                    sm:h-[90dvh] sm:max-w-4xl sm:rounded-xl sm:border sm:border-line"
       >
-        {/* barre d'outils : titre + télécharger + fermer */}
+        {/* barre d'outils : (titre + télécharger) à gauche, fermer plaqué à droite */}
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-          <span className="hidden sm:inline font-mono text-sm text-muted truncate">
-            {t("a11y", "cvTitle", lang)}
-          </span>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="hidden sm:inline font-mono text-sm text-muted truncate">
+              {t("a11y", "cvTitle", lang)}
+            </span>
             <a
               href={CV_URL}
               download
               aria-label={t("a11y", "downloadCV", lang)}
-              className="inline-flex items-center gap-1.5 font-mono text-sm px-3 py-1.5 rounded
+              className="inline-flex shrink-0 items-center gap-1.5 font-mono text-sm px-3 py-1.5 rounded
                          border border-line text-ink hover:border-accent hover:text-accent transition"
             >
               <Download size={14} aria-hidden />
               <span className="hidden xs:inline">{t("a11y", "downloadCV", lang)}</span>
             </a>
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={onClose}
-              aria-label={t("projects", "close", lang)}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line
-                         bg-base text-ink hover:border-accent hover:text-accent transition"
-            >
-              <X size={18} aria-hidden />
-            </button>
           </div>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            aria-label={t("projects", "close", lang)}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line
+                       bg-base text-ink hover:border-accent hover:text-accent transition"
+          >
+            <X size={18} aria-hidden />
+          </button>
         </div>
 
         {/* aperçu du PDF (le bouton Télécharger reste le secours si le rendu inline
