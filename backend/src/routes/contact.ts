@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { pool } from "../db";
 import { notifyContact } from "../notifier";
+import { verifyTurnstile } from "../turnstile";
 
 type ContactBody = {
   firstname: string;
@@ -10,6 +11,7 @@ type ContactBody = {
   phone?: string; // optionnel
   message: string;
   company?: string; // honeypot anti-spam (doit rester vide)
+  cfTurnstileToken?: string; // jeton anti-bot Cloudflare Turnstile
 };
 
 // Validation côté serveur (JSON Schema natif Fastify → renvoie 400 automatiquement).
@@ -29,6 +31,7 @@ const bodySchema = {
     phone: { type: "string", maxLength: 40 }, // optionnel
     message: { type: "string", minLength: 1, maxLength: 5000 },
     company: { type: "string" }, // honeypot
+    cfTurnstileToken: { type: "string", maxLength: 4000 }, // jeton Turnstile
   },
 };
 
@@ -47,6 +50,12 @@ export async function contactRoutes(app: FastifyInstance) {
       // honeypot rempli → bot : on répond OK sans rien enregistrer ni notifier
       if (company && company.trim() !== "") {
         return reply.code(201).send({ ok: true });
+      }
+
+      // anti-bot Turnstile (si un secret est configuré côté serveur)
+      const captchaOk = await verifyTurnstile(req.body.cfTurnstileToken, req.ip);
+      if (!captchaOk) {
+        return reply.code(400).send({ ok: false, error: "captcha" });
       }
 
       const cleanPhone = phone?.trim() || null;

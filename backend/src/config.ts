@@ -17,6 +17,8 @@ export const config = {
     .split(",")
     .map((s) => s.trim()),
   databaseUrl: required("DATABASE_URL"),
+  // secret Turnstile (anti-bot). Optionnel : si absent, la vérif est sautée.
+  turnstileSecret: process.env.TURNSTILE_SECRET,
   ntfy: {
     url: required("NTFY_URL"),
     topic: required("NTFY_TOPIC"),
