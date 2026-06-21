@@ -245,16 +245,51 @@ export default function CvModal({ onClose }: Props) {
               <span className="hidden xs:inline">{t("a11y", "downloadCV", lang)}</span>
             </a>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            aria-label={t("projects", "close", lang)}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line
-                       bg-base text-ink hover:border-accent hover:text-accent transition"
-          >
-            <X size={18} aria-hidden />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {!error && (
+              <div className="flex items-center rounded-lg border border-line">
+                <button
+                  type="button"
+                  onClick={() => zoomByCenter(1 / 1.3)}
+                  disabled={transform.scale <= MIN_SCALE}
+                  aria-label={t("a11y", "zoomOut", lang)}
+                  className={zoomBtn}
+                >
+                  <ZoomOut size={16} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={reset}
+                  disabled={
+                    transform.scale === 1 && transform.tx === 0 && transform.ty === 0
+                  }
+                  aria-label={t("a11y", "zoomReset", lang)}
+                  className={zoomBtn}
+                >
+                  <Maximize2 size={15} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => zoomByCenter(1.3)}
+                  disabled={transform.scale >= MAX_SCALE}
+                  aria-label={t("a11y", "zoomIn", lang)}
+                  className={zoomBtn}
+                >
+                  <ZoomIn size={16} aria-hidden />
+                </button>
+              </div>
+            )}
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              aria-label={t("projects", "close", lang)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line
+                         bg-base text-ink hover:border-accent hover:text-accent transition"
+            >
+              <X size={18} aria-hidden />
+            </button>
+          </div>
         </div>
 
         {/* aperçu : zone A4 dimensionnée dès l'ouverture (pas de cadre vide) */}
@@ -329,43 +364,6 @@ export default function CvModal({ onClose }: Props) {
               </div>
             )}
 
-            {/* contrôles de zoom flottants */}
-            {!error && (
-              <div
-                onPointerDown={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => e.stopPropagation()}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1
-                           rounded-lg border border-line bg-base/90 px-1.5 py-1 shadow-md backdrop-blur-xs"
-              >
-                <button
-                  type="button"
-                  onClick={() => zoomByCenter(1 / 1.3)}
-                  disabled={transform.scale <= MIN_SCALE}
-                  aria-label={t("a11y", "zoomOut", lang)}
-                  className={zoomBtn}
-                >
-                  <ZoomOut size={16} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={reset}
-                  disabled={transform.scale === 1 && transform.tx === 0 && transform.ty === 0}
-                  aria-label={t("a11y", "zoomReset", lang)}
-                  className={zoomBtn}
-                >
-                  <Maximize2 size={15} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => zoomByCenter(1.3)}
-                  disabled={transform.scale >= MAX_SCALE}
-                  aria-label={t("a11y", "zoomIn", lang)}
-                  className={zoomBtn}
-                >
-                  <ZoomIn size={16} aria-hidden />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
