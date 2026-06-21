@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Menu, X, Download } from "lucide-react";
 import { useTheme } from "../hooks/useTheme";
 import { useLang } from "../i18n/LangContext";
 import { useActiveSection } from "../hooks/useActiveSection";
 import { t } from "../i18n/translations";
+
+// modale d'aperçu du CV (PDF) chargée à la demande
+const CvModal = lazy(() => import("./CvModal"));
 
 const SECTIONS = [
   "skills",
@@ -17,6 +20,7 @@ export default function Header() {
   const { theme, toggle } = useTheme();
   const { lang, toggle: toggleLang } = useLang();
   const [open, setOpen] = useState(false);
+  const [cvOpen, setCvOpen] = useState(false);
   const active = useActiveSection(SECTIONS);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -116,16 +120,16 @@ export default function Header() {
 
           {/* actions à droite */}
           <div className="text-muted flex flex-wrap items-center gap-2">
-            <a
-              href="/cv-alexis-wallez.pdf"
-              download
-              aria-label={t("a11y", "downloadCV", lang)}
-              title={t("a11y", "downloadCV", lang)}
+            <button
+              type="button"
+              onClick={() => setCvOpen(true)}
+              aria-label={t("a11y", "viewCV", lang)}
+              title={t("a11y", "viewCV", lang)}
               className="hidden nav:inline-flex items-center gap-1.5 font-mono text-sm px-3 py-1 rounded border border-line hover:border-accent hover:text-accent transition"
             >
               <Download size={14} aria-hidden />
               CV
-            </a>
+            </button>
             <button
               onClick={toggleLang}
               aria-label={t("a11y", "switchLang", lang)}
@@ -210,19 +214,27 @@ export default function Header() {
                   EN
                 </span>
               </button>
-              <a
-                href="/cv-alexis-wallez.pdf"
-                download
-                onClick={() => setOpen(false)}
-                aria-label={t("a11y", "downloadCV", lang)}
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setCvOpen(true);
+                }}
+                aria-label={t("a11y", "viewCV", lang)}
                 className="flex-1 inline-flex items-center justify-center gap-1.5 font-mono text-sm px-3 py-2 rounded-lg border border-line text-ink hover:border-accent hover:text-accent transition"
               >
                 <Download size={15} className="text-accent" aria-hidden />
                 CV
-              </a>
+              </button>
             </div>
           </div>
         </nav>
+
+      {cvOpen && (
+        <Suspense fallback={null}>
+          <CvModal onClose={() => setCvOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

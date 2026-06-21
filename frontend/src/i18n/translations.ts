@@ -107,6 +107,8 @@ export const translations = {
       fr: "Télécharger le CV (PDF)",
       en: "Download résumé (PDF)",
     },
+    viewCV: { fr: "Voir le CV", en: "View résumé" },
+    cvTitle: { fr: "CV — Alexis Wallez", en: "Résumé — Alexis Wallez" },
     available: { fr: "Disponible", en: "Available" },
     availableLong: {
       fr: "Disponible pour mission freelance & alternance",
