@@ -14,11 +14,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      # host 55432 (5432 ET 5433 sont déjà pris sur le NAS par UGOS) → conteneur 5432.
-      # exposé sur le LAN pour que l'API de dev (PC) s'y connecte.
-      # En prod, l'API tournera sur le NAS et parlera à Postgres via le réseau interne.
-      - "55432:5432"
+    # Aucun port publié : Postgres n'est joignable que par l'API via le réseau Docker
+    # interne. (Pour un accès admin ponctuel : `docker compose exec postgres psql ...`.)
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -83,10 +80,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    ports:
-      # exposé sur le LAN pour debug ; l'accès public passe par `caddy` (443).
-      # À retirer une fois le HTTPS validé pour ne garder que Caddy en entrée.
-      - "${WEB_PORT:-8088}:80"
+    # Aucun port publié : seul `caddy` (8081/8443) est l'entrée publique → il
+    # joint `web` via le réseau Docker interne. (Plus d'accès LAN direct en 8088.)
 
   # --- Reverse proxy public + HTTPS auto (Let's Encrypt). Seule entrée 80/443. ---
   caddy:
