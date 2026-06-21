@@ -36,6 +36,10 @@ services:
       # Relais APNs pour les notifs push iOS (app fermée).
       # Seul un "réveil" anonyme passe par ntfy.sh ; le message reste sur le NAS.
       NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+      # Auth : tout est refusé par défaut. On crée un user + token (write) pour l'API
+      # et on connecte l'appli du tél avec ce compte (read). Base persistée dans le volume.
+      NTFY_AUTH_FILE: /var/cache/ntfy/user.db
+      NTFY_AUTH_DEFAULT_ACCESS: deny-all
     ports:
       - "8080:80"
     volumes:
@@ -58,6 +62,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NTFY_URL: http://ntfy:80
       NTFY_TOPIC: ${NTFY_TOPIC}
+      NTFY_TOKEN: ${NTFY_TOKEN:-} # token de publication ntfy (auth activée)
       CORS_ORIGIN: ${SITE_URL}
     depends_on:
       postgres:
