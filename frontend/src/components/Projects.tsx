@@ -22,6 +22,7 @@ import persoDark from "../assets/projects/perso-dark.svg?raw";
 
 type Project = {
   name: string;
+  folder: { fr: string; en: string }; // libellé ~/dossier/ affiché sous l'image
   title: { fr: string; en: string };
   desc: { fr: string; en: string };
   tags: string[];
@@ -31,6 +32,7 @@ type Project = {
 const PROJECTS: Project[] = [
   {
     name: "clients",
+    folder: { fr: "clients", en: "clients" },
     title: { fr: "Projets web clients", en: "Client web projects" },
     desc: {
       fr: "Sites vitrines et applications web sur mesure pour artisans et indépendants : du front-end au déploiement. Dashboards de gestion (CRM, stock, réservations), espaces client et formulaires.",
@@ -41,6 +43,7 @@ const PROJECTS: Project[] = [
   },
   {
     name: "portfolio",
+    folder: { fr: "portfolio", en: "portfolio" },
     title: { fr: "Ce portfolio", en: "This portfolio" },
     desc: {
       fr: "Site full-stack React + TypeScript, API Node (Fastify) + PostgreSQL pour le formulaire de contact, conteneurisé (Docker) et auto-hébergé sur mon NAS. Accessibilité, SEO, tests et CI/CD.",
@@ -51,6 +54,7 @@ const PROJECTS: Project[] = [
   },
   {
     name: "reseau",
+    folder: { fr: "reseau", en: "network" },
     title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
     desc: {
       fr: "Segmentation VLAN, pare-feu, DNS, VPN et SSH ; liaison 10 GbE et stockage iSCSI ; administration et durcissement Linux.",
@@ -61,6 +65,7 @@ const PROJECTS: Project[] = [
   },
   {
     name: "homelab",
+    folder: { fr: "homelab", en: "homelab" },
     title: {
       fr: "Infrastructure auto-hébergée (NAS)",
       en: "Self-hosted infrastructure (NAS)",
@@ -74,6 +79,7 @@ const PROJECTS: Project[] = [
   },
   {
     name: "lab",
+    folder: { fr: "lab", en: "lab" },
     title: {
       fr: "Projets perso & lab DevOps",
       en: "Personal projects & DevOps lab",
@@ -156,7 +162,7 @@ export default function Projects() {
                 </div>
               )}
               {/* nom de dossier en mono, clin d'œil terminal */}
-              <p className="font-mono text-xs text-muted mb-2">~/{p.name}/</p>
+              <p className="font-mono text-xs text-muted mb-2">~/{p.folder[lang]}/</p>
 
               <h3 className="text-ink font-semibold mb-2">{p.title[lang]}</h3>
               <p className="text-sm text-muted leading-relaxed mb-4 grow">

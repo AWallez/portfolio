@@ -6,7 +6,7 @@ import Reveal from "./Reveal";
 
 type Service = {
   Icon: LucideIcon;
-  folder: string;
+  folder: { fr: string; en: string };
   name: { fr: string; en: string };
   desc: { fr: string; en: string };
   highlights: { fr: string[]; en: string[] };
@@ -15,7 +15,7 @@ type Service = {
 const SERVICES: Service[] = [
   {
     Icon: Globe,
-    folder: "dev-web/",
+    folder: { fr: "dev-web/", en: "web-dev/" },
     name: { fr: "Développement web", en: "Web Development" },
     desc: {
       fr: "Conception et développement d'applications web sur mesure, du front-end au back-end.",
@@ -40,7 +40,7 @@ const SERVICES: Service[] = [
   },
   {
     Icon: Server,
-    folder: "deploiement/",
+    folder: { fr: "deploiement/", en: "deployment/" },
     name: {
       fr: "Déploiement & mise en ligne",
       en: "Deployment & go-live",
@@ -66,7 +66,7 @@ const SERVICES: Service[] = [
   },
   {
     Icon: Cpu,
-    folder: "pc-assembly/",
+    folder: { fr: "montage-pc/", en: "pc-assembly/" },
     name: { fr: "Montage PC", en: "PC Assembly" },
     desc: {
       fr: "Assemblage de configurations sur mesure adaptées à vos besoins : gaming, bureautique ou station de travail.",
@@ -89,7 +89,7 @@ const SERVICES: Service[] = [
   },
   {
     Icon: Lightbulb,
-    folder: "conseil/",
+    folder: { fr: "conseil/", en: "consulting/" },
     name: {
       fr: "Conseil & accompagnement",
       en: "Consulting & guidance",
@@ -133,7 +133,7 @@ export default function Services() {
       <div className="flex flex-wrap justify-center gap-5">
         {SERVICES.map((s, i) => (
           <Reveal
-            key={s.folder}
+            key={s.folder.en}
             delay={i * 100}
             variant={i % 2 === 0 ? "left" : "right"}
             className="w-full sm:w-[calc(50%-0.625rem)] flex"
@@ -148,7 +148,7 @@ export default function Services() {
                 <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 text-accent">
                   <s.Icon size={20} />
                 </span>
-                <span className="font-mono text-xs text-muted">{s.folder}</span>
+                <span className="font-mono text-xs text-muted">{s.folder[lang]}</span>
               </div>
 
               <h3 className="text-ink font-semibold mb-2">{s.name[lang]}</h3>

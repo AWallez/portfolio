@@ -22,7 +22,7 @@ export const translations = {
   },
   skills: {
     title: { fr: "Compétences", en: "Skills" },
-    command: { fr: "ls -la skills/", en: "ls -la skills/" },
+    command: { fr: "ls -la competences/", en: "ls -la skills/" },
     systems: { fr: "Systèmes & conteneurs", en: "Systems & containers" },
     network: { fr: "Réseau & sécurité", en: "Network & security" },
     cloud: { fr: "Cloud / CI-CD / IaC", en: "Cloud / CI-CD / IaC" },
@@ -39,7 +39,7 @@ export const translations = {
   },
   projects: {
     title: { fr: "Projets & Homelab", en: "Projects & Homelab" },
-    command: { fr: "ls -la ~/projects", en: "ls -la ~/projects" },
+    command: { fr: "ls -la ~/projets", en: "ls -la ~/projects" },
     zoom: { fr: "Agrandir l’image", en: "Enlarge image" },
     close: { fr: "Fermer", en: "Close" },
   },
