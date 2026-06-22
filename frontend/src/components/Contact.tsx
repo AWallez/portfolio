@@ -79,6 +79,10 @@ export default function Contact() {
   const [captchaToken, setCaptchaToken] = useState("");
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  // n'injecte Turnstile (script tiers Cloudflare) que lorsque la section contact
+  // approche du viewport → page initiale plus légère et console propre au démarrage
+  const [armed, setArmed] = useState(false);
 
   // thème courant, réactif au toggle du header (observe la classe `dark` sur <html>)
   const [dark, setDark] = useState(() =>
@@ -93,8 +97,26 @@ export default function Contact() {
     return () => obs.disconnect();
   }, []);
 
+  // arme le chargement Turnstile quand la section approche (300 px avant) — une fois
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || armed) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setArmed(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [armed]);
+
   // (re)rend le widget Turnstile en suivant la langue (i18n) et le thème du site
   useEffect(() => {
+    if (!armed) return;
     let cancelled = false;
     loadTurnstile().then(() => {
       if (cancelled || !widgetRef.current || !window.turnstile) return;
@@ -115,7 +137,7 @@ export default function Contact() {
         widgetIdRef.current = null;
       }
     };
-  }, [lang, dark]);
+  }, [armed, lang, dark]);
 
   // styles réutilisés pour les champs
   const field =
@@ -192,7 +214,11 @@ export default function Contact() {
     (extra ? ` ${extra}` : "");
 
   return (
-    <section id="contact" className="max-w-300 container-page py-7">
+    <section
+      id="contact"
+      ref={sectionRef}
+      className="max-w-300 container-page py-7"
+    >
       <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
         <span className="text-muted">//</span> {t("contact", "title", lang)}
       </h2>
