@@ -8,17 +8,16 @@ import ProjectVisual from "./ProjectVisual";
 // chargée à la demande : seulement quand on agrandit une image
 const Lightbox = lazy(() => import("./Lightbox"));
 // Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
-// Générés par branding/generate-projects.mjs.
-import clientsLight from "../assets/projects/web-clients-light.svg?raw";
-import clientsDark from "../assets/projects/web-clients-dark.svg?raw";
-import portfolioLight from "../assets/projects/portfolio-light.svg?raw";
-import portfolioDark from "../assets/projects/portfolio-dark.svg?raw";
-import reseauLight from "../assets/projects/reseau-light.svg?raw";
-import reseauDark from "../assets/projects/reseau-dark.svg?raw";
-import homelabLight from "../assets/projects/homelab-light.svg?raw";
-import homelabDark from "../assets/projects/homelab-dark.svg?raw";
-import persoLight from "../assets/projects/perso-light.svg?raw";
-import persoDark from "../assets/projects/perso-dark.svg?raw";
+// Générés par branding/generate-projects.mjs (5 projets × clair/sombre × FR/EN).
+const SVGS = import.meta.glob("../assets/projects/**/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+// variante {thème}-{langue}, ou {thème} seul (perso : terminal pur, sans langue)
+const svg = (asset: string, theme: "light" | "dark", lang: "fr" | "en") =>
+  SVGS[`../assets/projects/${asset}/${theme}-${lang}.svg`] ??
+  SVGS[`../assets/projects/${asset}/${theme}.svg`];
 
 type Project = {
   name: string;
@@ -26,7 +25,7 @@ type Project = {
   title: { fr: string; en: string };
   desc: { fr: string; en: string };
   tags: string[];
-  image?: { light: string; dark: string }; // SVG inline brut · 16:9 1200×675 · une version par thème
+  asset?: string; // préfixe de fichier dans assets/projects (ex. "web-clients")
 };
 
 const PROJECTS: Project[] = [
@@ -39,7 +38,7 @@ const PROJECTS: Project[] = [
       en: "Showcase sites and custom web apps for craftspeople and freelancers: from front-end to deployment. Management dashboards (CRM, stock, bookings), client areas and forms.",
     },
     tags: ["React", "Node.js", "PostgreSQL", "Responsive", "Docker"],
-    image: { light: clientsLight, dark: clientsDark },
+    asset: "web-clients",
   },
   {
     name: "portfolio",
@@ -50,7 +49,7 @@ const PROJECTS: Project[] = [
       en: "Full-stack React + TypeScript site, Node (Fastify) API + PostgreSQL for the contact form, containerized (Docker) and self-hosted on my NAS. Accessibility, SEO, tests and CI/CD.",
     },
     tags: ["React", "TypeScript", "Fastify", "PostgreSQL", "Docker"],
-    image: { light: portfolioLight, dark: portfolioDark },
+    asset: "portfolio",
   },
   {
     name: "reseau",
@@ -61,7 +60,7 @@ const PROJECTS: Project[] = [
       en: "VLAN segmentation, firewall, DNS, VPN and SSH; 10 GbE link and iSCSI storage; Linux administration and hardening.",
     },
     tags: ["Réseau", "VLAN", "10 GbE", "iSCSI", "iptables"],
-    image: { light: reseauLight, dark: reseauDark },
+    asset: "reseau",
   },
   {
     name: "homelab",
@@ -75,7 +74,7 @@ const PROJECTS: Project[] = [
       en: "Linux NAS server: containerized services via Docker / docker-compose — PostgreSQL, ntfy, WireGuard VPN, game servers, reverse proxy and storage.",
     },
     tags: ["Docker", "Linux", "WireGuard", "self-hosting"],
-    image: { light: homelabLight, dark: homelabDark },
+    asset: "homelab",
   },
   {
     name: "lab",
@@ -89,7 +88,7 @@ const PROJECTS: Project[] = [
       en: "Self-hosted multiplayer game servers (Docker) and a DevOps lab to level up: Kubernetes, Terraform and Ansible in a test environment.",
     },
     tags: ["Docker", "Kubernetes", "Terraform", "Ansible", "Bash"],
-    image: { light: persoLight, dark: persoDark },
+    asset: "perso",
   },
 ];
 
@@ -137,7 +136,7 @@ export default function Projects() {
                                 bg-base/60 backdrop-blur-[3px] p-5 shadow-sm overflow-hidden
                                 hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
             >
-              {p.image && (
+              {p.asset && (
                 <div className="-m-5 mb-4 border-b border-line overflow-hidden">
                   {/* clic sur l'image (ou le badge) -> agrandir */}
                   <button
@@ -146,7 +145,10 @@ export default function Projects() {
                     aria-label={`${t("projects", "zoom", lang)} — ${p.title[lang]}`}
                     className="group/img relative block w-full cursor-zoom-in p-0"
                   >
-                    <ProjectVisual light={p.image.light} dark={p.image.dark} />
+                    <ProjectVisual
+                      light={svg(p.asset, "light", lang)}
+                      dark={svg(p.asset, "dark", lang)}
+                    />
                     {/* badge d'agrandissement : toujours visible, accentué au survol */}
                     <span
                       aria-hidden
@@ -179,11 +181,11 @@ export default function Projects() {
         ))}
       </div>
 
-      {zoomed?.image && (
+      {zoomed?.asset && (
         <Suspense fallback={null}>
           <Lightbox
-            light={zoomed.image.light}
-            dark={zoomed.image.dark}
+            light={svg(zoomed.asset, "light", lang)}
+            dark={svg(zoomed.asset, "dark", lang)}
             title={zoomed.title[lang]}
             onClose={closeZoom}
           />
