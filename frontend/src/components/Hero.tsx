@@ -146,19 +146,22 @@ export default function Hero() {
   // tilt 3D du terminal : suit la souris (desktop uniquement).
   // Désactivé si « mouvement réduit » ou sur tactile ; rAF pour rester fluide.
   const cardRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (
       matchMedia("(prefers-reduced-motion: reduce)").matches ||
       matchMedia("(pointer: coarse)").matches
     )
       return;
-    const MAX = 6; // inclinaison max (degrés)
+    const MAX = 7; // inclinaison max (degrés)
     const clamp = (v: number) => Math.max(-1, Math.min(1, v));
     let mx = 0;
     let my = 0;
     let raf = 0;
-    // lecture du layout + écriture regroupées dans le rAF : 1 reflow max par
+    // lecture du layout + écritures regroupées dans le rAF : 1 reflow max par
     // frame (et non par event mousemove). Le terminal suit la souris partout.
+    // En plus de la rotation, on donne du volume : ombre portée directionnelle
+    // (la carte semble soulevée) + reflet spéculaire qui suit le curseur.
     const render = () => {
       raf = 0;
       const el = cardRef.current;
@@ -168,6 +171,28 @@ export default function Hero() {
       const nx = clamp((mx - (r.left + r.width / 2)) / (window.innerWidth / 2));
       const ny = clamp((my - (r.top + r.height / 2)) / (window.innerHeight / 2));
       el.style.transform = `perspective(900px) rotateX(${(-ny * MAX).toFixed(2)}deg) rotateY(${(nx * MAX).toFixed(2)}deg)`;
+      // ombre portée opposée à l'inclinaison → effet « soulevé du plan »
+      // (on garde le biseau inset pour l'épaisseur, sinon il sauterait au survol)
+      const sx = (-nx * 22).toFixed(0);
+      const sy = (-ny * 22 + 14).toFixed(0);
+      el.style.boxShadow = `${sx}px ${sy}px 45px -8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15)`;
+      // reflet : un point lumineux suit le curseur, d'autant plus fort que l'on
+      // est loin du centre (la surface « accroche » la lumière en s'inclinant).
+      // Teinté avec --accent (teal) qui s'adapte déjà clair/sombre → visible sur
+      // les deux thèmes, sans détecter le thème en JS.
+      const g = glareRef.current;
+      if (g) {
+        const gx = (((mx - r.left) / r.width) * 100).toFixed(1);
+        const gy = (((my - r.top) / r.height) * 100).toFixed(1);
+        const intensity = Math.min(1, Math.hypot(nx, ny));
+        // le teal sombre (clair) ressort moins que le teal vif (sombre) : on
+        // monte un peu l'opacité en thème clair, on la baisse en thème sombre
+        const dark = document.documentElement.classList.contains("dark");
+        const pct = dark
+          ? (5 + 13 * intensity).toFixed(1) // sombre : 5 % → 18 %
+          : (10 + 24 * intensity).toFixed(1); // clair : 10 % → 34 %
+        g.style.background = `radial-gradient(circle at ${gx}% ${gy}%, color-mix(in srgb, var(--accent) ${pct}%, transparent), transparent 60%)`;
+      }
     };
     const onMove = (e: MouseEvent) => {
       mx = e.clientX;
@@ -177,9 +202,12 @@ export default function Hero() {
     const onLeave = () => {
       if (raf) cancelAnimationFrame(raf);
       raf = 0;
-      if (cardRef.current)
-        cardRef.current.style.transform =
-          "perspective(900px) rotateX(0deg) rotateY(0deg)";
+      const el = cardRef.current;
+      if (el) {
+        el.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg)";
+        el.style.boxShadow = ""; // retour à l'ombre de repos (classe Tailwind)
+      }
+      if (glareRef.current) glareRef.current.style.background = "transparent";
     };
     window.addEventListener("mousemove", onMove);
     document.addEventListener("mouseleave", onLeave);
@@ -197,8 +225,9 @@ export default function Hero() {
       <h1 className="sr-only">{lines[0].output}</h1>
       <div
         ref={cardRef}
-        className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] shadow-lg overflow-hidden
-                   transition-transform duration-150 ease-out will-change-transform motion-reduce:transition-none"
+        className="relative rounded-xl border border-line bg-base/20 backdrop-blur-[3px] overflow-hidden
+                   shadow-[0_18px_45px_-12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(0,0,0,0.15)]
+                   transition-[transform,box-shadow] duration-150 ease-out will-change-transform motion-reduce:transition-none"
       >
         {/* Barre de titre */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
@@ -239,6 +268,15 @@ export default function Hero() {
             );
           })}
         </div>
+
+        {/* reflet spéculaire piloté en JS (suit le curseur) — clippé par les
+            coins arrondis grâce à overflow-hidden du parent */}
+        <div
+          ref={glareRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "transparent" }}
+        />
       </div>
     </section>
   );
