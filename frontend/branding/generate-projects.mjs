@@ -223,7 +223,6 @@ function portfolio(p) {
   s += T(48, 56, 13, p.muted, "Portfolio — React · TypeScript · Vite · Tailwind");
   s += card(48, 66, 556, 322, p, { r: 12 });
   s += `${T(70, 100, 14, p.muted, "// ", { w: "bold", mono: true })}${T(94, 100, 14, a, "alexis.wallez", { w: "bold", mono: true })}`;
-  s += `<circle cx="196" cy="95" r="4" fill="${a}"/>`;
   s += T(584, 99, 10, p.muted, "Skills · Projects · Services · Contact", { anchor: "end" });
   s += `<line x1="48" y1="116" x2="604" y2="116" stroke="${p.line}"/>`;
   s += `<rect x="70" y="130" width="512" height="182" rx="10" fill="${p.soft}" stroke="${p.line}"/>`;
@@ -241,7 +240,6 @@ function portfolio(p) {
   s += card(620, 86, 160, 302, p, { r: 20 });
   s += `<rect x="678" y="100" width="44" height="6" rx="3" fill="${p.line}"/>`;
   s += `${T(638, 134, 11, p.muted, "// ", { w: "bold", mono: true })}${T(662, 134, 11, a, "alexis.w", { w: "bold", mono: true })}`;
-  s += `<circle cx="712" cy="129" r="3.5" fill="${a}"/>`;
   s += `<rect x="636" y="148" width="128" height="108" rx="8" fill="${p.soft}" stroke="${p.line}"/>`;
   s += `${T(648, 172, 10, a, "$ ", { mono: true })}${T(662, 172, 10, p.ink, "whoami", { mono: true })}`;
   s += T(648, 189, 10, p.muted, "Full-Stack", { mono: true });
