@@ -11,7 +11,7 @@ const LINES_FR: Line[] = [
   },
   {
     path: "~/portfolio",
-    command: "cat skills.txt",
+    command: "cat competences.txt",
     output: "Full-Stack · DevOps · Linux · Docker · Réseau & self-hosting",
   },
   {

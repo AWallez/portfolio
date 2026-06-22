@@ -4,7 +4,7 @@ import type { Lang } from "./LangContext";
 export const translations = {
   about: {
     title: { fr: "À propos", en: "About" },
-    command: { fr: "cat about.md", en: "cat about.md" },
+    command: { fr: "cat a-propos.md", en: "cat about.md" },
     body: {
       fr: "Développeur web full-stack indépendant depuis 2023, je conçois des applications de bout en bout : du front-end à la mise en ligne.  Ma particularité, c'est de ne pas m'arrêter au code : Linux, Docker, le réseau et l'auto-hébergement font partie de mon quotidien. Le DevOps s'impose alors comme une évolution naturelle — il réunit mes deux centres d'intérêt, le développement et les systèmes & réseau.",
       en: "I’ve been a freelance full-stack web developer since 2023, and I build applications from start to finish: from the front end to deployment. What sets me apart is that I don’t stop at just coding: Linux, Docker, networking, and self-hosting are all part of my daily routine. DevOps has therefore emerged as a natural progression — it brings together my two main areas of interest: development and systems & networking.",
