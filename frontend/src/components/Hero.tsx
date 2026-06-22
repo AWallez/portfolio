@@ -143,11 +143,15 @@ export default function Hero() {
   const { rendered } = useTypewriter(lines);
   const { ref, height } = useMeasuredHeight<HTMLDivElement>();
 
-  // tilt 3D du terminal : souris sur desktop, gyroscope sur tactile.
-  // Désactivé si « mouvement réduit » ; rAF pour rester fluide.
+  // tilt 3D du terminal : suit la souris (desktop uniquement).
+  // Désactivé si « mouvement réduit » ou sur tactile ; rAF pour rester fluide.
   const cardRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (
+      matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      matchMedia("(pointer: coarse)").matches
+    )
+      return;
     const MAX = 6; // degrés max d'inclinaison
     const clamp = (v: number) => Math.max(-1, Math.min(1, v));
     let raf = 0;
@@ -160,49 +164,7 @@ export default function Hero() {
       });
     };
 
-    // --- Tactile : parallax au gyroscope (DeviceOrientation) ---
-    // Android : actif d'office. iOS : nécessite une autorisation déclenchée par un
-    // geste → non demandée ici (l'effet reste simplement inactif, sans rien casser).
-    if (matchMedia("(pointer: coarse)").matches) {
-      let base: { beta: number; gamma: number } | null = null; // repos = 1re lecture
-      const onOrient = (e: DeviceOrientationEvent) => {
-        if (e.beta == null || e.gamma == null) return;
-        if (!base) base = { beta: e.beta, gamma: e.gamma };
-        const ry = clamp((e.gamma - base.gamma) / 25) * MAX; // gauche/droite
-        const rx = clamp((e.beta - base.beta) / 25) * MAX; // avant/arrière
-        apply(-rx, ry);
-      };
-      const listen = () => window.addEventListener("deviceorientation", onOrient);
-
-      // iOS 13+ : capteurs de mouvement derrière une autorisation déclenchée
-      // par un geste utilisateur. Android & co : actif directement.
-      const DOE = window.DeviceOrientationEvent as unknown as
-        | { requestPermission?: () => Promise<string> }
-        | undefined;
-      let gesture: (() => void) | null = null;
-      if (DOE && typeof DOE.requestPermission === "function") {
-        gesture = () => {
-          DOE.requestPermission?.()
-            .then((state) => state === "granted" && listen())
-            .catch(() => {});
-        };
-        window.addEventListener("touchend", gesture, { once: true });
-        window.addEventListener("click", gesture, { once: true });
-      } else {
-        listen();
-      }
-
-      return () => {
-        window.removeEventListener("deviceorientation", onOrient);
-        if (gesture) {
-          window.removeEventListener("touchend", gesture);
-          window.removeEventListener("click", gesture);
-        }
-        cancelAnimationFrame(raf);
-      };
-    }
-
-    // --- Desktop : le terminal suit la souris partout sur la page ---
+    // le terminal suit la souris partout sur la page (même en dehors de lui)
     const onMove = (e: MouseEvent) => {
       const el = cardRef.current;
       if (!el) return;
