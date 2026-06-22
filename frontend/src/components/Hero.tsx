@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTypewriter, type Line } from "../hooks/useTypewriter";
 import { useLang } from "../i18n/LangContext";
 import { useMeasuredHeight } from "../hooks/useMeasuredHeight";
@@ -143,12 +143,100 @@ export default function Hero() {
   const { rendered } = useTypewriter(lines);
   const { ref, height } = useMeasuredHeight<HTMLDivElement>();
 
+  // tilt 3D du terminal : souris sur desktop, gyroscope sur tactile.
+  // Désactivé si « mouvement réduit » ; rAF pour rester fluide.
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const MAX = 6; // degrés max d'inclinaison
+    const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+    let raf = 0;
+    const apply = (rx: number, ry: number) => {
+      const el = cardRef.current;
+      if (!el) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        el.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      });
+    };
+
+    // --- Tactile : parallax au gyroscope (DeviceOrientation) ---
+    // Android : actif d'office. iOS : nécessite une autorisation déclenchée par un
+    // geste → non demandée ici (l'effet reste simplement inactif, sans rien casser).
+    if (matchMedia("(pointer: coarse)").matches) {
+      let base: { beta: number; gamma: number } | null = null; // repos = 1re lecture
+      const onOrient = (e: DeviceOrientationEvent) => {
+        if (e.beta == null || e.gamma == null) return;
+        if (!base) base = { beta: e.beta, gamma: e.gamma };
+        const ry = clamp((e.gamma - base.gamma) / 25) * MAX; // gauche/droite
+        const rx = clamp((e.beta - base.beta) / 25) * MAX; // avant/arrière
+        apply(-rx, ry);
+      };
+      const listen = () => window.addEventListener("deviceorientation", onOrient);
+
+      // iOS 13+ : capteurs de mouvement derrière une autorisation déclenchée
+      // par un geste utilisateur. Android & co : actif directement.
+      const DOE = window.DeviceOrientationEvent as unknown as
+        | { requestPermission?: () => Promise<string> }
+        | undefined;
+      let gesture: (() => void) | null = null;
+      if (DOE && typeof DOE.requestPermission === "function") {
+        gesture = () => {
+          DOE.requestPermission?.()
+            .then((state) => state === "granted" && listen())
+            .catch(() => {});
+        };
+        window.addEventListener("touchend", gesture, { once: true });
+        window.addEventListener("click", gesture, { once: true });
+      } else {
+        listen();
+      }
+
+      return () => {
+        window.removeEventListener("deviceorientation", onOrient);
+        if (gesture) {
+          window.removeEventListener("touchend", gesture);
+          window.removeEventListener("click", gesture);
+        }
+        cancelAnimationFrame(raf);
+      };
+    }
+
+    // --- Desktop : le terminal suit la souris partout sur la page ---
+    const onMove = (e: MouseEvent) => {
+      const el = cardRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return; // hors écran → ignore
+      const nx = clamp((e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2));
+      const ny = clamp((e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2));
+      apply(-ny * MAX, nx * MAX);
+    };
+    const onLeave = () => {
+      cancelAnimationFrame(raf);
+      if (cardRef.current)
+        cardRef.current.style.transform =
+          "perspective(900px) rotateX(0deg) rotateY(0deg)";
+    };
+    window.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <section className="items-center max-w-210 container-page py-7 w-full">
       {/* titre principal (h1) pour lecteurs d'écran & SEO ; le terminal animé
           ci-dessous reste le rendu visuel. lines[0].output = nom + rôle localisés */}
       <h1 className="sr-only">{lines[0].output}</h1>
-      <div className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] shadow-lg overflow-hidden">
+      <div
+        ref={cardRef}
+        className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] shadow-lg overflow-hidden
+                   transition-transform duration-150 ease-out will-change-transform motion-reduce:transition-none"
+      >
         {/* Barre de titre */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
           <span className="w-3 h-3 rounded-full bg-red-400" />
