@@ -18,7 +18,7 @@ const LINES_FR: Line[] = [
     path: "~/portfolio",
     command: "cd services/ ; ls",
     output:
-      "contact.sh   dev-web/   montage-d'ordinateurs/   conseil-hébergement-web/",
+      "contact.sh   dev-web/   montage-pc/   conseil/",
   },
   {
     path: "~/portfolio/services",
@@ -44,7 +44,7 @@ const LINES_EN: Line[] = [
   {
     path: "~/portfolio",
     command: "cd services/ ; ls",
-    output: "contact.sh   dev-web/   pc-assembly/   web-hosting-consulting/",
+    output: "contact.sh   web-dev/   pc-assembly/   consulting/",
   },
   {
     path: "~/portfolio/services",
