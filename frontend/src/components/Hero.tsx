@@ -152,30 +152,31 @@ export default function Hero() {
       matchMedia("(pointer: coarse)").matches
     )
       return;
-    const MAX = 6; // degrés max d'inclinaison
+    const MAX = 6; // inclinaison max (degrés)
     const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+    let mx = 0;
+    let my = 0;
     let raf = 0;
-    const apply = (rx: number, ry: number) => {
-      const el = cardRef.current;
-      if (!el) return;
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        el.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
-      });
-    };
-
-    // le terminal suit la souris partout sur la page (même en dehors de lui)
-    const onMove = (e: MouseEvent) => {
+    // lecture du layout + écriture regroupées dans le rAF : 1 reflow max par
+    // frame (et non par event mousemove). Le terminal suit la souris partout.
+    const render = () => {
+      raf = 0;
       const el = cardRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight) return; // hors écran → ignore
-      const nx = clamp((e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2));
-      const ny = clamp((e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2));
-      apply(-ny * MAX, nx * MAX);
+      const nx = clamp((mx - (r.left + r.width / 2)) / (window.innerWidth / 2));
+      const ny = clamp((my - (r.top + r.height / 2)) / (window.innerHeight / 2));
+      el.style.transform = `perspective(900px) rotateX(${(-ny * MAX).toFixed(2)}deg) rotateY(${(nx * MAX).toFixed(2)}deg)`;
+    };
+    const onMove = (e: MouseEvent) => {
+      mx = e.clientX;
+      my = e.clientY;
+      if (!raf) raf = requestAnimationFrame(render);
     };
     const onLeave = () => {
-      cancelAnimationFrame(raf);
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
       if (cardRef.current)
         cardRef.current.style.transform =
           "perspective(900px) rotateX(0deg) rotateY(0deg)";
@@ -185,7 +186,7 @@ export default function Hero() {
     return () => {
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseleave", onLeave);
-      cancelAnimationFrame(raf);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
