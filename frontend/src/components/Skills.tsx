@@ -40,19 +40,6 @@ const GROUPS: {
     items: ["WireGuard", "DNS", "IPv4/IPv6", "iptables", "SSH", "iSCSI", "Nginx / Caddy"],
   },
   {
-    key: "cloud",
-    Icon: Cloud,
-    items: [
-      "AWS",
-      "Git",
-      "GitLab",
-      "CI/CD",
-      "Kubernetes",
-      "Terraform",
-      "Ansible",
-    ],
-  },
-  {
     key: "frontend",
     Icon: MonitorSmartphone,
     items: [
@@ -73,6 +60,19 @@ const GROUPS: {
     key: "backend",
     Icon: Server,
     items: ["Node.js", "Fastify", "Express", "API REST", "Python", "PHP", "Postman"],
+  },
+  {
+    key: "cloud",
+    Icon: Cloud,
+    items: [
+      "AWS",
+      "Git",
+      "GitLab",
+      "CI/CD",
+      "Kubernetes",
+      "Terraform",
+      "Ansible",
+    ],
   },
   {
     key: "data",
