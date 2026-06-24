@@ -116,8 +116,8 @@ export const translations = {
     cvUnavailable: { fr: "Aperçu indisponible.", en: "Preview unavailable." },
     available: { fr: "Disponible", en: "Available" },
     availableLong: {
-      fr: "Disponible pour mission freelance & alternance",
-      en: "Available for freelance & work-study",
+      fr: "Disponible pour missions freelance & opportunités pro",
+      en: "Available for freelance & professional opportunities",
     },
   },
   footer: {
