@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-
-const prefersReduced = () =>
-  typeof matchMedia !== "undefined" &&
-  matchMedia("(prefers-reduced-motion: reduce)").matches;
+import { staticIntro } from "../lib/media";
 
 export function useReveal<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  // si l'utilisateur veut moins d'animations : visible dès le départ (pas de setState dans l'effet)
-  const [visible, setVisible] = useState(prefersReduced);
+  // mobile ou « mouvement réduit » : visible dès le départ (pas d'animation,
+  // pas de setState dans l'effet)
+  const [visible, setVisible] = useState(staticIntro);
 
   useEffect(() => {
-    if (prefersReduced()) return; // déjà visible, rien à observer
+    if (staticIntro()) return; // déjà visible, rien à observer
     const el = ref.current;
     if (!el) return;
 
