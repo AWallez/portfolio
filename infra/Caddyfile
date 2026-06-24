@@ -12,11 +12,6 @@ www.alexiswallez.fr {
 }
 
 alexiswallez.fr {
-	# Compression à l'edge. Indispensable : le proxy de Caddy décompresse la
-	# réponse gzip de l'upstream Nginx, donc sans `encode` le client recevrait du
-	# non compressé. zstd pour les navigateurs récents, gzip en repli universel.
-	encode zstd gzip
-
 	# En-têtes de sécurité ajoutés à l'edge (HSTS + Permissions-Policy).
 	# X-Frame-Options / X-Content-Type-Options / Referrer-Policy sont déjà posés
 	# par Nginx (web) et traversent Caddy. CSP volontairement omise (script anti-flash inline).
@@ -25,11 +20,15 @@ alexiswallez.fr {
 		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
 		-Server
 	}
+	# Nginx (web) compresse déjà en gzip. On fait simplement TRAVERSER sa réponse :
+	# `compression off` désactive la décompression automatique du transport Go de
+	# Caddy, et on demande explicitement du gzip à l'upstream. Le navigateur reçoit
+	# donc bien du gzip (le `encode` de Caddy, lui, ne re-compressait pas la sortie
+	# du reverse_proxy dans cette version).
 	reverse_proxy web:80 {
-		# Demande du NON compressé à l'upstream Nginx. Sinon Caddy reçoit du gzip,
-		# le transport Go le décompresse en transparence (et retire Content-Encoding),
-		# puis renvoie du clair au navigateur. En `identity`, c'est `encode` (ci-dessus)
-		# qui compresse proprement pour le client.
-		header_up Accept-Encoding identity
+		header_up Accept-Encoding gzip
+		transport http {
+			compression off
+		}
 	}
 }
