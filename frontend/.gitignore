@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# drapeaux copiés depuis country-flag-icons au build (scripts/copy-flags.mjs)
+public/flags/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

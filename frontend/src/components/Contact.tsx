@@ -359,6 +359,10 @@ export default function Contact() {
                 <PhoneInput
                   defaultCountry="FR"
                   limitMaxLength
+                  // drapeaux servis depuis notre domaine (copiés dans public/flags/)
+                  // au lieu de l'hôte tiers GitHub Pages par défaut (requête externe
+                  // peu fiable). Chargés à la demande : seul le pays affiché est requis.
+                  flagUrl="/flags/{XX}.svg"
                   placeholder={phonePlaceholder}
                   value={values.phone || undefined}
                   onChange={(v) => setField("phone", v ?? "")}
