@@ -228,7 +228,7 @@ export default function Contact() {
         {t("contact", "command", lang)}
       </p>
 
-      <div className="max-w-150 mx-auto min-h-125 flex flex-col justify-center">
+      <div className="min-h-125 flex flex-col justify-center">
         {/* annonces pour lecteurs d'écran (envoi / succès) */}
         <p className="sr-only" role="status" aria-live="polite">
           {status === "sending" && t("contact", "sendingStatus", lang)}
@@ -236,7 +236,7 @@ export default function Contact() {
         </p>
 
         {status === "sent" ? (
-          <div className="rounded-xl border border-accent/40 bg-accent/5 p-6 text-center shadow-sm backdrop-blur-xs">
+          <div className="w-fit max-w-full mx-auto rounded-xl border border-accent/40 bg-accent/5 px-6 py-5 text-center shadow-sm backdrop-blur-xs">
             <p className="text-accent font-mono">
               ✓ {t("contact", "success", lang)}
             </p>
@@ -245,7 +245,7 @@ export default function Contact() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="rounded-xl border border-line bg-base/60 backdrop-blur-[3px] p-6 space-y-4 shadow-sm"
+            className="w-full max-w-150 mx-auto rounded-xl border border-line bg-base/60 backdrop-blur-[3px] p-6 space-y-4 shadow-sm"
           >
             {/* honeypot anti-spam : hors écran et hors tabulation */}
             <div aria-hidden className="absolute left-[-9999px]">
