@@ -12,6 +12,11 @@ www.alexiswallez.fr {
 }
 
 alexiswallez.fr {
+	# Compression à l'edge. Indispensable : le proxy de Caddy décompresse la
+	# réponse gzip de l'upstream Nginx, donc sans `encode` le client recevrait du
+	# non compressé. zstd pour les navigateurs récents, gzip en repli universel.
+	encode zstd gzip
+
 	# En-têtes de sécurité ajoutés à l'edge (HSTS + Permissions-Policy).
 	# X-Frame-Options / X-Content-Type-Options / Referrer-Policy sont déjà posés
 	# par Nginx (web) et traversent Caddy. CSP volontairement omise (script anti-flash inline).
