@@ -10,18 +10,14 @@ export function useActiveSection(ids: readonly string[]) {
   const [active, setActive] = useState<string>("");
 
   useEffect(() => {
-    const sections = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-    if (sections.length === 0) return;
-
     // on maintient l'ensemble des sections actuellement visibles (id → position top)
     const visible = new Map<string, number>();
 
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) visible.set(e.target.id, e.boundingClientRect.top);
+          if (e.isIntersecting)
+            visible.set(e.target.id, e.boundingClientRect.top);
           else visible.delete(e.target.id);
         }
 
@@ -44,8 +40,35 @@ export function useActiveSection(ids: readonly string[]) {
       { rootMargin: "-40% 0px -55% 0px", threshold: 0 },
     );
 
-    sections.forEach((s) => io.observe(s));
-    return () => io.disconnect();
+    // Certaines sections (Projects, Contact) sont lazy → pas encore dans le DOM
+    // au montage du Header. On observe celles présentes, puis on réessaie via un
+    // MutationObserver à mesure que les chunks lazy montent, jusqu'à les avoir toutes.
+    const observed = new Set<string>();
+    const tryObserve = () => {
+      for (const id of ids) {
+        if (observed.has(id)) continue;
+        const el = document.getElementById(id);
+        if (el) {
+          io.observe(el);
+          observed.add(id);
+        }
+      }
+    };
+    tryObserve();
+
+    let mo: MutationObserver | undefined;
+    if (observed.size < ids.length) {
+      mo = new MutationObserver(() => {
+        tryObserve();
+        if (observed.size === ids.length) mo?.disconnect();
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
+
+    return () => {
+      io.disconnect();
+      mo?.disconnect();
+    };
   }, [ids]);
 
   return active;
