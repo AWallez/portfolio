@@ -58,9 +58,9 @@ export default function Lightbox({ light, dark, title, onClose }: Props) {
     };
     document.addEventListener("keydown", onKey);
 
-    // bloque le scroll de l'arrière-plan. <html> est le conteneur de scroll
-    // (il a overflow-x: clip), donc on verrouille documentElement, pas <body>.
-    // On compense la largeur de la scrollbar pour éviter un saut horizontal.
+    // bloque le scroll de l'arrière-plan en verrouillant documentElement
+    // (l'élément qui défile). On compense la largeur de la scrollbar pour
+    // éviter un saut horizontal au moment du verrouillage.
     const docEl = document.documentElement;
     const scrollbarW = window.innerWidth - docEl.clientWidth;
     const prevOverflow = docEl.style.overflow;

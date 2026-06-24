@@ -32,7 +32,10 @@ export default function App() {
       <ScrollProgress />
       <Background />
       <Header />
-      <main id="main">
+      {/* overflow-x-clip ici (pas sur html/body) : contient le débordement
+          horizontal des animations Reveal sans casser le sticky/fixed sur iOS.
+          'clip' ne crée pas de conteneur de scroll. */}
+      <main id="main" className="overflow-x-clip">
         <div className="min-h-[calc(100dvh-4rem)] flex flex-col justify-center gap-8">
           <Hero key={lang} />
           <Reveal variant="zoom">

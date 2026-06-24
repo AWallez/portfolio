@@ -40,17 +40,17 @@
 @layer base {
   body {
     @apply bg-base text-ink font-sans antialiased;
-    /* évite le scroll horizontal créé par les translations des animations de révélation
-       (translate-x sur les cartes en w-full). 'clip' ne crée pas de conteneur de scroll,
-       donc le header sticky continue de fonctionner. */
-    overflow-x: clip;
   }
+  /* On NE met PAS overflow-x sur html/body : sur Safari iOS, un overflow
+     non-visible sur la racine casse position:sticky/fixed (header rogné, barre
+     de progression qui disparaît). Le clip anti-débordement des animations de
+     révélation (translate-x des cartes) est posé sur #main (cf. App.tsx), en
+     dehors du header et de la barre de progression. */
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
-    overflow-x: clip;
   }
   /* Tailwind v4 ne met plus cursor:pointer sur les <button> par défaut.
      En @layer base, les utilitaires cursor-* (ex. cursor-zoom-in) restent prioritaires. */
