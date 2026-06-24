@@ -1,0 +1,24 @@
+# Alexis Wallez — Développeur Full-Stack & DevOps
+
+> Portfolio d'Alexis Wallez, développeur web full-stack orienté DevOps. Il conçoit des applications de bout en bout (front-end, back-end, base de données, SEO, déploiement) et maîtrise Linux, Docker, le réseau et l'auto-hébergement. Basé à Savigny-le-Temple (77, Île-de-France), disponible pour des missions freelance et des opportunités professionnelles. Ce site est une SPA React + TypeScript, auto-hébergée sur son propre NAS via Docker.
+
+## Sections du site
+
+- [À propos](https://alexiswallez.fr/#about) : parcours, approche et présentation.
+- [Compétences](https://alexiswallez.fr/#skills) : systèmes & conteneurs, réseau & sécurité, cloud / CI-CD / IaC, front-end, back-end & API, bases de données.
+- [Parcours](https://alexiswallez.fr/#career) : expériences professionnelles et formations.
+- [Projets & Homelab](https://alexiswallez.fr/#projects) : applications web clients, ce portfolio auto-hébergé, réseau domestique avancé (VLAN, pare-feu, 10 GbE), infrastructure NAS conteneurisée, lab DevOps (Kubernetes, Terraform, Ansible).
+- [Services](https://alexiswallez.fr/#services) : développement web, déploiement, montage PC, conseil.
+- [Contact](https://alexiswallez.fr/#contact) : formulaire de prise de contact.
+
+## Ressources
+
+- [CV en français (PDF)](https://alexiswallez.fr/cv-alexis-wallez.pdf)
+- [CV en anglais (PDF)](https://alexiswallez.fr/cv-alexis-wallez-en.pdf)
+- [GitHub](https://github.com/AWallez) : code et projets open source.
+- [LinkedIn](https://www.linkedin.com/in/alexis-wallez/) : profil professionnel.
+
+## Contact
+
+- Email : wallezalexis@gmail.com
+- Localisation : Savigny-le-Temple, Île-de-France, France
