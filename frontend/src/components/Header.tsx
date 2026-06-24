@@ -90,14 +90,18 @@ export default function Header() {
             {/* indicateur de disponibilité : pastille toujours visible, texte en desktop */}
             <span
               title={t("a11y", "availableLong", lang)}
-              aria-label={t("a11y", "availableLong", lang)}
               className="inline-flex items-center gap-1.5 font-mono text-xs text-muted"
             >
-              <span className="relative flex h-2 w-2">
+              <span aria-hidden className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75 animate-ping motion-reduce:animate-none" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
               </span>
-              <span className="hidden nav:inline">{t("a11y", "available", lang)}</span>
+              {/* texte court visible (desktop), masqué aux lecteurs d'écran */}
+              <span aria-hidden className="hidden nav:inline">
+                {t("a11y", "available", lang)}
+              </span>
+              {/* nom accessible complet (remplace l'aria-label interdit sur un span) */}
+              <span className="sr-only">{t("a11y", "availableLong", lang)}</span>
             </span>
           </div>
 

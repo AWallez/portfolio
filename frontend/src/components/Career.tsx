@@ -106,7 +106,9 @@ export default function Career() {
       </p>
 
       <div className="lex justify-center items-center">
-        <ol ref={ref} className="relative w-fit mx-auto">
+        {/* wrapper relatif : porte les lignes déco (hors du <ol> pour garder une
+            liste sémantiquement valide = uniquement des <li>) */}
+        <div className="relative w-fit mx-auto">
           {/* la ligne verticale centrale (rail gris) */}
           <div className="absolute left-27.5 sm:left-32.5 top-0 bottom-0 w-px bg-line" />
           {/* la ligne d'accent qui se dessine au scroll */}
@@ -115,57 +117,55 @@ export default function Career() {
             style={{ transform: `scaleY(${progress})` }}
           />
 
-          {TIMELINE.map((item, i) => (
-            <Reveal
-              key={i}
-              delay={i * 120}
-              variant="right"
-              className="pb-8 last:pb-0 "
-            >
-              <li className="flex items-center">
-                {/* côté gauche : date + badge */}
-                <div className="flex flex-col items-center w-25 sm:w-30 shrink-0 pt-1">
-                  {" "}
-                  <span className="font-mono text-xs text-muted block mb-1.25 text-center w-fit">
-                    {item.date[lang]}
-                  </span>
-                  <span
-                    className="badge-hover font-mono text-[10px] px-1.5 py-0.5  rounded
+          <ol ref={ref}>
+            {TIMELINE.map((item, i) => (
+              // <li> enfant direct du <ol> ; l'animation Reveal est À L'INTÉRIEUR
+              <li key={i} className="pb-8 last:pb-0">
+                <Reveal delay={i * 120} variant="right" className="flex items-center">
+                  {/* côté gauche : date + badge */}
+                  <div className="flex flex-col items-center w-25 sm:w-30 shrink-0 pt-1">
+                    {" "}
+                    <span className="font-mono text-xs text-muted block mb-1.25 text-center w-fit">
+                      {item.date[lang]}
+                    </span>
+                    <span
+                      className="badge-hover font-mono text-[10px] px-1.5 py-0.5  rounded
                              bg-accent/10 text-accent border border-accent/30 text-center"
-                  >
-                    {item.type === "exp"
-                      ? t("career", "exp", lang)
-                      : t("career", "edu", lang)}
-                  </span>
-                </div>
+                    >
+                      {item.type === "exp"
+                        ? t("career", "exp", lang)
+                        : t("career", "edu", lang)}
+                    </span>
+                  </div>
 
-                {/* le badge sur la ligne (icône exp / formation) */}
-                <div className="relative shrink-0 w-5 flex justify-center">
-                  <span className="z-10 flex items-center justify-center w-7 h-7 -mt-0.5 rounded-full bg-base border-2 border-accent text-accent">
-                    {item.type === "exp" ? (
-                      <Briefcase size={13} />
-                    ) : (
-                      <GraduationCap size={14} />
-                    )}
-                  </span>
-                </div>
+                  {/* le badge sur la ligne (icône exp / formation) */}
+                  <div className="relative shrink-0 w-5 flex justify-center">
+                    <span className="z-10 flex items-center justify-center w-7 h-7 -mt-0.5 rounded-full bg-base border-2 border-accent text-accent">
+                      {item.type === "exp" ? (
+                        <Briefcase size={13} />
+                      ) : (
+                        <GraduationCap size={14} />
+                      )}
+                    </span>
+                  </div>
 
-                {/* côté droit : contenu */}
-                <div className="pl-4">
-                  <h3 className="text-ink font-semibold text-readable w-fit">
-                    {item.role[lang]}
-                  </h3>
-                  <p className="text-sm text-accent mb-1 text-readable w-fit">
-                    {item.place}
-                  </p>
-                  <p className="text-sm text-muted leading-relaxed text-readable w-fit">
-                    {item.desc[lang]}
-                  </p>
-                </div>
+                  {/* côté droit : contenu */}
+                  <div className="pl-4">
+                    <h3 className="text-ink font-semibold text-readable w-fit">
+                      {item.role[lang]}
+                    </h3>
+                    <p className="text-sm text-accent mb-1 text-readable w-fit">
+                      {item.place}
+                    </p>
+                    <p className="text-sm text-muted leading-relaxed text-readable w-fit">
+                      {item.desc[lang]}
+                    </p>
+                  </div>
+                </Reveal>
               </li>
-            </Reveal>
-          ))}
-        </ol>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );
