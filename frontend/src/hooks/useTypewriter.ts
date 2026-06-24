@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { staticIntro } from "../lib/media";
 
 export type Line = {
   path: string;
@@ -10,10 +9,12 @@ export type Line = {
 };
 type Rendered = Line & { showOutput: boolean; isRunning?: boolean };
 
+const prefersReduced = () =>
+  typeof matchMedia !== "undefined" &&
+  matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function useTypewriter(lines: Line[]) {
-  // mobile ou « mouvement réduit » → on saute la frappe et on rend tout de suite
-  // les lignes complètes (texte du hero présent dès le 1er rendu → meilleur LCP).
-  const [reduced] = useState(staticIntro);
+  const [reduced] = useState(prefersReduced);
   const [rendered, setRendered] = useState<Rendered[]>(
     reduced
       ? lines.map((l) => ({

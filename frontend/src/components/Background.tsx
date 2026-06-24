@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { isSmallScreen, prefersReducedMotion } from "../lib/media";
 
 export default function Background() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,9 +12,7 @@ export default function Background() {
     const cv = canvas;
     const ctx = context;
 
-    // pas de réseau de particules si mouvement réduit, ni sur mobile (économie
-    // main-thread / batterie) — les halos aurora (CSS) restent affichés.
-    if (prefersReducedMotion() || isSmallScreen()) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let width = 0,
       height = 0,
