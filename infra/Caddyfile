@@ -25,5 +25,11 @@ alexiswallez.fr {
 		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
 		-Server
 	}
-	reverse_proxy web:80
+	reverse_proxy web:80 {
+		# Demande du NON compressé à l'upstream Nginx. Sinon Caddy reçoit du gzip,
+		# le transport Go le décompresse en transparence (et retire Content-Encoding),
+		# puis renvoie du clair au navigateur. En `identity`, c'est `encode` (ci-dessus)
+		# qui compresse proprement pour le client.
+		header_up Accept-Encoding identity
+	}
 }
