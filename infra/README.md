@@ -1,27 +1,34 @@
 # Infra — stack complète du portfolio (sur le NAS)
 
-Toute la stack du portfolio via Docker Compose.
+Toute la stack du portfolio via **Docker Compose** : front, API, base de données, notifications et reverse proxy HTTPS. Voir aussi le [README racine](../README.md).
 
-- **web** : Nginx qui sert le SPA (build du `frontend/`) et proxy `/api` → `api`.
-- **api** : API Fastify (`backend/`) — enregistre les messages et publie sur ntfy.
-- **postgres** : stocke les messages du formulaire de contact (table `contacts`).
-- **ntfy** : serveur de notifications push → chaque message arrive sur ton téléphone.
+## Services
 
-> **Ports** : `web` est publié sur **`${WEB_PORT}` (8088 par défaut)** — c'est là qu'on
-> branche le reverse proxy + HTTPS d'UGOS (→ `alexiswallez.fr`). `api` n'est **pas exposé**
-> (joignable seulement par Nginx → même origine, zéro CORS). Postgres reste sur **55432**
-> (dev), ntfy sur **8080**.
+| Service | Image | Rôle | Exposition |
+| --- | --- | --- | --- |
+| **caddy** | `caddy:2-alpine` | Reverse proxy public + **HTTPS auto** (Let's Encrypt) | **8081 (HTTP) / 8443 (HTTPS)** — seule entrée publique |
+| **web** | build `../frontend` | Nginx : sert le SPA React et proxy `/api` → `api` | interne uniquement |
+| **api** | build `../backend` | API Fastify : valide → PostgreSQL → ntfy | interne uniquement |
+| **postgres** | `postgres:17-alpine` | Messages du formulaire (table `contacts`) | interne uniquement |
+| **ntfy** | `binwiederhier/ntfy` | Notifications push → 📱 | 8080 (LAN, app ntfy) |
+
+> **Topologie** : seul **Caddy** est public (8081/8443). Le front (`web`), l'API et Postgres ne sont **pas publiés** — ils ne se parlent que par le réseau Docker interne. L'API et le front partageant la même origine (Nginx proxy `/api`), il n'y a **aucun CORS** côté navigateur.
+
+## HTTPS & mise en ligne
+
+- **Caddy** obtient et renouvelle seul le certificat Let's Encrypt (challenge tls-alpn-01), redirige `80→443` et `www`→domaine apex. Config versionnée : [`Caddyfile`](Caddyfile).
+- Les ports **80/443 du NAS étant pris** par le nginx système et **8080 par ntfy**, Caddy écoute sur **8081/8443** ; la box redirige (NAT/PAT) le `80/443` public vers eux.
+- Les volumes `caddy_data`/`caddy_config` **persistent les certificats** — à ne pas supprimer (rate-limit ACME).
 
 ## Déploiement
 
-> Le compose build `../frontend` et `../backend` → **cloner le repo entier** sur le NAS
-> (pas seulement `infra/`).
+> Le compose build `../frontend` et `../backend` → **cloner le repo entier** sur le NAS, pas seulement `infra/`.
 
-1. Sur le NAS : `git clone <repo> && cd portfolio/infra`
-2. Créer le `.env` et le remplir :
+1. Cloner le repo, puis se placer dans `infra/`.
+2. Créer le `.env` à partir de l'exemple et le remplir :
    ```bash
    cp .env.example .env
-   nano .env   # Postgres fort, NTFY_BASE_URL + NTFY_TOPIC, SITE_URL, WEB_PORT
+   nano .env   # Postgres, NTFY_* (base + topic + token), TURNSTILE_SECRET, SITE_URL
    ```
 3. Build + démarrage :
    ```bash
@@ -33,44 +40,53 @@ Toute la stack du portfolio via Docker Compose.
    ```
 5. Vérifier que tout est sain :
    ```bash
-   docker compose ps      # postgres / ntfy / api / web → "healthy"
+   docker compose ps      # caddy / web / api / postgres / ntfy → "healthy"
    ```
-6. Brancher le reverse proxy + HTTPS d'UGOS sur `http://IP_NAS:${WEB_PORT}`.
+
+Mettre à jour ensuite = `git pull` puis `docker compose up -d --build web` (rebuild du service concerné).
+
+## Sécurité (en place)
+
+- **En-têtes** — HSTS + `Permissions-Policy` posés par Caddy ; `X-Frame-Options` / `X-Content-Type-Options` / `Referrer-Policy` par Nginx.
+- **Compression** — gzip côté Nginx (`gzip_proxied any`), traversé tel quel par Caddy (`transport { compression off }` + `header_up Accept-Encoding gzip`).
+- **Postgres** — jamais publié : joignable seulement par l'API via le réseau interne.
+- **ntfy** — auth `deny-all` par défaut : un user + **token** en écriture pour l'API, l'app du téléphone connectée avec ce compte. Topic au nom secret.
+- **Anti-bot** — Cloudflare **Turnstile** : Site Key publique dans le front, `TURNSTILE_SECRET` côté API (vérif `siteverify` *fail-closed* → 400 si jeton absent/invalide).
+- **`.env` jamais committé** (gitignoré, exclu par `.dockerignore`).
+
+## Notifications sur le téléphone (ntfy)
+
+1. Installer l'app **ntfy** (Android / iOS).
+2. Réglages → ajouter le serveur : `http://IP_DU_NAS:8080`, se connecter avec le compte ntfy créé.
+3. S'abonner au topic (`NTFY_TOPIC` du `.env`).
+4. Test depuis le NAS :
+   ```bash
+   curl -H "Authorization: Bearer $NTFY_TOKEN" -d "Test" http://localhost:8080/MON_TOPIC
+   ```
+
+### iOS
+
+Un serveur ntfy auto-hébergé ne peut pas pousser en arrière-plan sans relais APNs. D'où `NTFY_UPSTREAM_BASE_URL=https://ntfy.sh` dans le compose : seul un « réveil » anonyme transite par ntfy.sh, **le message reste sur le NAS**. (Android n'en a pas besoin.)
+
+## Spécificités NAS & dépannage
+
+- **Pas de `git` sur le NAS** → cloner/pull via conteneur :
+  ```bash
+  docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/..":/repo alpine/git -c safe.directory=/repo pull
+  ```
+- **Healthchecks en `127.0.0.1`** (pas `localhost`) : dans un conteneur, `localhost` résout d'abord en IPv6 `::1`, or l'API et Nginx n'écoutent qu'en IPv4 → sinon faux « unhealthy ».
+- **Drift local** : si un fichier a été patché à la main sur le NAS, faire `git checkout -- <fichier>` avant un `git pull` pour éviter un conflit.
+- **Réseau bridge Docker KO** (plus de sortie internet pour un conteneur fraîchement lancé, ex. `alpine/git pull` → « Could not resolve host ») : ajouter **`--network host`** au `docker run` du pull. Fix durable = redémarrer le service Docker / le NAS (régénère les règles iptables du bridge).
 
 ## Vérifications
 
 ```bash
 # Postgres répond ?
-docker exec -it portfolio-postgres psql -U portfolio -d portfolio -c "\l"
+docker compose exec postgres psql -U portfolio -d portfolio -c "\l"
 
 # ntfy répond ?
 curl http://localhost:8080/v1/health
+
+# compression active en prod ?
+curl -s -D - -H "Accept-Encoding: gzip" https://alexiswallez.fr/ -o /dev/null | grep -i content-encoding
 ```
-
-## Recevoir les notifs sur le téléphone
-
-1. Installer l'app **ntfy** (Android / iOS).
-2. Réglages → ajouter le serveur : `http://IP_DU_NAS:8080`.
-3. S'abonner au topic du formulaire (le même que celui configuré dans l'API backend,
-   ex. un nom secret et difficile à deviner).
-4. Test depuis le NAS :
-   ```bash
-   curl -d "Test depuis le NAS" http://localhost:8080/MON_TOPIC_SECRET
-   ```
-   → la notif doit arriver sur le téléphone.
-
-## iOS
-
-Sur iPhone, un serveur ntfy auto-hébergé ne peut pas pousser en arrière-plan sans relais
-APNs. D'où `NTFY_UPSTREAM_BASE_URL=https://ntfy.sh` dans le compose : seul un « réveil »
-anonyme transite par ntfy.sh, le message reste sur le NAS. (Android n'en a pas besoin.)
-
-## Sécurité (à garder en tête)
-
-- **Postgres (5432)** est exposé sur le LAN pour le dev. OK sur un réseau domestique ;
-  ne pas exposer ce port sur Internet. En prod, l'API tournera sur le NAS et parlera à
-  Postgres via le réseau Docker interne (port non publié).
-- **ntfy** : par défaut, qui connaît le topic peut publier/lire. Pour le v1 on s'appuie
-  sur un **topic au nom secret**. Durcissement possible plus tard : activer l'auth ntfy
-  (`NTFY_AUTH_DEFAULT_ACCESS=deny-all` + token pour l'API).
-- Mot de passe Postgres fort, et `.env` jamais committé (déjà gitignoré).

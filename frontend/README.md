@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# Frontend — portfolio (SPA React)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface du portfolio : **React 19 + TypeScript + Vite 8 + Tailwind CSS v4**, esthétique terminal, **bilingue FR/EN** et **thème clair/sombre**. Servi en production par Nginx (voir [`../infra/README.md`](../infra/README.md)).
 
-Currently, two official plugins are available:
+> Fait partie du monorepo [portfolio](../README.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- **React 19** + **TypeScript** — SPA
+- **Vite 8** — dev server + build
+- **Tailwind CSS v4** (via `@tailwindcss/vite`) — thème teal, breakpoints custom (`nav:950px`, `xs:370px`)
+- **i18n maison** (FR/EN) — `src/i18n/`
+- Polices auto-hébergées (`@fontsource-variable` : Inter + JetBrains Mono)
+- `react-phone-number-input` (drapeaux self-hostés, pas d'appel tiers)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Démarrage
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Script | Rôle |
+| --- | --- |
+| `npm run dev` | Serveur de dev (HMR) |
+| `npm run build` | Typecheck (`tsc -b`) + build de production (Vite) |
+| `npm run preview` | Sert le build local |
+| `npm run lint` | ESLint |
+| `npm test` | Tests Vitest (ajouter `-- --run` en CI) |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+> `predev`/`prebuild` copient d'abord les drapeaux téléphone en local (`scripts/copy-flags.mjs`) → pas de requête vers un CDN tiers.
+
+## Structure
+
 ```
+src/
+├── components/   Sections (Hero, About, Career, Projects, Contact…) + UI (Reveal, Lightbox…)
+├── hooks/        useReveal, useActiveSection (scroll-spy), useTypewriter…
+├── i18n/         LangContext + traductions FR/EN
+├── lib/          helpers (spotlight, etc.)
+├── assets/       visuels des projets (SVG générés, cf. branding/)
+├── test/         setup Vitest
+├── index.css     thème Tailwind (variables clair/sombre, aurora…)
+└── main.tsx      point d'entrée
+```
+
+## Caractéristiques
+
+- **Accessibilité (WCAG AA)** — structure sémantique, `sr-only`, focus visibles ; smoke test **axe** dans la suite Vitest.
+- **SEO** — meta OG/Twitter, données structurées JSON-LD (Person), `sitemap.xml`, `llms.txt`, fallback `<noscript>` (voir [`index.html`](index.html) et [`public/`](public)).
+- **Perf** — `Contact` et `Lightbox` chargés en lazy, polices en `font-display: swap`, visuels projets en SVG inline. Compression gzip côté serveur (Nginx).
+- **Animations** — apparition au scroll (`Reveal`), machine à écrire, particules canvas, transition de thème (View Transitions). Respecte `prefers-reduced-motion`.
+- **CV intégré** — modale plein écran affichant le CV en SVG vectoriel (bi-langue × bi-thème) + téléchargement PDF (`public/cv-*`).
+
+## Visuels des projets
+
+Les captures des projets sont des **SVG inline générés** (ils héritent des webfonts du site), bilingues et bi-thème. Régénérer :
+
+```bash
+node branding/generate-projects.mjs   # cwd = frontend/
+```
+
+Détails (og-image, projets) dans [`branding/README.md`](branding/README.md).
+
+## Tests
+
+```bash
+npm test          # watch
+npm test -- --run # une passe (CI)
+```
+
+Couvre l'i18n, le formulaire de contact, la lightbox et un contrôle d'accessibilité axe.
