@@ -8,7 +8,7 @@ import ProjectVisual from "./ProjectVisual";
 // chargée à la demande : seulement quand on agrandit une image
 const Lightbox = lazy(() => import("./Lightbox"));
 // Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
-// Générés par branding/generate-projects.mjs (5 projets × clair/sombre × FR/EN).
+// Générés par branding/generate-projects.mjs (6 projets × clair/sombre × FR/EN).
 const SVGS = import.meta.glob("../assets/projects/**/*.svg", {
   query: "?raw",
   import: "default",
@@ -45,8 +45,8 @@ const PROJECTS: Project[] = [
     folder: { fr: "portfolio", en: "portfolio" },
     title: { fr: "Ce portfolio", en: "This portfolio" },
     desc: {
-      fr: "Site full-stack React + TypeScript, API Node (Fastify) + PostgreSQL pour le contact, conteneurisé (Docker) et auto-hébergé sur mon NAS derrière un reverse proxy (HTTPS automatique). Résultat : Lighthouse 100 SEO / 100 accessibilité / 100 bonnes pratiques et ~98 de performance, avec tests et CI/CD.",
-      en: "Full-stack React + TypeScript site, Node (Fastify) API + PostgreSQL for the contact form, containerized (Docker) and self-hosted on my NAS behind a reverse proxy (automatic HTTPS). Result: Lighthouse 100 SEO / 100 accessibility / 100 best practices and ~98 performance, with tests and CI/CD.",
+      fr: "Site full-stack React + TypeScript, API Node (Fastify) + PostgreSQL pour le contact, conteneurisé (Docker) et auto-hébergé sur mon NAS derrière un reverse proxy Caddy (HTTPS automatique Let's Encrypt).",
+      en: "Full-stack React + TypeScript site, Node (Fastify) API + PostgreSQL for the contact form, containerized (Docker) and self-hosted on my NAS behind a Caddy reverse proxy (automatic HTTPS via Let's Encrypt).",
     },
     tags: ["React", "TypeScript", "Fastify", "PostgreSQL", "Docker"],
     asset: "portfolio",
@@ -70,10 +70,10 @@ const PROJECTS: Project[] = [
       en: "Self-hosted infrastructure (NAS)",
     },
     desc: {
-      fr: "Infrastructure auto-hébergée sur NAS Linux : une dizaine de services conteneurisés (Docker / docker-compose) — PostgreSQL, ntfy, VPN WireGuard, serveurs de jeux, reverse proxy — déployés et supervisés de façon reproductible, comme en production.",
-      en: "Self-hosted infrastructure on a Linux NAS: a dozen containerized services (Docker / docker-compose) — PostgreSQL, ntfy, WireGuard VPN, game servers, reverse proxy — deployed and monitored reproducibly, production-style.",
+      fr: "Infrastructure auto-hébergée sur NAS Linux : plusieurs services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : ce portfolio, un serveur de streaming média (Jellyfin), un VPN WireGuard, des serveurs de jeux, PostgreSQL et des notifications ntfy — déployés de façon reproductible.",
+      en: "Self-hosted infrastructure on a Linux NAS: several containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: this portfolio, a media streaming server (Jellyfin), a WireGuard VPN, game servers, PostgreSQL and ntfy notifications — deployed reproducibly.",
     },
-    tags: ["Docker", "Linux", "WireGuard", "self-hosting"],
+    tags: ["Docker", "Linux", "Caddy", "WireGuard", "self-hosting"],
     asset: "homelab",
   },
   {
@@ -89,6 +89,20 @@ const PROJECTS: Project[] = [
     },
     tags: ["Docker", "Kubernetes", "Terraform", "Ansible", "Bash"],
     asset: "perso",
+  },
+  {
+    name: "monitoring",
+    folder: { fr: "Supervision", en: "monitoring" },
+    title: {
+      fr: "Supervision & observabilité",
+      en: "Monitoring & observability",
+    },
+    desc: {
+      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) et déclenche une alerte push instantanée sur mobile (ntfy) dès qu'un service tombe. Dockge pilote les stacks Docker Compose et une page de statut centralise l'état des services. Détection de panne et notification de bout en bout, 100 % auto-hébergé, sans dépendance à un service tiers.",
+      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) and fires an instant mobile push alert (ntfy) the moment a service goes down. Dockge manages the Docker Compose stacks and a status page centralizes service health. End-to-end failure detection and alerting, fully self-hosted, with no third-party dependency.",
+    },
+    tags: ["Docker", "Uptime Kuma", "ntfy", "Monitoring", "Alerting"],
+    asset: "monitoring",
   },
 ];
 
@@ -164,7 +178,9 @@ export default function Projects() {
                 </div>
               )}
               {/* nom de dossier en mono, clin d'œil terminal */}
-              <p className="font-mono text-xs text-muted mb-2">~/{p.folder[lang]}/</p>
+              <p className="font-mono text-xs text-muted mb-2">
+                ~/{p.folder[lang]}/
+              </p>
 
               <h3 className="text-ink font-semibold mb-2">{p.title[lang]}</h3>
               <p className="text-sm text-muted leading-relaxed mb-4 grow">

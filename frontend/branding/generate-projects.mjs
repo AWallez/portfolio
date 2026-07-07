@@ -1,4 +1,4 @@
-// Generates the Projects-section visuals — 5 cards × light/dark theme × FR/EN.
+// Generates the Projects-section visuals — 6 cards × light/dark theme × FR/EN.
 // Each card is recolored from the site tokens (src/index.css) and rendered for
 // both palettes and both languages, so images match the site's colors AND its
 // current language. Commands / tech terms / tool output stay in English (universal);
@@ -6,7 +6,7 @@
 // Output is SVG (vector), inlined in Projects.tsx (inherits the site's webfonts).
 // IDs are made unique per file to avoid collisions between inlined SVGs.
 //
-//   node branding/generate-projects.mjs   -> 20 SVG into src/assets/projects/
+//   node branding/generate-projects.mjs   -> 22 SVG into src/assets/projects/
 //
 // File name pattern: {name}-{theme}-{lang}.svg
 
@@ -290,7 +290,9 @@ function portfolio(p, lang) {
   s += `<rect x="66" y="600" width="338" height="26" rx="8" fill="${a}"/>${T(235, 618, 11, p.accentInk, tr("→ Envoyer", "→ Send"), { w: "bold", anchor: "middle" })}`;
 
   s += `<line x1="424" y1="500" x2="482" y2="500" stroke="${p.muted}" stroke-width="2" marker-end="url(#arrow)"/>`;
-  s += T(453, 492, 10, p.muted, "POST", { anchor: "middle" });
+  // la requête transite par le reverse proxy Caddy (HTTPS) avant d'atteindre l'API
+  s += `<rect x="424" y="474" width="58" height="20" rx="10" fill="${p.base}"/><rect x="424" y="474" width="58" height="20" rx="10" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(453, 488, 10, a, "Caddy", { w: "bold", anchor: "middle", mono: true })}`;
+  s += T(453, 516, 10, p.muted, "POST", { anchor: "middle" });
   s += card(488, 470, 168, 76, p, { r: 12, fill: p.chrome, stroke: p.chrome });
   s += `<circle cx="510" cy="500" r="6" fill="${a}"/>${T(524, 497, 13, p.chromeInk, "Fastify API", { w: "bold" })}`;
   s += T(506, 524, 11, p.chromeInk, "/api/contact", { mono: true, op: 0.7 });
@@ -368,7 +370,7 @@ function reseau(p, lang) {
     o += T(x + 16, 538, 11, p.muted, l2);
     return o;
   };
-  s += vlan(125, "VLAN 10", tr("Serveurs", "Servers"), "NAS · Postgres · ntfy", tr("jeux · stockage", "games · storage"));
+  s += vlan(125, "VLAN 10", tr("Serveurs", "Servers"), "NAS · Docker · Caddy", tr("Jellyfin · jeux · supervision", "Jellyfin · games · monitoring"));
   s += vlan(375, "VLAN 20", tr("Postes de travail", "Workstations"), "PC / dev", tr("machines de travail", "work machines"));
   s += vlan(625, "VLAN 30", tr("IoT / Domotique", "IoT / Smart home"), tr("objets connectés", "connected devices"), tr("isolé du LAN", "isolated from LAN"));
   s += vlan(875, "VLAN 40", tr("Invités / Wi-Fi", "Guests / Wi-Fi"), tr("accès limité", "limited access"), tr("aucun accès interne", "no internal access"));
@@ -412,34 +414,45 @@ function homelab(p, lang) {
   s += `<rect x="724" y="130" width="82" height="22" rx="11" fill="${a}"/>${T(765, 145, 11, p.accentInk, "Docker", { w: "bold", anchor: "middle", mono: true })}`;
   s += T(400, 190, 12, p.muted, tr("Services conteneurisés", "Containerized services"), { w: "bold" });
 
+  // rendu d'une tuile de service (halo accent + nom + sous-titre)
+  const svc = (x, y, name, sub) => {
+    let o = card(x, y, 196, 54, p, { r: 10, fill: p.soft, shadow: false });
+    o += `<circle cx="${x + 22}" cy="${y + 27}" r="7" fill="${a}" fill-opacity="0.18" stroke="${a}" stroke-opacity="0.5"/><circle cx="${x + 22}" cy="${y + 27}" r="3" fill="${a}"/>`;
+    o += T(x + 38, y + 24, 13, p.ink, name, { w: "bold" });
+    o += T(x + 38, y + 40, 10, p.muted, sub, { mono: true });
+    return o;
+  };
+
+  // grille 2×4 : 8 conteneurs (Supervision = Uptime Kuma + Dockge fusionnés), Jellyfin en dernier
   const services = tr(
     [
       [400, 202, "PostgreSQL", "base de données"],
       [606, 202, "ntfy", "notifications push"],
-      [400, 278, "WireGuard", "VPN auto-hébergé"],
-      [606, 278, "Serveurs de jeux", "multijoueur"],
-      [400, 354, "Stockage RAID", "données &amp; sauvegardes"],
-      [606, 354, "Nginx", "reverse proxy / HTTPS"],
+      [400, 264, "WireGuard", "VPN auto-hébergé"],
+      [606, 264, "Serveurs de jeux", "multijoueur"],
+      [400, 326, "Stockage RAID", "données &amp; sauvegardes"],
+      [606, 326, "Caddy", "reverse proxy / HTTPS"],
+      [400, 388, "Supervision", "Uptime Kuma · Dockge"],
+      [606, 388, "Jellyfin", "streaming média"],
     ],
     [
       [400, 202, "PostgreSQL", "database"],
       [606, 202, "ntfy", "push notifications"],
-      [400, 278, "WireGuard", "self-hosted VPN"],
-      [606, 278, "Game servers", "multiplayer"],
-      [400, 354, "RAID storage", "data &amp; backups"],
-      [606, 354, "Nginx", "reverse proxy / HTTPS"],
+      [400, 264, "WireGuard", "self-hosted VPN"],
+      [606, 264, "Game servers", "multiplayer"],
+      [400, 326, "RAID storage", "data &amp; backups"],
+      [606, 326, "Caddy", "reverse proxy / HTTPS"],
+      [400, 388, "Monitoring", "Uptime Kuma · Dockge"],
+      [606, 388, "Jellyfin", "media streaming"],
     ],
   );
   services.forEach(([x, y, name, sub]) => {
-    s += card(x, y, 196, 62, p, { r: 10, fill: p.soft, shadow: false });
-    s += `<circle cx="${x + 22}" cy="${y + 31}" r="7" fill="${a}" fill-opacity="0.18" stroke="${a}" stroke-opacity="0.5"/><circle cx="${x + 22}" cy="${y + 31}" r="3" fill="${a}"/>`;
-    s += T(x + 38, y + 28, 13, p.ink, name, { w: "bold" });
-    s += T(x + 38, y + 44, 10, p.muted, sub, { mono: true });
+    s += svc(x, y, name, sub);
   });
-  s += T(400, 448, 11, p.muted, tr("+ docker-compose · Linux · durcissement · monitoring", "+ docker-compose · Linux · hardening · monitoring"), { op: 0.85 });
-  s += `<rect x="400" y="462" width="402" height="64" rx="10" fill="${p.soft}"/>`;
-  s += T(416, 486, 11, p.muted, "$ docker compose up -d", { mono: true });
-  s += `<circle cx="420" cy="504" r="4" fill="${a}"/>${T(432, 508, 11, a, tr("6 services actifs", "6 services running"), { mono: true })}`;
+  s += T(400, 458, 11, p.muted, tr("+ docker-compose · Linux · durcissement", "+ docker-compose · Linux · hardening"), { op: 0.85 });
+  s += `<rect x="400" y="470" width="402" height="56" rx="10" fill="${p.soft}"/>`;
+  s += T(416, 492, 11, p.muted, "$ docker compose up -d", { mono: true });
+  s += `<circle cx="420" cy="510" r="4" fill="${a}"/>${T(432, 514, 11, a, tr("8 services actifs", "8 services running"), { mono: true })}`;
 
   // clients
   const cl = (y, label, icon, secure = false) => {
@@ -507,12 +520,115 @@ function lab(p) {
   return frame(p, s);
 }
 
+/* ================================================================== */
+/* 6. monitoring — supervision & observabilité                        */
+/* ================================================================== */
+function monitoring(p, lang) {
+  const a = p.accent;
+  const tr = (fr, en) => (lang === "fr" ? fr : en);
+  const up = "#22c55e"; // statut OK (couleurs de statut universelles, hors thème)
+  const down = "#ef4444"; // statut hors ligne
+  let s = "";
+
+  const dx = 64,
+    dy = 84,
+    dw = 700;
+  const rx = 792,
+    rw = 344;
+
+  // connecteur : la sonde en panne déclenche l'alerte ntfy
+  s += `<path d="M740 480 C 768 480, 770 440, 792 440" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>`;
+
+  // ---- Dashboard Uptime Kuma ----
+  s += card(dx, dy, dw, 512, p, { r: 16 });
+  s += titlebar(dx, dy, dw, p, "uptime-kuma", { h: 40 });
+  s += T(dx + 24, dy + 74, 14, p.ink, tr("État des services", "Service health"), { w: "bold" });
+  s += `<rect x="${dx + dw - 172}" y="${dy + 56}" width="148" height="26" rx="13" fill="${up}" fill-opacity="0.14" stroke="${up}" stroke-opacity="0.42"/>`;
+  s += `<circle cx="${dx + dw - 154}" cy="${dy + 69}" r="4.5" fill="${up}"/>`;
+  s += T(dx + dw - 142, dy + 73, 12, up, tr("16 / 17 en ligne", "16 / 17 up"), { mono: true, w: "bold" });
+
+  const rows = tr(
+    [
+      ["portfolio · web", true, "99,98 %", "42 ms"],
+      ["api · contact", true, "99,95 %", "31 ms"],
+      ["postgres", true, "100 %", "3 ms"],
+      ["jellyfin", true, "99,90 %", "88 ms"],
+      ["caddy · reverse proxy", true, "100 %", "11 ms"],
+      ["wireguard", false, "hors ligne", "—"],
+    ],
+    [
+      ["portfolio · web", true, "99.98%", "42 ms"],
+      ["api · contact", true, "99.95%", "31 ms"],
+      ["postgres", true, "100%", "3 ms"],
+      ["jellyfin", true, "99.90%", "88 ms"],
+      ["caddy · reverse proxy", true, "100%", "11 ms"],
+      ["wireguard", false, "offline", "—"],
+    ],
+  );
+  let ry = dy + 96;
+  rows.forEach(([name, ok, uptime, lat]) => {
+    const c = ok ? up : down;
+    s += card(dx + 24, ry, dw - 48, 48, p, { r: 10, fill: p.soft, shadow: false });
+    s += `<circle cx="${dx + 48}" cy="${ry + 24}" r="6.5" fill="${c}" fill-opacity="0.2" stroke="${c}" stroke-opacity="0.55"/><circle cx="${dx + 48}" cy="${ry + 24}" r="3" fill="${c}"/>`;
+    s += T(dx + 66, ry + 29, 13, p.ink, name, { w: "bold" });
+    // historique de disponibilité (barres)
+    const bx = dx + 372;
+    for (let i = 0; i < 20; i++) {
+      const bad = !ok && i >= 17;
+      s += `<rect x="${bx + i * 8}" y="${ry + 15}" width="5" height="18" rx="1.5" fill="${bad ? down : up}" fill-opacity="${bad ? 0.85 : 0.5}"/>`;
+    }
+    s += T(dx + dw - 150, ry + 29, 11.5, c, uptime, { mono: true, w: "bold" });
+    s += T(dx + dw - 40, ry + 29, 11, p.muted, lat, { mono: true, anchor: "end" });
+    ry += 56;
+  });
+  s += T(dx + 24, dy + 490, 11, p.muted, tr("Sondes via le socket Docker · intervalle 60 s · 15 sondes actives", "Probes via Docker socket · 60 s interval · 15 active checks"), { mono: true, op: 0.85 });
+
+  // ---- Dockge (gestion des stacks Compose) ----
+  s += card(rx, dy, rw, 200, p, { r: 16 });
+  s += titlebar(rx, dy, rw, p, "dockge — stacks", { h: 36 });
+  const stacks = tr(
+    [["portfolio", "5"], ["monitoring", "2"], ["jeux", "3"]],
+    [["portfolio", "5"], ["monitoring", "2"], ["games", "3"]],
+  );
+  let sy = dy + 52;
+  stacks.forEach(([nm, cnt]) => {
+    s += card(rx + 20, sy, rw - 40, 40, p, { r: 8, fill: p.soft, shadow: false });
+    s += `<rect x="${rx + 34}" y="${sy + 13}" width="14" height="14" rx="3" fill="${a}" fill-opacity="0.2" stroke="${a}" stroke-opacity="0.5"/>`;
+    s += T(rx + 58, sy + 25, 12.5, p.ink, nm, { w: "bold" });
+    s += `<circle cx="${rx + rw - 96}" cy="${sy + 20}" r="4" fill="${up}"/>`;
+    s += T(rx + rw - 84, sy + 24, 11, up, "running", { mono: true });
+    s += T(rx + rw - 28, sy + 24, 11, p.muted, "×" + cnt, { mono: true, anchor: "end" });
+    sy += 48;
+  });
+
+  // ---- Alerte ntfy (push mobile) ----
+  const ay = dy + 224;
+  s += card(rx, ay, rw, 288, p, { r: 16 });
+  s += `<rect x="${rx + 20}" y="${ay + 20}" width="40" height="40" rx="10" fill="${a}"/>`;
+  s += `<path d="M${rx + 40} ${ay + 30} a9 9 0 0 1 9 9 v5 l2 3 h-22 l2 -3 v-5 a9 9 0 0 1 9 -9 z" fill="${p.accentInk}"/><circle cx="${rx + 40}" cy="${ay + 52}" r="2.5" fill="${p.accentInk}"/>`;
+  s += T(rx + 72, ay + 37, 14, p.ink, "ntfy", { w: "bold" });
+  s += T(rx + 72, ay + 54, 11, p.muted, tr("sur ton téléphone", "on your phone"), { mono: true });
+  s += T(rx + rw - 20, ay + 37, 10, p.muted, tr("maintenant", "now"), { anchor: "end" });
+  s += `<line x1="${rx + 20}" y1="${ay + 74}" x2="${rx + rw - 20}" y2="${ay + 74}" stroke="${p.line}"/>`;
+  s += `<rect x="${rx + 20}" y="${ay + 88}" width="${rw - 40}" height="134" rx="10" fill="${down}" fill-opacity="0.08" stroke="${down}" stroke-opacity="0.3"/>`;
+  s += `<circle cx="${rx + 44}" cy="${ay + 116}" r="5" fill="${down}"/>`;
+  s += T(rx + 58, ay + 121, 13.5, p.ink, "wireguard", { w: "bold" });
+  s += `<rect x="${rx + rw - 96}" y="${ay + 106}" width="66" height="22" rx="6" fill="${down}"/>${T(rx + rw - 63, ay + 121, 11, "#ffffff", "DOWN", { w: "bold", anchor: "middle", mono: true })}`;
+  s += T(rx + 40, ay + 150, 12, p.muted, tr("Le conteneur ne répond plus", "Container is not responding"));
+  s += T(rx + 40, ay + 172, 10.5, p.muted, tr("Sonde « Docker » · échec depuis 60 s", "“Docker” probe · failing 60 s"), { mono: true });
+  s += `<rect x="${rx + 40}" y="${ay + 188}" width="128" height="22" rx="5" fill="${down}" fill-opacity="0.12" stroke="${down}" stroke-opacity="0.32"/>${T(rx + 54, ay + 203, 11, down, tr("priorité urgente", "urgent priority"), { mono: true })}`;
+  s += T(rx + 20, ay + 252, 10.5, p.muted, tr("Relais APNs → push même app fermée", "APNs relay → push even when app closed"), { mono: true, op: 0.85 });
+
+  return frame(p, s);
+}
+
 /* ------------------------------------------------------------------ */
 const BUILDERS = {
   "web-clients": clients,
   portfolio,
   reseau,
   homelab,
+  monitoring,
   perso: lab,
 };
 
