@@ -8,7 +8,7 @@ Interface du portfolio : **React 19 + TypeScript + Vite 8 + Tailwind CSS v4**, e
 
 - **React 19** + **TypeScript** — SPA
 - **Vite 8** — dev server + build
-- **Tailwind CSS v4** (via `@tailwindcss/vite`) — thème teal, breakpoints custom (`nav:950px`, `xs:370px`)
+- **Tailwind CSS v4** (via `@tailwindcss/vite`) — thème vert canard, breakpoints custom (`nav:950px`, `xs:370px`)
 - **i18n maison** (FR/EN) — `src/i18n/`
 - Polices auto-hébergées (`@fontsource-variable` : Inter + JetBrains Mono)
 - `react-phone-number-input` (drapeaux self-hostés, pas d'appel tiers)

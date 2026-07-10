@@ -10,7 +10,7 @@
   --ink: #0a2229;
   --muted: #486169;
   --line: #c8d6d2;
-  --accent: #0f766e;
+  --accent: #006d77;
 }
 .dark {
   /* thème sombre */
@@ -20,7 +20,7 @@
   --ink: #e6edf3;
   --muted: #8b98a5;
   --line: #1f2a30;
-  --accent: #2dd4bf;
+  --accent: #14b8a6;
 }
 
 @theme inline {
