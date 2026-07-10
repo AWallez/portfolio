@@ -24,6 +24,14 @@ export default function Header() {
   const active = useActiveSection(SECTIONS);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // le terminal interactif du Hero peut demander l'ouverture du CV
+  // (commande `cv`) : la modale vit ici, on écoute un événement global.
+  useEffect(() => {
+    const openCv = () => setCvOpen(true);
+    window.addEventListener("portfolio:open-cv", openCv);
+    return () => window.removeEventListener("portfolio:open-cv", openCv);
+  }, []);
+
   // ferme le menu mobile sur Échap et au clic en dehors
   useEffect(() => {
     if (!open) return;

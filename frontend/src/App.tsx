@@ -1,6 +1,7 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useLang } from "./i18n/LangContext";
 import { t } from "./i18n/translations";
+import NotFound from "./components/NotFound";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -18,8 +19,41 @@ import Reveal from "./components/Reveal";
 import BackToTop from "./components/BackToTop";
 import ScrollProgress from "./components/ScrollProgress";
 
+// La page ne vit qu'à la racine ; Nginx renvoie index.html pour toute route
+// inconnue (fallback SPA) → c'est ici qu'on décide d'afficher la 404.
+const isHome = ["/", "/index.html"].includes(window.location.pathname);
+
 export default function App() {
   const { lang } = useLang();
+
+  // Curseur « _ » qui clignote dans le titre de l'onglet quand il passe en
+  // arrière-plan (clin d'œil terminal + rappel discret). Onglet actif = titre
+  // SEO d'origine intact, donc aucune incidence sur l'indexation.
+  useEffect(() => {
+    if (!isHome) return;
+    const original = document.title;
+    let timer: number | undefined;
+    const onVisibility = () => {
+      if (document.hidden) {
+        let on = true;
+        timer = window.setInterval(() => {
+          document.title = on ? "// alexis.wallez_" : "// alexis.wallez";
+          on = !on;
+        }, 700);
+      } else {
+        if (timer) clearInterval(timer);
+        document.title = original;
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (timer) clearInterval(timer);
+      document.title = original;
+    };
+  }, []);
+
+  if (!isHome) return <NotFound />;
 
   return (
     <div className="min-h-screen text-ink">

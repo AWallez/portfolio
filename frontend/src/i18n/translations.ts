@@ -135,6 +135,19 @@ export const translations = {
     },
     connect: { fr: "Me contacter", en: "Get in touch" },
     rights: { fr: "Tous droits réservés.", en: "All rights reserved." },
+    // badge « infra live » : état réel renvoyé par l'API auto-hébergée (/api/health)
+    hostOnline: {
+      fr: "infra en ligne — servie depuis mon NAS",
+      en: "infra live — served from my NAS",
+    },
+    hostOffline: {
+      fr: "API momentanément hors ligne",
+      en: "API temporarily offline",
+    },
+    hostChecking: {
+      fr: "vérification de l'infra…",
+      en: "checking infra…",
+    },
   },
   nav: {
     about: { fr: "À propos", en: "About" },

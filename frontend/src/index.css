@@ -337,3 +337,45 @@ html {
   max-height: 100%;
   max-width: 100%;
 }
+
+/* ---- Info-bulle des tags de compétences (hover desktop uniquement) ---- */
+.tag-tip {
+  position: relative;
+}
+.tag-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 230px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: center;
+  white-space: normal;
+  box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  translate: 0 4px;
+  transition:
+    opacity 0.15s ease,
+    translate 0.15s ease;
+  pointer-events: none;
+  z-index: 30;
+}
+.tag-tip:hover::after {
+  opacity: 1;
+  translate: 0 0;
+}
+/* pas de hover fiable au tactile → on n'affiche rien */
+@media (pointer: coarse) {
+  .tag-tip::after {
+    display: none;
+  }
+}

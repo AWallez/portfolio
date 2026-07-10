@@ -1,6 +1,29 @@
+import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+
+// même convention que Contact.tsx : URL directe en dev, même origine en prod
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
+
+type Infra = "checking" | "online" | "offline";
+
+// Interroge l'API auto-hébergée : le badge du footer reflète l'état RÉEL de
+// l'infra (NAS → Docker → Fastify) au moment de la visite — la preuve DevOps
+// en direct plutôt qu'une simple déclaration.
+function useInfraStatus(): Infra {
+  const [status, setStatus] = useState<Infra>("checking");
+  useEffect(() => {
+    const ctl = new AbortController();
+    fetch(`${API_URL}/api/health`, { signal: ctl.signal })
+      .then((r) => setStatus(r.ok ? "online" : "offline"))
+      .catch(() => {
+        if (!ctl.signal.aborted) setStatus("offline");
+      });
+    return () => ctl.abort();
+  }, []);
+  return status;
+}
 
 // chemins SVG officiels des logos (source : simple-icons), collés en dur → zéro dépendance
 const GITHUB_PATH =
@@ -43,6 +66,13 @@ const LINKS = [
 export default function Footer() {
   const { lang } = useLang();
   const year = new Date().getFullYear();
+  const infra = useInfraStatus();
+  const infraKey =
+    infra === "online"
+      ? "hostOnline"
+      : infra === "offline"
+        ? "hostOffline"
+        : "hostChecking";
 
   return (
     <footer className="border-t border-line mt-10 bg-base/60 backdrop-blur">
@@ -66,6 +96,25 @@ export default function Footer() {
           </p>
           <p className="font-mono text-xs text-muted">
             {t("footer", "stack", lang)}
+          </p>
+
+          {/* état LIVE de l'infra auto-hébergée (vérifié via /api/health au chargement) */}
+          <p
+            role="status"
+            className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-muted"
+          >
+            <span
+              aria-hidden
+              className={
+                "inline-block h-2 w-2 rounded-full " +
+                (infra === "online"
+                  ? "bg-green-500"
+                  : infra === "offline"
+                    ? "bg-red-400"
+                    : "bg-yellow-400 animate-pulse motion-reduce:animate-none")
+              }
+            />
+            {t("footer", infraKey, lang)}
           </p>
         </div>
 

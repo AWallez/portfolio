@@ -12,6 +12,9 @@ await app.register(cors, { origin: config.corsOrigin, methods: ["POST"] });
 await app.register(rateLimit, { global: false }); // activé route par route
 
 app.get("/health", async () => ({ status: "ok" }));
+// même healthcheck exposé sous /api/ : c'est le seul préfixe que Nginx proxifie
+// vers l'API → utilisé par le badge « infra live » du footer.
+app.get("/api/health", async () => ({ status: "ok" }));
 await app.register(contactRoutes);
 
 try {
