@@ -414,7 +414,9 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="items-center max-w-210 container-page py-7 w-full">
+    // max-w-215 (au lieu de 210) : compense la gouttière de scrollbar réservée
+    // dans le corps du terminal (les lignes de l'intro wrappent comme avant)
+    <section className="items-center max-w-215 container-page py-7 w-full">
       {/* titre principal (h1) pour lecteurs d'écran & SEO ; le terminal animé
           ci-dessous reste le rendu visuel. lines[0].output = nom + rôle localisés */}
       <h1 className="sr-only">{lines[0].output}</h1>
@@ -438,15 +440,16 @@ export default function Hero() {
         </div>
 
         {/* Corps : hauteur figée via le fantôme mesuré (même composant → mesure
-            exacte). overflow-hidden : la molette ne capture jamais le scroll de
-            la page ; on suit la dernière ligne en JS (scrollTop marche même en
-            hidden), l'ancien contenu est rogné en haut comme un vrai terminal */}
+            exacte, invite comprise). scrollbar-gutter réserve la place de la
+            scrollbar dès le départ : quand elle apparaît (commandes tapées),
+            rien ne se re-wrappe. +44 = padding vertical (40) + marge de sûreté */}
         <div
           ref={bodyRef}
-          className="relative p-5 font-mono text-sm leading-relaxed overflow-y-hidden"
-          style={{ height: height ? height + 40 : "auto" }}
+          className="relative p-5 font-mono text-sm leading-relaxed overflow-y-auto [scrollbar-gutter:stable]"
+          style={{ height: height ? height + 44 : "auto" }}
         >
-          {/* ① fantôme invisible = état final mesuré */}
+          {/* ① fantôme invisible = état final mesuré (invite interactive
+              comprise, sinon elle déborderait de la hauteur figée) */}
           <div
             ref={ref}
             aria-hidden
@@ -455,6 +458,10 @@ export default function Hero() {
             {lines.map((line, i) => (
               <TerminalLine key={i} line={line} lang={lang} ghost />
             ))}
+            <p className="wrap-break-word">
+              <Prompt path="~/portfolio" />
+              {T.hint}
+            </p>
           </div>
 
           {/* ② version animée visible (masquée après `clear`, comme un vrai shell) */}
