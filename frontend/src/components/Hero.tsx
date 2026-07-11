@@ -453,7 +453,7 @@ export default function Hero() {
             rien ne se re-wrappe. +44 = padding vertical (40) + marge de sûreté */}
         <div
           ref={bodyRef}
-          className="relative p-5 font-mono text-sm leading-relaxed overflow-y-auto [scrollbar-gutter:stable]"
+          className="relative p-5 font-mono text-sm leading-relaxed overflow-y-auto scrollbar-gutter-stable"
           style={{ height: height ? height + 44 : "auto" }}
         >
           {/* ① fantôme invisible = état final mesuré (invite interactive
