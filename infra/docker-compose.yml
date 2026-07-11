@@ -103,8 +103,12 @@ services:
       - "8081:80"
       - "8443:443"
       - "8443:443/udp" # HTTP/3 (QUIC)
+    # NB : sur la machine de déploiement, un docker-compose.override.yml LOCAL
+    # (non versionné, chargé automatiquement) peut enrichir ce service :
+    # image Caddy avec plugins + réseaux d'autres stacks pour les blocs conf.d/.
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./conf.d:/etc/caddy/conf.d:ro # blocs locaux importés (gitignorés)
       - caddy_data:/data # certificats Let's Encrypt — À PERSISTER (rate-limit ACME)
       - caddy_config:/config
 

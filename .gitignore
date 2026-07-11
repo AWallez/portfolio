@@ -29,3 +29,8 @@ Thumbs.db
 
 # Divers
 *.local
+
+# Config locale à la machine de déploiement (NAS) — jamais versionnée :
+# blocs Caddy des services personnels + override compose (image/réseaux)
+infra/conf.d/*.caddy
+infra/docker-compose.override.yml

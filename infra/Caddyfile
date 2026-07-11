@@ -38,3 +38,16 @@ alexiswallez.fr {
 		}
 	}
 }
+
+# ntfy (notifications push : formulaire de contact + alertes monitoring),
+# exposé en HTTPS pour que le téléphone s'abonne hors LAN. Auth deny-all
+# côté ntfy : seuls les comptes autorisés lisent/publient.
+ntfy.alexiswallez.fr {
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy ntfy:80
+}
+
+# Blocs locaux à la machine de déploiement (services personnels hors
+# portfolio) : fichiers *.caddy dans conf.d/, non versionnés (gitignorés)
+# → ils survivent aux `git reset --hard` des déploiements.
+import conf.d/*.caddy
