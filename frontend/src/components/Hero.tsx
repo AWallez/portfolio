@@ -18,8 +18,7 @@ const LINES_FR: Line[] = [
   {
     path: "~/portfolio",
     command: "cd services/ ; ls",
-    output:
-      "contact.sh   dev-web/   montage-pc/   conseil/",
+    output: "contact.sh   dev-web/   montage-pc/   conseil/",
   },
   {
     path: "~/portfolio/services",
@@ -83,10 +82,12 @@ const TERM = {
     theme: "Bascule du thème ✓",
     langSame: "Déjà en français 😉  (essaie « lang en »)",
     sudo: "[sudo] Mot de passe : ●●●●●●●● — accès refusé 😄",
-    coffee: "☕ Café en préparation… prêt ! Je le prends volontiers en vrai aussi.",
+    coffee:
+      "☕ Café en préparation… prêt ! Je le prends volontiers en vrai aussi.",
     rmrf: "🚨 Bien tenté ! Heureusement, tout est versionné sur GitHub.",
     exit: "Pas de sortie ici — mais le formulaire de contact est juste en bas 😉",
-    notFound: (c: string) => `bash : ${c} : commande introuvable — tape « help »`,
+    notFound: (c: string) =>
+      `bash : ${c} : commande introuvable — tape « help »`,
   },
   en: {
     hint: "type help ↵",
@@ -264,19 +265,24 @@ export default function Hero() {
       return [T.theme];
     }
     if (low === "lang" || low === "lang en" || low === "lang fr") {
-      const target = low.endsWith("en") ? "en" : low.endsWith("fr") ? "fr" : null;
+      const target = low.endsWith("en")
+        ? "en"
+        : low.endsWith("fr")
+          ? "fr"
+          : null;
       if (target === lang) return [T.langSame];
       toggleLang(); // remonte Hero (key={lang}) → l'intro rejoue dans l'autre langue
       return [];
     }
-    // navigation façon shell : cd <section>, cd ~ (haut de page), cd /projets…
-    if (low === "cd" || low === "cd ~" || low === "cd /" || low === "cd ~/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return [T.home];
-    }
-    if (low.startsWith("cd ")) {
-      const arg = low.slice(3).trim();
+    // navigation façon shell : cd <section>, et toute variante de « remonter
+    // à la racine ~ » : cd · cd ~ · cd / · cd .. · cd ../ · cd ../.. · cd . · cd - · cd..
+    if (low === "cd" || low === "cd.." || low.startsWith("cd ")) {
+      const arg = low.startsWith("cd ") ? low.slice(3).trim() : "";
       const key = arg.replace(/^[~/]+/, "").replace(/\/+$/, ""); // ~/x, /x, x/
+      if (!key || key === "~" || /^[./-]+$/.test(key)) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return [T.home];
+      }
       const target = SECTIONS_MAP[key];
       if (target) {
         scrollToSection(target);
@@ -364,7 +370,9 @@ export default function Hero() {
       const r = el.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight) return; // hors écran → ignore
       const nx = clamp((mx - (r.left + r.width / 2)) / (window.innerWidth / 2));
-      const ny = clamp((my - (r.top + r.height / 2)) / (window.innerHeight / 2));
+      const ny = clamp(
+        (my - (r.top + r.height / 2)) / (window.innerHeight / 2),
+      );
       el.style.transform = `perspective(900px) rotateX(${(-ny * MAX).toFixed(2)}deg) rotateY(${(nx * MAX).toFixed(2)}deg)`;
       // ombre portée opposée à l'inclinaison → effet « soulevé du plan »
       // (on garde le biseau inset pour l'épaisseur, sinon il sauterait au survol)
@@ -495,9 +503,11 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* ④ invite réelle : le terminal devient interactif après l'intro */}
+          {/* ④ invite réelle : le terminal devient interactif après l'intro.
+              gap-2 ≈ un caractère mono : en flex, l'espace de fin du « $ » est
+              avalé — on recrée le même écart que sur les lignes de l'intro */}
           {introDone && (
-            <form onSubmit={onSubmit} className="flex items-baseline">
+            <form onSubmit={onSubmit} className="flex items-baseline gap-2">
               <span className="whitespace-nowrap">
                 <Prompt path="~/portfolio" />
               </span>
