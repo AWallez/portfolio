@@ -12,12 +12,18 @@ www.alexiswallez.fr {
 }
 
 alexiswallez.fr {
-	# En-têtes de sécurité ajoutés à l'edge (HSTS + Permissions-Policy).
-	# X-Frame-Options / X-Content-Type-Options / Referrer-Policy sont déjà posés
-	# par Nginx (web) et traversent Caddy. CSP volontairement omise (script anti-flash inline).
+	# TOUS les en-têtes de sécurité sont posés ici, à l'edge — un seul endroit,
+	# appliqués uniformément à chaque réponse. (Avant, X-Frame/X-Content-Type/
+	# Referrer venaient de Nginx, mais un add_header dans un location — cache
+	# des assets, no-store d'index.html — ANNULE ceux hérités du bloc server :
+	# certaines réponses partaient sans en-têtes.) CSP volontairement omise
+	# (script anti-flash inline dans le <head>).
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
 		-Server
 	}
 	# Nginx (web) compresse déjà en gzip. On fait simplement TRAVERSER sa réponse :

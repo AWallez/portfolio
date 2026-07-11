@@ -6,7 +6,11 @@ import process from "node:process";
 import { config } from "./config";
 import { contactRoutes } from "./routes/contact";
 
-const app = Fastify({ logger: true });
+// trustProxy : derrière Caddy → Nginx, sans ça req.ip vaudrait l'IP interne du
+// proxy pour TOUS les visiteurs (rate-limit global partagé au lieu de par IP,
+// colonne contacts.ip inutile, remoteip Turnstile faux). Sûr ici : l'API n'est
+// joignable que par Nginx via le réseau Docker interne.
+const app = Fastify({ logger: true, trustProxy: true });
 
 await app.register(cors, { origin: config.corsOrigin, methods: ["POST"] });
 await app.register(rateLimit, { global: false }); // activé route par route
