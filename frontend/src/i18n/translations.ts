@@ -137,8 +137,8 @@ export const translations = {
     rights: { fr: "Tous droits réservés.", en: "All rights reserved." },
     // badge « infra live » : état réel renvoyé par l'API auto-hébergée (/api/health)
     hostOnline: {
-      fr: "infra en ligne — servie depuis mon NAS",
-      en: "infra live — served from my NAS",
+      fr: "infra en ligne — hébergée sur mon NAS",
+      en: "infra live — hosted on my NAS",
     },
     hostOffline: {
       fr: "API momentanément hors ligne",
