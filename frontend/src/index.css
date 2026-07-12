@@ -346,6 +346,37 @@ html {
   max-width: 100%;
 }
 
+/* ---- Info-bulles des compétences : entrée (@starting-style) / sortie (is-closing) ----
+   La bulle est visible par défaut (opacity:1) → aucune dépendance à un rAF JS :
+   robuste même si les transitions ne tournent pas. */
+.tooltip-anim {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+  transition:
+    opacity 0.15s ease-out,
+    scale 0.15s ease-out,
+    translate 0.15s ease-out;
+}
+@starting-style {
+  .tooltip-anim {
+    opacity: 0;
+    scale: 0.96;
+    translate: 0 4px;
+  }
+}
+.tooltip-anim.is-closing {
+  opacity: 0;
+  scale: 0.96;
+  translate: 0 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tooltip-anim,
+  .tooltip-anim.is-closing {
+    transition: none;
+  }
+}
+
 /* ---- Invite du terminal (Hero) : hint « tape help » via ::before ----
    Le span contentEditable n'a pas de placeholder natif : on affiche data-hint
    tant qu'il est vide (retiré dès la première frappe, ou dès qu'une commande a

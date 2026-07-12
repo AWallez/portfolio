@@ -7,7 +7,13 @@ import {
   Database,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
@@ -34,12 +40,13 @@ const GROUPS: {
       "VMware",
       "VirtualBox",
       "Bash",
+      "systemd",
     ],
   },
   {
     key: "network",
     Icon: Network,
-    items: ["WireGuard", "DNS", "IPv4/IPv6", "iptables", "SSH", "iSCSI", "Nginx / Caddy"],
+    items: ["WireGuard", "VLAN", "DNS", "IPv4/IPv6", "iptables", "SSH", "iSCSI", "Nginx / Caddy"],
   },
   {
     key: "frontend",
@@ -54,6 +61,7 @@ const GROUPS: {
       "Angular",
       "Next.js",
       "Vite",
+      "Vitest",
       "Responsive design",
       "SEO",
     ],
@@ -70,6 +78,7 @@ const GROUPS: {
       "AWS",
       "Git",
       "GitLab",
+      "GitHub Actions",
       "CI/CD",
       "Kubernetes",
       "Terraform",
@@ -131,6 +140,10 @@ const TIPS: Record<string, { fr: string; en: string }> = {
     fr: "Shell et langage de script Unix pour automatiser des tâches.",
     en: "Unix shell and scripting language to automate tasks.",
   },
+  systemd: {
+    fr: "Gestionnaire de services et de tâches planifiées de Linux.",
+    en: "Linux's service manager and task scheduler.",
+  },
   // Réseau & sécurité
   WireGuard: {
     fr: "VPN moderne, simple et rapide, basé sur un chiffrement récent.",
@@ -139,6 +152,10 @@ const TIPS: Record<string, { fr: string; en: string }> = {
   DNS: {
     fr: "Annuaire d'Internet : traduit les noms de domaine en adresses IP.",
     en: "The Internet's directory: translates domain names into IP addresses.",
+  },
+  VLAN: {
+    fr: "Réseau local virtuel : cloisonne un réseau physique en segments isolés.",
+    en: "Virtual LAN: splits a physical network into isolated segments.",
   },
   "IPv4/IPv6": {
     fr: "Protocoles d'adressage qui identifient les machines sur un réseau.",
@@ -197,6 +214,10 @@ const TIPS: Record<string, { fr: string; en: string }> = {
     fr: "Outil de build moderne et ultra-rapide pour le développement front.",
     en: "Modern, ultra-fast build tool for front-end development.",
   },
+  Vitest: {
+    fr: "Framework de tests rapide, pensé pour les projets Vite / TypeScript.",
+    en: "Fast testing framework built for Vite / TypeScript projects.",
+  },
   "Responsive design": {
     fr: "Adapter l'affichage à toutes les tailles d'écran (mobile → desktop).",
     en: "Adapting layouts to every screen size (mobile → desktop).",
@@ -247,6 +268,10 @@ const TIPS: Record<string, { fr: string; en: string }> = {
     fr: "Plateforme d'hébergement de dépôts Git avec CI/CD intégrée.",
     en: "Git repository hosting platform with built-in CI/CD.",
   },
+  "GitHub Actions": {
+    fr: "CI/CD intégrée à GitHub : automatise tests, build et déploiement.",
+    en: "GitHub's built-in CI/CD: automates tests, build and deployment.",
+  },
   "CI/CD": {
     fr: "Automatisation des tests et du déploiement à chaque changement de code.",
     en: "Automating tests and deployment on every code change.",
@@ -290,7 +315,18 @@ function Tag({ children, tip }: { children: string; tip?: string }) {
   const ref = useRef<HTMLButtonElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false); // reste monté le temps de l'anim de sortie
   const [style, setStyle] = useState<React.CSSProperties>();
+
+  // montage immédiat à l'ouverture (setState de rendu guardé → pas de boucle) ;
+  // l'ENTRÉE est animée en CSS (@starting-style), la SORTIE via la classe is-closing,
+  // puis on démonte après l'anim (~150 ms). Zéro rAF → robuste.
+  if (open && !mounted) setMounted(true);
+  useEffect(() => {
+    if (open || !mounted) return;
+    const id = window.setTimeout(() => setMounted(false), 160);
+    return () => window.clearTimeout(id);
+  }, [open, mounted]);
 
   // positionne l'info-bulle en `fixed` : centrée sur le tag mais BORNÉE à l'écran
   // (jamais coupée par un bord) ; au-dessus si la place le permet, sinon en dessous.
@@ -308,9 +344,9 @@ function Tag({ children, tip }: { children: string; tip?: string }) {
     setStyle({ top: above ? r.top - h - 8 : r.bottom + 8, left });
   }, []);
 
-  // mesure/positionne après rendu de la bulle ; ferme au scroll / clic extérieur
+  // mesure/positionne dès que la bulle est montée ; ferme au scroll / clic extérieur
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!mounted) return;
     place();
     const close = () => setOpen(false);
     const onDown = (e: PointerEvent) => {
@@ -324,7 +360,7 @@ function Tag({ children, tip }: { children: string; tip?: string }) {
       window.removeEventListener("resize", place);
       document.removeEventListener("pointerdown", onDown);
     };
-  }, [open, place]);
+  }, [mounted, place]);
 
   // desktop = survol ; tactile = tap (les deux gérés sans double-déclenchement)
   const canHover = () =>
@@ -348,16 +384,20 @@ function Tag({ children, tip }: { children: string; tip?: string }) {
       >
         {children}
       </button>
-      {open &&
+      {mounted &&
         createPortal(
           <div
             ref={tipRef}
             role="tooltip"
             style={style}
-            className="fixed left-0 top-0 z-[100] w-max max-w-[min(17rem,calc(100vw-1.25rem))]
-                       rounded-lg border border-line bg-surface px-2.5 py-1.5
-                       text-[11px] leading-snug text-muted text-center
-                       shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] pointer-events-none"
+            className={
+              "fixed left-0 top-0 z-[100] w-max max-w-[min(17rem,calc(100vw-1.25rem))] " +
+              "rounded-lg border border-line bg-surface px-2.5 py-1.5 " +
+              "text-[11px] leading-snug text-muted text-center " +
+              "shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] pointer-events-none " +
+              "tooltip-anim" +
+              (open ? "" : " is-closing")
+            }
           >
             {tip}
           </div>,
