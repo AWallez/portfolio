@@ -505,9 +505,12 @@ export default function Hero() {
 
           {/* ④ invite réelle : le terminal devient interactif après l'intro.
               gap-2 ≈ un caractère mono : en flex, l'espace de fin du « $ » est
-              avalé — on recrée le même écart que sur les lignes de l'intro */}
+              avalé — on recrée le même écart que sur les lignes de l'intro.
+              flex-wrap + min-w-36 : sur mobile, le prompt long mange la largeur ;
+              sans ça le champ (donc le hint « tape help ») serait rogné. Ici il
+              passe à la ligne, pleine largeur → hint toujours visible. */}
           {introDone && (
-            <form onSubmit={onSubmit} className="flex items-baseline gap-2">
+            <form onSubmit={onSubmit} className="flex flex-wrap items-baseline gap-2">
               <span className="whitespace-nowrap">
                 <Prompt path="~/portfolio" />
               </span>
@@ -523,7 +526,7 @@ export default function Hero() {
                 autoCorrect="off"
                 spellCheck={false}
                 enterKeyHint="go"
-                className="grow min-w-0 bg-transparent border-none outline-none
+                className="grow min-w-36 bg-transparent border-none outline-none
                            font-mono text-sm text-ink caret-accent
                            placeholder:text-muted/60"
               />
