@@ -545,7 +545,7 @@ function monitoring(p, lang) {
   s += T(dx + 24, dy + 74, 14, p.ink, tr("État des services", "Service health"), { w: "bold" });
   s += `<rect x="${dx + dw - 172}" y="${dy + 56}" width="148" height="26" rx="13" fill="${up}" fill-opacity="0.14" stroke="${up}" stroke-opacity="0.42"/>`;
   s += `<circle cx="${dx + dw - 154}" cy="${dy + 69}" r="4.5" fill="${up}"/>`;
-  s += T(dx + dw - 142, dy + 73, 12, up, tr("16 / 17 en ligne", "16 / 17 up"), { mono: true, w: "bold" });
+  s += T(dx + dw - 142, dy + 73, 12, up, tr("14 / 15 en ligne", "14 / 15 up"), { mono: true, w: "bold" });
 
   const rows = tr(
     [
@@ -594,7 +594,7 @@ function monitoring(p, lang) {
   s += gauge(dx + 192, "RAM", "68 %", 0.68);
   s += gauge(dx + 344, tr("Disque", "Disk"), "58 %", 0.58);
   s += gauge(dx + 496, "Temp", "54 °C", 0.54);
-  s += T(dx + 24, dy + 490, 11, p.muted, tr("Socket Docker · 15 sondes · watchdog externe (UptimeRobot)", "Docker socket · 15 checks · external watchdog (UptimeRobot)"), { mono: true, op: 0.85 });
+  s += T(dx + 24, dy + 490, 11, p.muted, tr("Socket Docker · ~15 sondes · watchdog externe (UptimeRobot)", "Docker socket · ~15 checks · external watchdog (UptimeRobot)"), { mono: true, op: 0.85 });
 
   // ---- Dockge (gestion des stacks Compose) ----
   s += card(rx, dy, rw, 200, p, { r: 16 });
