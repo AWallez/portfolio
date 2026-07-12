@@ -338,6 +338,8 @@ function Tag({ children, tip }: { children: string; tip?: string }) {
         ref={ref}
         type="button"
         aria-label={`${children} : ${tip}`}
+        // garde l'anim « survol » du badge tant que la bulle est ouverte (mobile)
+        data-active={open}
         onMouseEnter={() => canHover() && setOpen(true)}
         onMouseLeave={() => canHover() && setOpen(false)}
         onClick={() => !canHover() && setOpen((o) => !o)}

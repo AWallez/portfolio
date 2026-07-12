@@ -212,13 +212,17 @@
   }
 
   /* halo « spotlight » qui suit le curseur sur les cartes.
-     Posé en background-image → toujours derrière le texte, clippé par le border-radius. */
-  .spotlight {
-    background-image: radial-gradient(
-      75px circle at var(--mx, 50%) var(--my, -200%),
-      color-mix(in srgb, var(--accent) 20%, transparent),
-      transparent 62%
-    );
+     Posé en background-image → toujours derrière le texte, clippé par le border-radius.
+     Uniquement sur pointeur fin (souris) : sur tactile il se figerait à l'endroit
+     du tap (rendu médiocre) → désactivé. */
+  @media (hover: hover) and (pointer: fine) {
+    .spotlight {
+      background-image: radial-gradient(
+        75px circle at var(--mx, 50%) var(--my, -200%),
+        color-mix(in srgb, var(--accent) 20%, transparent),
+        transparent 62%
+      );
+    }
   }
 
   /* animation de survol partagée par tous les badges (Skills, Projets, faits-clés, Parcours) */
@@ -230,7 +234,10 @@
       box-shadow 0.18s ease;
     cursor: default;
   }
-  .badge-hover:hover {
+  /* [data-active] : garde l'état « survolé » tant que l'info-bulle est ouverte
+     (utile sur mobile, où il n'y a pas de survol persistant) */
+  .badge-hover:hover,
+  .badge-hover[data-active="true"] {
     transform: translateY(-2px) scale(1.06);
     background-color: color-mix(in srgb, var(--accent) 20%, transparent);
     border-color: color-mix(in srgb, var(--accent), transparent);
@@ -238,7 +245,8 @@
       color-mix(in srgb, var(--accent) 35%, transparent);
   }
   @media (prefers-reduced-motion: reduce) {
-    .badge-hover:hover {
+    .badge-hover:hover,
+    .badge-hover[data-active="true"] {
       transform: none;
     }
   }
