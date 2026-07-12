@@ -34,19 +34,6 @@ const TIMELINE: Item[] = [
     },
   },
   {
-    type: "edu",
-    date: { fr: "2021 — 2023", en: "2021 — 2023" },
-    place: "IPSSI Paris · Lycée Jacques Prévert",
-    role: {
-      fr: "BTS SIO SLAM — Solutions Logicielles & Applications Métiers",
-      en: "BTS SIO SLAM — Software Solutions & Business Applications",
-    },
-    desc: {
-      fr: "Conception et développement d'applications, bases de données et programmation orientée objet.",
-      en: "Application design and development, databases and object-oriented programming.",
-    },
-  },
-  {
     type: "exp",
     date: { fr: "2023 — 2024", en: "2023 — 2024" },
     place: "Picnic Fulfilment Center · Moissy-Cramayel (77)",
@@ -57,6 +44,19 @@ const TIMELINE: Item[] = [
     desc: {
       fr: "Rigueur, contrôle qualité et résolution de problèmes en environnement logistique exigeant.",
       en: "Rigor, quality control and problem-solving in a demanding logistics environment.",
+    },
+  },
+  {
+    type: "edu",
+    date: { fr: "2021 — 2023", en: "2021 — 2023" },
+    place: "IPSSI Paris · Lycée Jacques Prévert",
+    role: {
+      fr: "BTS SIO SLAM — Solutions Logicielles & Applications Métiers",
+      en: "BTS SIO SLAM — Software Solutions & Business Applications",
+    },
+    desc: {
+      fr: "Conception et développement d'applications, bases de données et programmation orientée objet.",
+      en: "Application design and development, databases and object-oriented programming.",
     },
   },
   {
