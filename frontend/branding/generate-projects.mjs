@@ -579,14 +579,15 @@ function monitoring(p, lang) {
     s += T(dx + dw - 40, ry + 29, 11, p.muted, lat, { mono: true, anchor: "end" });
     ry += 56;
   });
-  // ---- Beszel : métriques système (dans l'espace libéré par la 6ᵉ sonde) ----
-  s += card(dx + 24, 452, dw - 48, 92, p, { r: 10, fill: p.soft, shadow: false });
-  s += T(dx + 40, 474, 11.5, p.ink, tr("Beszel — métriques système", "Beszel — system metrics"), { w: "bold" });
+  // ---- Beszel : métriques système (dans l'espace libéré par la 6ᵉ sonde).
+  // y=460 : même écart de 8 px qu'entre les sondes (la 5ᵉ finit à 452) ----
+  s += card(dx + 24, 460, dw - 48, 92, p, { r: 10, fill: p.soft, shadow: false });
+  s += T(dx + 40, 482, 11.5, p.ink, tr("Beszel — métriques système", "Beszel — system metrics"), { w: "bold" });
   const gauge = (gx, label, val, pct) => {
-    let o = T(gx, 500, 11, p.muted, label, { mono: true });
-    o += T(gx + 120, 500, 11, p.ink, val, { mono: true, anchor: "end", w: "bold" });
-    o += `<rect x="${gx}" y="510" width="120" height="6" rx="3" fill="${p.line}"/>`;
-    o += `<rect x="${gx}" y="510" width="${(120 * pct).toFixed(0)}" height="6" rx="3" fill="${a}"/>`;
+    let o = T(gx, 508, 11, p.muted, label, { mono: true });
+    o += T(gx + 120, 508, 11, p.ink, val, { mono: true, anchor: "end", w: "bold" });
+    o += `<rect x="${gx}" y="518" width="120" height="6" rx="3" fill="${p.line}"/>`;
+    o += `<rect x="${gx}" y="518" width="${(120 * pct).toFixed(0)}" height="6" rx="3" fill="${a}"/>`;
     return o;
   };
   s += gauge(dx + 40, "CPU", "41 %", 0.41);
