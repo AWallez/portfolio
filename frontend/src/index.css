@@ -379,3 +379,14 @@ html {
     display: none;
   }
 }
+
+/* ---- Invite du terminal (Hero) : hint « tape help » via ::before ----
+   Le span contentEditable n'a pas de placeholder natif : on affiche data-hint
+   tant qu'il est vide (retiré dès la première frappe, ou dès qu'une commande a
+   déjà été tapée car data-hint devient alors ""). */
+.term-input:empty::before {
+  content: attr(data-hint);
+  color: var(--muted);
+  opacity: 0.6;
+  pointer-events: none;
+}

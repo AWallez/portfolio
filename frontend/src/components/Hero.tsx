@@ -221,19 +221,12 @@ export default function Hero() {
 
   type HistEntry = { cmd: string; out: string[] };
   const [history, setHistory] = useState<HistEntry[]>([]);
-  const [value, setValue] = useState("");
   const [cleared, setCleared] = useState(false); // `clear` efface aussi l'intro
   const [past, setPast] = useState<string[]>([]); // commandes tapées (flèches ↑/↓)
   const [pastIdx, setPastIdx] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-
-  // le contenu dépasse la hauteur figée du terminal → on scrolle en bas,
-  // comme un vrai terminal (la fenêtre ne grandit pas)
-  useEffect(() => {
-    const el = bodyRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [history, cleared]);
+  // invite = span contentEditable : le prompt et la saisie coulent comme un vrai
+  // texte (retour à la ligne commun), exactement comme les lignes de l'intro.
+  const editRef = useRef<HTMLSpanElement>(null);
 
   const scrollToSection = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -302,10 +295,23 @@ export default function Hero() {
     return [T.notFound(cmd)];
   };
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cmd = value.trim();
-    setValue("");
+  // écrit dans l'invite et replace le curseur à la fin (navigation historique)
+  const setPrompt = (txt: string) => {
+    const el = editRef.current;
+    if (!el) return;
+    el.textContent = txt;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  };
+
+  const submit = () => {
+    const el = editRef.current;
+    const cmd = (el?.textContent ?? "").trim();
+    if (el) el.textContent = "";
     setPastIdx(-1);
     if (!cmd) return;
     setPast((p) => [...p, cmd]);
@@ -313,35 +319,44 @@ export default function Hero() {
     if (out !== null) setHistory((h) => [...h, { cmd, out }]);
   };
 
-  // flèches ↑/↓ : rappel des commandes précédentes, comme un vrai shell
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowUp") {
+  // Entrée = exécuter ; ↑/↓ = rappel des commandes, comme un vrai shell
+  const onKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submit();
+    } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (!past.length) return;
       const idx = pastIdx < 0 ? past.length - 1 : Math.max(0, pastIdx - 1);
       setPastIdx(idx);
-      setValue(past[idx]);
+      setPrompt(past[idx]);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       if (pastIdx < 0) return;
       const idx = pastIdx + 1;
       if (idx >= past.length) {
         setPastIdx(-1);
-        setValue("");
+        setPrompt("");
       } else {
         setPastIdx(idx);
-        setValue(past[idx]);
+        setPrompt(past[idx]);
       }
     }
   };
 
-  // cliquer n'importe où sur la carte focalise l'invite (desktop uniquement :
-  // sur tactile, seul un tap direct sur l'input ouvre le clavier — opt-in)
+  // colle en texte brut (un terminal n'a ni gras, ni retours à la ligne)
+  const onPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData("text/plain").replace(/\r?\n/g, " ");
+    document.execCommand("insertText", false, text);
+  };
+
+  // cliquer sur la carte focalise l'invite (desktop uniquement :
+  // sur tactile, seul un tap direct sur l'invite ouvre le clavier — opt-in)
   const focusPrompt = () => {
     if (!introDone) return;
     if (window.getSelection()?.toString()) return; // ne pas gêner la sélection
-    if (matchMedia("(pointer: fine)").matches)
-      inputRef.current?.focus({ preventScroll: true });
+    if (matchMedia("(pointer: fine)").matches) editRef.current?.focus();
   };
 
   // tilt 3D du terminal : suit la souris (desktop uniquement).
@@ -422,9 +437,7 @@ export default function Hero() {
   }, []);
 
   return (
-    // max-w-215 (au lieu de 210) : compense la gouttière de scrollbar réservée
-    // dans le corps du terminal (les lignes de l'intro wrappent comme avant)
-    <section className="items-center max-w-215 container-page py-7 w-full">
+    <section className="items-center max-w-210 container-page py-7 w-full">
       {/* titre principal (h1) pour lecteurs d'écran & SEO ; le terminal animé
           ci-dessous reste le rendu visuel. lines[0].output = nom + rôle localisés */}
       <h1 className="sr-only">{lines[0].output}</h1>
@@ -447,14 +460,12 @@ export default function Hero() {
           </span>
         </div>
 
-        {/* Corps : hauteur figée via le fantôme mesuré (même composant → mesure
-            exacte, invite comprise). scrollbar-gutter réserve la place de la
-            scrollbar dès le départ : quand elle apparaît (commandes tapées),
-            rien ne se re-wrappe. +44 = padding vertical (40) + marge de sûreté */}
+        {/* Corps : min-height = hauteur finale mesurée par le fantôme (l'intro ne
+            saute donc pas pendant la frappe), puis le terminal GRANDIT librement
+            quand on tape des commandes — pas de scrollbar. +44 = padding + marge */}
         <div
-          ref={bodyRef}
-          className="relative p-5 font-mono text-sm leading-relaxed overflow-y-auto scrollbar-gutter-stable"
-          style={{ height: height ? height + 44 : "auto" }}
+          className="relative p-5 font-mono text-sm leading-relaxed"
+          style={{ minHeight: height ? height + 44 : undefined }}
         >
           {/* ① fantôme invisible = état final mesuré (invite interactive
               comprise, sinon elle déborderait de la hauteur figée) */}
@@ -503,34 +514,26 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* ④ invite réelle : le terminal devient interactif après l'intro.
-              gap-2 ≈ un caractère mono : en flex, l'espace de fin du « $ » est
-              avalé — on recrée le même écart que sur les lignes de l'intro.
-              flex-wrap + min-w-36 : sur mobile, le prompt long mange la largeur ;
-              sans ça le champ (donc le hint « tape help ») serait rogné. Ici il
-              passe à la ligne, pleine largeur → hint toujours visible. */}
+          {/* ④ invite réelle : le prompt et la saisie coulent dans un même <p>
+              (comme les lignes de l'intro) → ils reviennent à la ligne ensemble.
+              Le hint « tape help » s'affiche via ::before quand le span est vide
+              (cf. .term-input dans index.css). */}
           {introDone && (
-            <form onSubmit={onSubmit} className="flex flex-wrap items-baseline gap-2">
-              <span className="whitespace-nowrap">
-                <Prompt path="~/portfolio" />
-              </span>
-              <input
-                ref={inputRef}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={onKeyDown}
+            <p className="wrap-break-word">
+              <Prompt path="~/portfolio" />
+              <span
+                ref={editRef}
+                contentEditable
+                suppressContentEditableWarning
+                role="textbox"
                 aria-label={T.ariaInput}
-                placeholder={past.length ? "" : T.hint}
-                autoComplete="off"
-                autoCapitalize="off"
-                autoCorrect="off"
+                data-hint={past.length ? "" : T.hint}
+                onKeyDown={onKeyDown}
+                onPaste={onPaste}
                 spellCheck={false}
-                enterKeyHint="go"
-                className="grow min-w-36 bg-transparent border-none outline-none
-                           font-mono text-sm text-ink caret-accent
-                           placeholder:text-muted/60"
+                className="term-input outline-none text-ink caret-accent"
               />
-            </form>
+            </p>
           )}
         </div>
 
