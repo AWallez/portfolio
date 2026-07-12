@@ -531,10 +531,8 @@ export default function Hero() {
                 onKeyDown={onKeyDown}
                 onPaste={onPaste}
                 spellCheck={false}
-                className="term-input outline-none text-ink"
+                className="term-input outline-none text-ink caret-accent"
               />
-              {/* curseur bloc clignotant (comme l'intro), en fin de saisie */}
-              <Cursor />
             </p>
           )}
         </div>
