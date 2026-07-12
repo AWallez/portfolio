@@ -1,4 +1,4 @@
-// Generates the Projects-section visuals — 6 cards × light/dark theme × FR/EN.
+// Generates the Projects-section visuals — 7 cards × light/dark theme × FR/EN.
 // Each card is recolored from the site tokens (src/index.css) and rendered for
 // both palettes and both languages, so images match the site's colors AND its
 // current language. Commands / tech terms / tool output stay in English (universal);
@@ -6,7 +6,7 @@
 // Output is SVG (vector), inlined in Projects.tsx (inherits the site's webfonts).
 // IDs are made unique per file to avoid collisions between inlined SVGs.
 //
-//   node branding/generate-projects.mjs   -> 22 SVG into src/assets/projects/
+//   node branding/generate-projects.mjs   -> 26 SVG into src/assets/projects/
 //
 // File name pattern: {name}-{theme}-{lang}.svg
 
@@ -348,7 +348,7 @@ function reseau(p, lang) {
   s += card(500, 168, 240, 76, p, { r: 12 });
   s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="522" y="190" width="30" height="22" rx="3"/><path d="M528 190 v-8 M540 190 v-12"/></g>`;
   s += T(566, 200, 14, p.ink, tr("Routeur / Pare-feu", "Router / Firewall"), { w: "bold" });
-  s += T(566, 220, 11, p.muted, "DNS · iptables · NAT", { mono: true });
+  s += T(566, 220, 11, p.muted, "AdGuard · iptables · NAT", { mono: true });
 
   // Remote access
   s += card(980, 100, 172, 60, p, { stroke: a, sw: 2 });
@@ -429,30 +429,30 @@ function homelab(p, lang) {
       [400, 202, "PostgreSQL", "base de données"],
       [606, 202, "ntfy", "notifications push"],
       [400, 264, "WireGuard", "VPN auto-hébergé"],
-      [606, 264, "Serveurs de jeux", "multijoueur"],
-      [400, 326, "Stockage RAID", "données &amp; sauvegardes"],
-      [606, 326, "Caddy", "reverse proxy / HTTPS"],
-      [400, 388, "Supervision", "Uptime Kuma · Dockge"],
+      [606, 264, "Caddy", "reverse proxy / HTTPS"],
+      [400, 326, "Vaultwarden", "mots de passe"],
+      [606, 326, "AdGuard", "filtrage DNS"],
+      [400, 388, "Paperless", "GED · OCR"],
       [606, 388, "Jellyfin", "streaming média"],
     ],
     [
       [400, 202, "PostgreSQL", "database"],
       [606, 202, "ntfy", "push notifications"],
       [400, 264, "WireGuard", "self-hosted VPN"],
-      [606, 264, "Game servers", "multiplayer"],
-      [400, 326, "RAID storage", "data &amp; backups"],
-      [606, 326, "Caddy", "reverse proxy / HTTPS"],
-      [400, 388, "Monitoring", "Uptime Kuma · Dockge"],
+      [606, 264, "Caddy", "reverse proxy / HTTPS"],
+      [400, 326, "Vaultwarden", "password manager"],
+      [606, 326, "AdGuard", "DNS filtering"],
+      [400, 388, "Paperless", "docs · OCR"],
       [606, 388, "Jellyfin", "media streaming"],
     ],
   );
   services.forEach(([x, y, name, sub]) => {
     s += svc(x, y, name, sub);
   });
-  s += T(400, 458, 11, p.muted, tr("+ docker-compose · Linux · durcissement", "+ docker-compose · Linux · hardening"), { op: 0.85 });
+  s += T(400, 458, 11, p.muted, tr("+ Vaultwarden · AdGuard · Homepage · durcissement", "+ Vaultwarden · AdGuard · Homepage · hardening"), { op: 0.85 });
   s += `<rect x="400" y="470" width="402" height="56" rx="10" fill="${p.soft}"/>`;
   s += T(416, 492, 11, p.muted, "$ docker compose up -d", { mono: true });
-  s += `<circle cx="420" cy="510" r="4" fill="${a}"/>${T(432, 514, 11, a, tr("8 services actifs", "8 services running"), { mono: true })}`;
+  s += `<circle cx="420" cy="510" r="4" fill="${a}"/>${T(432, 514, 11, a, tr("~15 services actifs", "~15 services running"), { mono: true })}`;
 
   // clients
   const cl = (y, label, icon, secure = false) => {
@@ -536,8 +536,8 @@ function monitoring(p, lang) {
   const rx = 792,
     rw = 344;
 
-  // connecteur : la sonde en panne déclenche l'alerte ntfy
-  s += `<path d="M740 480 C 768 480, 770 440, 792 440" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>`;
+  // connecteur : la sonde en panne (5ᵉ ligne) déclenche l'alerte ntfy
+  s += `<path d="M740 428 C 766 428, 770 432, 792 432" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>`;
 
   // ---- Dashboard Uptime Kuma ----
   s += card(dx, dy, dw, 512, p, { r: 16 });
@@ -552,7 +552,6 @@ function monitoring(p, lang) {
       ["portfolio · web", true, "99,98 %", "42 ms"],
       ["api · contact", true, "99,95 %", "31 ms"],
       ["postgres", true, "100 %", "3 ms"],
-      ["jellyfin", true, "99,90 %", "88 ms"],
       ["caddy · reverse proxy", true, "100 %", "11 ms"],
       ["wireguard", false, "hors ligne", "—"],
     ],
@@ -560,7 +559,6 @@ function monitoring(p, lang) {
       ["portfolio · web", true, "99.98%", "42 ms"],
       ["api · contact", true, "99.95%", "31 ms"],
       ["postgres", true, "100%", "3 ms"],
-      ["jellyfin", true, "99.90%", "88 ms"],
       ["caddy · reverse proxy", true, "100%", "11 ms"],
       ["wireguard", false, "offline", "—"],
     ],
@@ -581,7 +579,21 @@ function monitoring(p, lang) {
     s += T(dx + dw - 40, ry + 29, 11, p.muted, lat, { mono: true, anchor: "end" });
     ry += 56;
   });
-  s += T(dx + 24, dy + 490, 11, p.muted, tr("Sondes via le socket Docker · intervalle 60 s · 15 sondes actives", "Probes via Docker socket · 60 s interval · 15 active checks"), { mono: true, op: 0.85 });
+  // ---- Beszel : métriques système (dans l'espace libéré par la 6ᵉ sonde) ----
+  s += card(dx + 24, 452, dw - 48, 92, p, { r: 10, fill: p.soft, shadow: false });
+  s += T(dx + 40, 474, 11.5, p.ink, tr("Beszel — métriques système", "Beszel — system metrics"), { w: "bold" });
+  const gauge = (gx, label, val, pct) => {
+    let o = T(gx, 500, 11, p.muted, label, { mono: true });
+    o += T(gx + 120, 500, 11, p.ink, val, { mono: true, anchor: "end", w: "bold" });
+    o += `<rect x="${gx}" y="510" width="120" height="6" rx="3" fill="${p.line}"/>`;
+    o += `<rect x="${gx}" y="510" width="${(120 * pct).toFixed(0)}" height="6" rx="3" fill="${a}"/>`;
+    return o;
+  };
+  s += gauge(dx + 40, "CPU", "41 %", 0.41);
+  s += gauge(dx + 192, "RAM", "68 %", 0.68);
+  s += gauge(dx + 344, tr("Disque", "Disk"), "58 %", 0.58);
+  s += gauge(dx + 496, "Temp", "54 °C", 0.54);
+  s += T(dx + 24, dy + 490, 11, p.muted, tr("Socket Docker · 15 sondes · watchdog externe (UptimeRobot)", "Docker socket · 15 checks · external watchdog (UptimeRobot)"), { mono: true, op: 0.85 });
 
   // ---- Dockge (gestion des stacks Compose) ----
   s += card(rx, dy, rw, 200, p, { r: 16 });
@@ -622,6 +634,87 @@ function monitoring(p, lang) {
   return frame(p, s);
 }
 
+/* ================================================================== */
+/* 7. resilience — sauvegardes & PRA                                   */
+/* ================================================================== */
+function resilience(p, lang) {
+  const a = p.accent;
+  const tr = (fr, en) => (lang === "fr" ? fr : en);
+  const up = "#22c55e";
+  let s = "";
+
+  // flux horizontal : NAS -> restic -> PC hors-site
+  s += `<g stroke="${p.muted}" stroke-opacity="0.6" stroke-width="2.5" fill="none">
+    <path d="M370 275 L468 275" marker-end="url(#arrow)"/>
+    <path d="M730 275 L828 275" marker-end="url(#arrow)"/>
+  </g>`;
+  s += T(419, 262, 11, p.muted, "restic", { anchor: "middle", mono: true });
+  s += `<rect x="744" y="248" width="170" height="24" rx="12" fill="${p.base}"/><rect x="744" y="248" width="170" height="24" rx="12" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(829, 264, 11, a, tr("SFTP · à l'allumage", "SFTP · on power-on"), { anchor: "middle", mono: true, w: "bold" })}`;
+
+  // dead-man's-switch : branche descendante depuis restic
+  s += `<path d="M600 348 L600 470" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none" marker-end="url(#arrow)"/>`;
+
+  // ---- NAS (source à sauvegarder) ----
+  s += card(70, 150, 300, 252, p, { r: 14 });
+  s += `<path d="M70 164 a14 14 0 0 1 14 -14 h272 a14 14 0 0 1 14 14 v30 h-300 z" fill="${p.chrome}"/>`;
+  s += T(92, 182, 14, p.chromeInk, tr("NAS — à sauvegarder", "NAS — source"), { w: "bold" });
+  const src = tr(
+    [
+      ["/volume1/docker", "services & configs"],
+      ["volumes nommés", "ntfy · caddy · wireguard"],
+      ["pg_dump", "base PostgreSQL"],
+    ],
+    [
+      ["/volume1/docker", "services & configs"],
+      ["named volumes", "ntfy · caddy · wireguard"],
+      ["pg_dump", "PostgreSQL database"],
+    ],
+  );
+  let sy = 216;
+  src.forEach(([nm, sub]) => {
+    s += card(90, sy, 260, 44, p, { r: 8, fill: p.soft, shadow: false });
+    s += `<circle cx="112" cy="${sy + 22}" r="4" fill="${a}"/>`;
+    s += T(126, sy + 19, 11.5, p.ink, nm, { mono: true, w: "bold" });
+    s += T(126, sy + 34, 9.5, p.muted, sub);
+    sy += 52;
+  });
+  s += T(90, 388, 10.5, p.muted, tr("+ RAID1 — redondance miroir locale", "+ RAID1 — local mirror redundancy"), { mono: true, op: 0.9 });
+
+  // ---- restic (moteur de sauvegarde) ----
+  s += card(470, 208, 260, 140, p, { r: 14, fill: p.chrome, stroke: p.chrome });
+  s += `<rect x="583" y="240" width="34" height="26" rx="5" fill="none" stroke="${a}" stroke-width="2.5"/><path d="M589 240 v-8 a11 11 0 0 1 22 0 v8" fill="none" stroke="${a}" stroke-width="2.5"/><circle cx="600" cy="252" r="3" fill="${a}"/>`;
+  s += T(600, 296, 15, p.chromeInk, "restic", { w: "bold", anchor: "middle" });
+  s += T(600, 315, 10.5, p.chromeInk, tr("chiffré · dédupliqué", "encrypted · deduplicated"), { anchor: "middle", op: 0.75 });
+  s += T(600, 333, 10, a, tr("7 j · 4 sem · 6 mois", "7 d · 4 wk · 6 mo"), { anchor: "middle", mono: true });
+
+  // ---- PC (copie hors-site) ----
+  s += card(830, 150, 300, 252, p, { r: 14 });
+  s += `<path d="M830 164 a14 14 0 0 1 14 -14 h272 a14 14 0 0 1 14 14 v30 h-300 z" fill="${p.chrome}"/>`;
+  s += T(852, 182, 14, p.chromeInk, tr("PC — copie hors-site", "PC — off-site copy"), { w: "bold" });
+  const snaps = [
+    ["2026-07-12 08:14", "1.49 GiB"],
+    ["2026-07-11 22:03", "1.48 GiB"],
+    ["2026-07-11 08:07", "1.47 GiB"],
+  ];
+  let py = 216;
+  snaps.forEach(([d, sz], i) => {
+    s += card(850, py, 260, 40, p, { r: 8, fill: p.soft, shadow: false });
+    s += `<circle cx="872" cy="${py + 20}" r="4" fill="${i === 0 ? up : a}"/>`;
+    s += T(886, py + 24, 11, p.ink, d, { mono: true });
+    s += T(1096, py + 24, 10.5, p.muted, sz, { mono: true, anchor: "end" });
+    py += 48;
+  });
+  s += `<circle cx="861" cy="388" r="5" fill="${up}"/>${T(874, 392, 11, up, tr("restauration testée ✓", "restore tested ✓"), { mono: true, w: "bold" })}`;
+
+  // ---- dead-man's-switch (alerte si backup manquant) ----
+  s += card(456, 470, 288, 118, p, { r: 14, stroke: a, sw: 2 });
+  s += T(600, 500, 13, p.ink, "Dead-man's-switch", { w: "bold", anchor: "middle" });
+  s += T(600, 522, 11, p.muted, tr("aucune sauvegarde depuis 48 h", "no backup for 48 h"), { anchor: "middle" });
+  s += `<rect x="512" y="540" width="176" height="30" rx="8" fill="${a}" fill-opacity="0.12" stroke="${a}" stroke-opacity="0.32"/>${T(600, 560, 11, a, tr("→ alerte ntfy / Kuma", "→ ntfy / Kuma alert"), { anchor: "middle", mono: true, w: "bold" })}`;
+
+  return frame(p, s);
+}
+
 /* ------------------------------------------------------------------ */
 const BUILDERS = {
   "web-clients": clients,
@@ -629,6 +722,7 @@ const BUILDERS = {
   reseau,
   homelab,
   monitoring,
+  resilience,
   perso: lab,
 };
 

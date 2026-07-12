@@ -8,7 +8,7 @@ import ProjectVisual from "./ProjectVisual";
 // chargée à la demande : seulement quand on agrandit une image
 const Lightbox = lazy(() => import("./Lightbox"));
 // Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
-// Générés par branding/generate-projects.mjs (6 projets × clair/sombre × FR/EN).
+// Générés par branding/generate-projects.mjs (7 projets × clair/sombre × FR/EN).
 const SVGS = import.meta.glob("../assets/projects/**/*.svg", {
   query: "?raw",
   import: "default",
@@ -56,10 +56,10 @@ const PROJECTS: Project[] = [
     folder: { fr: "reseau", en: "network" },
     title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
     desc: {
-      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, DNS, VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Objectif atteint : un réseau cloisonné, sécurisé et performant, administré sous Linux.",
-      en: "Pro-grade home network: VLAN segmentation, firewall, DNS, hardened VPN and SSH, 10 GbE link and iSCSI storage. Outcome: a segmented, secure and high-throughput network, administered on Linux.",
+      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, filtrage DNS (AdGuard Home — pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Objectif atteint : un réseau cloisonné, sécurisé et performant, administré sous Linux.",
+      en: "Pro-grade home network: VLAN segmentation, firewall, DNS filtering (AdGuard Home — ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. Outcome: a segmented, secure and high-throughput network, administered on Linux.",
     },
-    tags: ["Réseau", "VLAN", "10 GbE", "iSCSI", "iptables"],
+    tags: ["Réseau", "VLAN", "AdGuard", "10 GbE", "iptables"],
     asset: "reseau",
   },
   {
@@ -70,10 +70,10 @@ const PROJECTS: Project[] = [
       en: "Self-hosted infrastructure (NAS)",
     },
     desc: {
-      fr: "Infrastructure auto-hébergée sur NAS Linux : plusieurs services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : ce portfolio, un serveur de streaming média (Jellyfin), un VPN WireGuard, des serveurs de jeux, PostgreSQL et des notifications ntfy — déployés de façon reproductible.",
-      en: "Self-hosted infrastructure on a Linux NAS: several containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: this portfolio, a media streaming server (Jellyfin), a WireGuard VPN, game servers, PostgreSQL and ntfy notifications — deployed reproducibly.",
+      fr: "Infrastructure auto-hébergée sur NAS Linux : une quinzaine de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), GED avec OCR (Paperless), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy — déployés et pilotés de façon reproductible.",
+      en: "Self-hosted infrastructure on a Linux NAS: around fifteen containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), document management with OCR (Paperless), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications — deployed and managed reproducibly.",
     },
-    tags: ["Docker", "Linux", "Caddy", "WireGuard", "self-hosting"],
+    tags: ["Docker", "Linux", "Caddy", "Vaultwarden", "self-hosting"],
     asset: "homelab",
   },
   {
@@ -98,11 +98,25 @@ const PROJECTS: Project[] = [
       en: "Monitoring & observability",
     },
     desc: {
-      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) et déclenche une alerte push instantanée sur mobile (ntfy) dès qu'un service tombe. Dockge pilote les stacks Docker Compose et une page de statut centralise l'état des services. Détection de panne et notification de bout en bout, 100 % auto-hébergé, sans dépendance à un service tiers.",
-      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) and fires an instant mobile push alert (ntfy) the moment a service goes down. Dockge manages the Docker Compose stacks and a status page centralizes service health. End-to-end failure detection and alerting, fully self-hosted, with no third-party dependency.",
+      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) tandis que Beszel trace les métriques système (CPU, RAM, disque, température). Un watchdog externe (UptimeRobot) vérifie le site depuis l'extérieur, et toute panne déclenche une alerte push instantanée sur mobile (ntfy, canaux dédiés). Dockge pilote les stacks et une page de statut centralise l'état des services. Détection de bout en bout, 100 % auto-hébergé.",
+      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) while Beszel tracks system metrics (CPU, RAM, disk, temperature). An external watchdog (UptimeRobot) checks the site from the outside, and any failure fires an instant mobile push alert (ntfy, dedicated channels). Dockge manages the stacks and a status page centralizes service health. End-to-end detection, fully self-hosted.",
     },
-    tags: ["Docker", "Uptime Kuma", "ntfy", "Monitoring", "Alerting"],
+    tags: ["Uptime Kuma", "Beszel", "ntfy", "UptimeRobot", "Alerting"],
     asset: "monitoring",
+  },
+  {
+    name: "resilience",
+    folder: { fr: "sauvegardes", en: "backups" },
+    title: {
+      fr: "Résilience & sauvegardes",
+      en: "Resilience & backups",
+    },
+    desc: {
+      fr: "Stratégie de sauvegarde de bout en bout : snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL) poussés vers un poste externe, déclenchés automatiquement à l'allumage du PC. Rétention 7 j / 4 sem / 6 mois, restauration testée, redondance RAID1 et dead-man's-switch (alerte si une sauvegarde manque). Objectif : pouvoir tout restaurer — et l'avoir prouvé.",
+      en: "End-to-end backup strategy: encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps) pushed to an external machine, triggered automatically when the PC powers on. 7-day / 4-week / 6-month retention, tested restore, RAID1 redundancy and a dead-man's-switch (alert if a backup is missing). Goal: be able to restore everything — and having proven it.",
+    },
+    tags: ["restic", "Chiffrement", "RAID1", "Automatisation", "PRA"],
+    asset: "resilience",
   },
 ];
 
