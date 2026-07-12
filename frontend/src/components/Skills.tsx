@@ -7,6 +7,8 @@ import {
   Database,
   type LucideIcon,
 } from "lucide-react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
@@ -159,18 +161,86 @@ const TIPS: Record<string, { fr: string; en: string }> = {
   },
 };
 
+const TAG_CLASS =
+  "badge-hover px-3 py-1.5 rounded-md text-sm font-medium font-mono " +
+  "bg-accent/10 text-accent border border-accent/30";
+
 function Tag({ children, tip }: { children: string; tip?: string }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [style, setStyle] = useState<React.CSSProperties>();
+
+  // positionne l'info-bulle en `fixed` : centrée sur le tag mais BORNÉE à l'écran
+  // (jamais coupée par un bord) ; au-dessus si la place le permet, sinon en dessous.
+  const place = useCallback(() => {
+    const el = ref.current;
+    const tipEl = tipRef.current;
+    if (!el || !tipEl) return;
+    const r = el.getBoundingClientRect();
+    const w = tipEl.offsetWidth;
+    const h = tipEl.offsetHeight;
+    const m = 10; // marge mini avec le bord de l'écran
+    let left = r.left + r.width / 2 - w / 2;
+    left = Math.max(m, Math.min(left, window.innerWidth - w - m));
+    const above = r.top > h + 16;
+    setStyle({ top: above ? r.top - h - 8 : r.bottom + 8, left });
+  }, []);
+
+  // mesure/positionne après rendu de la bulle ; ferme au scroll / clic extérieur
+  useLayoutEffect(() => {
+    if (!open) return;
+    place();
+    const close = () => setOpen(false);
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", place);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", place);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [open, place]);
+
+  // desktop = survol ; tactile = tap (les deux gérés sans double-déclenchement)
+  const canHover = () =>
+    typeof matchMedia !== "undefined" && matchMedia("(hover: hover)").matches;
+
+  if (!tip) return <span className={TAG_CLASS}>{children}</span>;
+
   return (
-    <span
-      data-tip={tip}
-      className={
-        "badge-hover px-3 py-1.5 rounded-md text-sm font-medium font-mono " +
-        "bg-accent/10 text-accent border border-accent/30" +
-        (tip ? " tag-tip" : "")
-      }
-    >
-      {children}
-    </span>
+    <>
+      <button
+        ref={ref}
+        type="button"
+        aria-label={`${children} : ${tip}`}
+        onMouseEnter={() => canHover() && setOpen(true)}
+        onMouseLeave={() => canHover() && setOpen(false)}
+        onClick={() => !canHover() && setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        className={TAG_CLASS + " cursor-help"}
+      >
+        {children}
+      </button>
+      {open &&
+        createPortal(
+          <div
+            ref={tipRef}
+            role="tooltip"
+            style={style}
+            className="fixed left-0 top-0 z-[100] w-max max-w-[min(17rem,calc(100vw-1.25rem))]
+                       rounded-lg border border-line bg-surface px-2.5 py-1.5
+                       text-[11px] leading-snug text-muted text-center
+                       shadow-[0_8px_24px_-8px_rgba(0,0,0,0.4)] pointer-events-none"
+          >
+            {tip}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -197,10 +267,7 @@ export default function Skills() {
             key={group.key}
             delay={i * 100}
             variant="zoom"
-            // relative + hover:z-40 : chaque wrapper Reveal crée un contexte
-            // d'empilement (translate) → sans ça, l'info-bulle d'une carte
-            // passerait DERRIÈRE les cartes voisines
-            className="w-full sm:w-[calc(50%-0.75rem)] flex relative hover:z-40"
+            className="w-full sm:w-[calc(50%-0.75rem)] flex"
           >
             <div
               {...spotlight}
