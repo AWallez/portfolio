@@ -12,7 +12,6 @@ Portfolio full-stack de **développeur web freelance (React & DevOps)**, conçu,
 
 ## ✨ Points clés
 
-- **Lighthouse (prod, mobile)** : 🟢 **100** SEO · **100** accessibilité · **100** bonnes pratiques · **~98** performance
 - **Full-stack + infra** : front React, API Fastify, PostgreSQL, notifications push (ntfy), reverse proxy Caddy — orchestrés en **Docker Compose**
 - **Bilingue FR/EN** et **thème clair/sombre**, esthétique terminal
 - **Accessibilité (WCAG AA)** vérifiée, tests automatisés (Vitest + axe) et **CI GitHub Actions**
