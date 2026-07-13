@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
@@ -10,18 +10,41 @@ type Infra = "checking" | "online" | "offline";
 
 // Interroge l'API auto-hébergée : le badge du footer reflète l'état RÉEL de
 // l'infra (NAS → Docker → Fastify) au moment de la visite — la preuve DevOps
-// en direct plutôt qu'une simple déclaration.
-function useInfraStatus(): Infra {
+// en direct plutôt qu'une simple déclaration. La sonde ne part QUE lorsque le
+// badge approche de l'écran (IntersectionObserver) : hors du chemin critique de
+// chargement (aucune requête au 1er paint → n'alourdit pas le FCP/LCP), et
+// sémantiquement juste (l'état est « live » au moment où on le regarde).
+function useInfraStatus(ref: RefObject<HTMLElement | null>): Infra {
   const [status, setStatus] = useState<Infra>("checking");
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     const ctl = new AbortController();
-    fetch(`${API_URL}/api/health`, { signal: ctl.signal })
-      .then((r) => setStatus(r.ok ? "online" : "offline"))
-      .catch(() => {
-        if (!ctl.signal.aborted) setStatus("offline");
-      });
-    return () => ctl.abort();
-  }, []);
+    const probe = () =>
+      fetch(`${API_URL}/api/health`, { signal: ctl.signal })
+        .then((r) => setStatus(r.ok ? "online" : "offline"))
+        .catch(() => {
+          if (!ctl.signal.aborted) setStatus("offline");
+        });
+    if (!("IntersectionObserver" in window)) {
+      probe();
+      return () => ctl.abort();
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          probe();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      ctl.abort();
+    };
+  }, [ref]);
   return status;
 }
 
@@ -66,7 +89,8 @@ const LINKS = [
 export default function Footer() {
   const { lang } = useLang();
   const year = new Date().getFullYear();
-  const infra = useInfraStatus();
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  const infra = useInfraStatus(statusRef);
   const infraKey =
     infra === "online"
       ? "hostOnline"
@@ -100,6 +124,7 @@ export default function Footer() {
 
           {/* état LIVE de l'infra auto-hébergée (vérifié via /api/health au chargement) */}
           <p
+            ref={statusRef}
             role="status"
             className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-muted"
           >

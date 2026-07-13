@@ -313,6 +313,14 @@ function portfolio(p, lang) {
   s += T(738, 580, 11, p.muted, tr("marie@example.com · Projet freelance", "marie@example.com · Freelance project"));
   s += T(738, 600, 11, p.muted, tr("&quot;Bonjour, j'aimerais un devis pour refondre mon site…&quot;", "&quot;Hi, I'd like a quote to redesign my website…&quot;"), { op: 0.85 });
 
+  // ---- Back-office : la même base PostgreSQL alimente une interface d'admin des
+  // leads, auto-hébergée et joignable uniquement par VPN (aucun accès public) ----
+  s += `<path d="M572 546 L572 566" stroke="${a}" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#arrow)"/>`;
+  s += card(486, 568, 172, 60, p, { r: 12 });
+  s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="502" y="591" width="16" height="13" rx="2"/><path d="M505 591 v-4 a5 5 0 0 1 10 0 v4"/></g>`;
+  s += T(528, 592, 12, p.ink, "Back-office", { w: "bold" });
+  s += T(528, 610, 9.5, p.muted, tr("leads · accès VPN", "leads · VPN access"), { mono: true });
+
   return frame(p, s);
 }
 
@@ -650,7 +658,11 @@ function resilience(p, lang) {
     <path d="M730 275 L828 275" marker-end="url(#arrow)"/>
   </g>`;
   s += T(419, 262, 11, p.muted, "restic", { anchor: "middle", mono: true });
-  s += `<rect x="744" y="248" width="170" height="24" rx="12" fill="${p.base}"/><rect x="744" y="248" width="170" height="24" rx="12" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(829, 264, 11, a, tr("SFTP · à l'allumage", "SFTP · on power-on"), { anchor: "middle", mono: true, w: "bold" })}`;
+  // l'écart restic→PC (100 px) est trop étroit pour le libellé complet : pastille
+  // « SFTP » au-dessus de la flèche + précision « à l'allumage » juste en dessous
+  // (l'ancien badge de 170 px, centré à 829, passait sous la carte PC → tronqué).
+  s += `<rect x="748" y="250" width="64" height="24" rx="12" fill="${p.base}"/><rect x="748" y="250" width="64" height="24" rx="12" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(780, 266, 11, a, "SFTP", { anchor: "middle", mono: true, w: "bold" })}`;
+  s += T(780, 296, 10, p.muted, tr("à l'allumage", "on power-on"), { anchor: "middle", mono: true });
 
   // dead-man's-switch : branche descendante depuis restic
   s += `<path d="M600 348 L600 470" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none" marker-end="url(#arrow)"/>`;
