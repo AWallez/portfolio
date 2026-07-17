@@ -17,8 +17,11 @@ async function request<T>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (res.status === 401) {
-    onUnauthorized?.();
-    throw new Error("unauthorized");
+    // un 401 sur /api/login = mauvais mot de passe, PAS une session expirée :
+    // on ne déclenche le retour à l'écran de connexion que pour les autres routes
+    if (!url.endsWith("/api/login")) onUnauthorized?.();
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? "unauthorized");
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

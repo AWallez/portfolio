@@ -52,7 +52,11 @@ services:
 
   # --- API Fastify (containerisée). Aucun port hôte : joignable seulement via `web`. ---
   api:
-    build: ../backend
+    build:
+      context: ../backend
+      # réseau hôte pendant le build : les RUN (npm ci) sont sinon droppés par
+      # le pare-feu UGOS en « Accès refusé » (même piège que caddy-ratelimit)
+      network: host
     container_name: portfolio-api
     restart: unless-stopped
     environment:
@@ -109,7 +113,9 @@ services:
 
   # --- Frontend : Nginx sert dist/ et proxy /api → api (même origine, zéro CORS). ---
   web:
-    build: ../frontend
+    build:
+      context: ../frontend
+      network: host
     container_name: portfolio-web
     restart: unless-stopped
     depends_on:
