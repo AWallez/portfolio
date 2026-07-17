@@ -28,9 +28,8 @@ export function Login({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
-        <h1>
-          <span style={{ color: "var(--accent)" }}>&gt;</span> connexion_
-        </h1>
+        <h1>Connexion</h1>
+        <p className="sub">CRM · alexiswallez.fr</p>
         <label className="field">
           <span>mot de passe</span>
           <input

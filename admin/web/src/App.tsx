@@ -27,8 +27,8 @@ export default function App() {
     <div className="shell">
       <header className="topbar">
         <span className="brand">
-          <span className="chev">&gt;</span> crm — alexiswallez.fr
-          <span className="cursor" />
+          <span className="logo">CRM</span>
+          <span className="host">alexiswallez.fr</span>
         </span>
         <nav>
           <button

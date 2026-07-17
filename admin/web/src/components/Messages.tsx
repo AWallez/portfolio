@@ -92,7 +92,7 @@ export function Messages() {
         {data && data.items.length === 0 ? (
           <div className="empty">aucun message</div>
         ) : (
-          <table>
+          <table className="messages-table">
             <thead>
               <tr>
                 <th>contact</th>
@@ -116,13 +116,13 @@ export function Messages() {
                     </span>
                     <span className="mail">{c.email ?? "—"}</span>
                   </td>
-                  <td>
+                  <td className="cell-type">
                     <span className="tag">{TYPE_LABELS[c.type] ?? c.type}</span>
                   </td>
-                  <td>
+                  <td className="cell-snippet">
                     <div className="snippet">{c.message ?? "—"}</div>
                   </td>
-                  <td>
+                  <td className="cell-status">
                     <span
                       className="status-badge"
                       style={{ color: `var(--st-${c.status})` }}
@@ -131,7 +131,7 @@ export function Messages() {
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>
-                  <td className="date">{fmtDate(c.created_at)}</td>
+                  <td className="date cell-date">{fmtDate(c.created_at)}</td>
                 </tr>
               ))}
             </tbody>
