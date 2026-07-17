@@ -105,7 +105,43 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
 
-/* ---- liste des messages ---- */
+/* ---- liste des messages : grille de cartes ---- */
+.msg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 0.8rem;
+}
+.msg-card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: 3px solid var(--st, var(--line));
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem; cursor: pointer;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+.msg-card:hover { background: var(--surface-2); border-color: var(--accent); border-left-color: var(--st, var(--accent)); }
+.msg-card header { display: flex; align-items: flex-start; gap: 0.6rem; }
+.msg-card header .who { min-width: 0; flex: 1; }
+.msg-card.unread .who .name { font-weight: 700; }
+.msg-card .preview {
+  margin: 0; color: var(--muted); font-size: 0.87rem; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; overflow-wrap: anywhere;
+}
+.msg-card .note-line {
+  margin: 0; font-size: 0.8rem; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.msg-card footer { display: flex; align-items: center; gap: 0.6rem; margin-top: auto; }
+.msg-card footer .spacer { flex: 1; }
+.icon-btn {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 7px; width: 30px; height: 30px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--accent); }
+.icon-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
 .card {
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius); overflow: hidden;
@@ -214,21 +250,26 @@ tr.unread td { font-weight: 600; }
   /* filtres : recherche pleine largeur */
   .filters .search { max-width: none; min-width: 100%; order: 10; }
 
-  /* tableau des messages → cartes empilées */
-  .messages-table thead { display: none; }
-  .messages-table, .messages-table tbody { display: block; }
-  .messages-table tbody tr {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.6rem;
-    padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--line);
+  /* grille de cartes → une colonne */
+  .msg-grid { grid-template-columns: 1fr; }
+
+  /* explorateur : chaque ligne devient une fiche « colonne : valeur » */
+  .table-scroll thead { display: none; }
+  .table-scroll table, .table-scroll tbody { display: block; }
+  .table-scroll tbody tr {
+    display: block; padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--line);
   }
-  .messages-table tbody tr:last-child { border-bottom: none; }
-  .messages-table tbody td { display: block; border: none; padding: 0; }
-  .messages-table td.who { flex: 1 1 auto; order: 1; min-width: 0; }
-  .messages-table td.cell-status { order: 2; }
-  .messages-table td.cell-snippet { order: 3; flex-basis: 100%; }
-  .messages-table td.cell-snippet .snippet { max-width: none; }
-  .messages-table td.cell-type { order: 4; }
-  .messages-table td.cell-date { order: 5; margin-left: auto; }
+  .table-scroll tbody tr:last-child { border-bottom: none; }
+  .table-scroll tbody td {
+    display: flex; gap: 0.6rem; border: none; padding: 0.12rem 0;
+    max-width: none; white-space: normal;
+  }
+  .table-scroll tbody td::before {
+    content: attr(data-label);
+    color: var(--muted); font-size: 0.75rem; font-weight: 600;
+    min-width: 96px; flex-shrink: 0; padding-top: 0.1rem;
+  }
+  .table-scroll tbody td span { overflow-wrap: anywhere; white-space: normal; }
 
   /* drawer plein écran + zones tactiles confortables */
   .drawer { width: 100vw; border-left: none; padding: 1.1rem; }

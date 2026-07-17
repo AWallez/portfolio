@@ -6,11 +6,12 @@ import { fmtDate } from "./Messages";
 type Props = {
   contact: Contact;
   onClose: () => void;
+  onEdit: () => void;
   onChanged: (updated: Contact | null) => void;
   onToast: (text: string, err?: boolean) => void;
 };
 
-export function Detail({ contact, onClose, onChanged, onToast }: Props) {
+export function Detail({ contact, onClose, onEdit, onChanged, onToast }: Props) {
   const [note, setNote] = useState(contact.note ?? "");
   const [busy, setBusy] = useState(false);
 
@@ -141,6 +142,9 @@ export function Detail({ contact, onClose, onChanged, onToast }: Props) {
             onClick={saveNote}
           >
             Enregistrer la note
+          </button>
+          <button className="btn" disabled={busy} onClick={onEdit}>
+            ✎ Modifier
           </button>
           <button
             className="btn danger"

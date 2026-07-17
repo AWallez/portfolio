@@ -17,7 +17,26 @@ type ListQuery = {
   limit?: number;
 };
 
-type PatchBody = { status?: Status; note?: string | null };
+type PatchBody = {
+  status?: Status;
+  note?: string | null;
+  firstname?: string;
+  lastname?: string;
+  email?: string | null;
+  phone?: string | null;
+  type?: string;
+  message?: string | null;
+};
+
+// Types acceptés (formulaire public + provenances des leads manuels).
+const CONTACT_TYPES = [
+  "project",
+  "hiring",
+  "other",
+  "malt",
+  "linkedin",
+  "telephone",
+];
 
 type CreateBody = {
   firstname: string;
@@ -119,7 +138,7 @@ export async function contactRoutes(app: FastifyInstance) {
     },
   );
 
-  // Mise à jour du statut et/ou de la note.
+  // Mise à jour partielle : statut, note, et/ou n'importe quel champ du contact.
   app.patch(
     "/api/contacts/:id",
     {
@@ -132,6 +151,18 @@ export async function contactRoutes(app: FastifyInstance) {
           properties: {
             status: { type: "string", enum: [...STATUSES] },
             note: { type: ["string", "null"], maxLength: 5000 },
+            firstname: { type: "string", minLength: 1, maxLength: 100 },
+            lastname: { type: "string", minLength: 1, maxLength: 100 },
+            // pattern JSON Schema : ignoré quand la valeur est null → un email
+            // effacé (null) reste valide, un email non vide doit être bien formé
+            email: {
+              type: ["string", "null"],
+              pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+              maxLength: 200,
+            },
+            phone: { type: ["string", "null"], maxLength: 40 },
+            type: { type: "string", enum: CONTACT_TYPES },
+            message: { type: ["string", "null"], maxLength: 5000 },
           },
         },
       },
@@ -142,13 +173,13 @@ export async function contactRoutes(app: FastifyInstance) {
     ) => {
       const sets: string[] = [];
       const params: unknown[] = [];
-      if (req.body.status !== undefined) {
-        params.push(req.body.status);
-        sets.push(`status = $${params.length}`);
-      }
-      if (req.body.note !== undefined) {
-        params.push(req.body.note === "" ? null : req.body.note);
-        sets.push(`note = $${params.length}`);
+      // champs texte optionnels : chaîne vide = effacement (NULL)
+      const NULLABLE = new Set(["note", "email", "phone", "message"]);
+      for (const [key, raw] of Object.entries(req.body)) {
+        if (raw === undefined) continue;
+        const value = NULLABLE.has(key) && raw === "" ? null : raw;
+        params.push(value);
+        sets.push(`${key} = $${params.length}`);
       }
       params.push(req.params.id);
 

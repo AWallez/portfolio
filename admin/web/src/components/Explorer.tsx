@@ -105,7 +105,7 @@ export function Explorer() {
                   {data.rows.map((row, i) => (
                     <tr key={i}>
                       {data.columns.map((c) => (
-                        <td key={c.name}>
+                        <td key={c.name} data-label={c.name}>
                           <Cell value={row[c.name]} />
                         </td>
                       ))}

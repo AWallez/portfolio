@@ -1,28 +1,34 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import type { Contact } from "../api";
 import { api } from "../api";
 
-type Props = { onClose: () => void; onCreated: () => void };
+type Props = {
+  // null = création d'un lead · Contact = édition de l'existant
+  contact: Contact | null;
+  onClose: () => void;
+  onSaved: (isNew: boolean) => void;
+};
 
-// Provenances possibles d'un lead ajouté à la main.
-const SOURCES = [
+const TYPES = [
   ["malt", "Malt"],
   ["linkedin", "LinkedIn"],
   ["telephone", "Téléphone"],
-  ["project", "Projet (autre canal)"],
+  ["project", "Projet"],
   ["hiring", "Recrutement"],
   ["other", "Autre"],
 ] as const;
 
-export function LeadForm({ onClose, onCreated }: Props) {
+export function LeadForm({ contact, onClose, onSaved }: Props) {
+  const isNew = contact === null;
   const [form, setForm] = useState({
-    firstname: "",
-    lastname: "",
-    email: "",
-    phone: "",
-    type: "malt",
-    message: "",
-    note: "",
+    firstname: contact?.firstname ?? "",
+    lastname: contact?.lastname ?? "",
+    email: contact?.email ?? "",
+    phone: contact?.phone ?? "",
+    type: contact?.type ?? "malt",
+    message: contact?.message ?? "",
+    note: contact?.note ?? "",
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -36,20 +42,33 @@ export function LeadForm({ onClose, onCreated }: Props) {
     setBusy(true);
     setError("");
     try {
-      // on n'envoie que les champs remplis (email vide ≠ email invalide)
-      const body: Record<string, string> = {
-        firstname: form.firstname.trim(),
-        lastname: form.lastname.trim(),
-        type: form.type,
-      };
-      if (form.email.trim()) body.email = form.email.trim();
-      if (form.phone.trim()) body.phone = form.phone.trim();
-      if (form.message.trim()) body.message = form.message.trim();
-      if (form.note.trim()) body.note = form.note.trim();
-      await api.post("/api/contacts", body);
-      onCreated();
+      if (isNew) {
+        // création : on n'envoie que les champs remplis
+        const body: Record<string, string> = {
+          firstname: form.firstname.trim(),
+          lastname: form.lastname.trim(),
+          type: form.type,
+        };
+        if (form.email.trim()) body.email = form.email.trim();
+        if (form.phone.trim()) body.phone = form.phone.trim();
+        if (form.message.trim()) body.message = form.message.trim();
+        if (form.note.trim()) body.note = form.note.trim();
+        await api.post("/api/contacts", body);
+      } else {
+        // édition : tout est envoyé, chaîne vide = effacement côté API
+        await api.patch(`/api/contacts/${contact.id}`, {
+          firstname: form.firstname.trim(),
+          lastname: form.lastname.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          type: form.type,
+          message: form.message,
+          note: form.note,
+        });
+      }
+      onSaved(isNew);
     } catch {
-      setError("Échec de l'ajout — vérifie les champs (email valide ?).");
+      setError("Échec de l'enregistrement — vérifie les champs (email valide ?).");
       setBusy(false);
     }
   }
@@ -58,9 +77,7 @@ export function LeadForm({ onClose, onCreated }: Props) {
     <>
       <div className="overlay" onClick={onClose} />
       <form className="modal" onSubmit={submit}>
-        <h2>
-          <span style={{ color: "var(--accent)" }}>+</span> nouveau_lead
-        </h2>
+        <h2>{isNew ? "Nouveau lead" : "Modifier le contact"}</h2>
         <div className="grid-2">
           <label className="field">
             <span>prénom *</span>
@@ -81,9 +98,9 @@ export function LeadForm({ onClose, onCreated }: Props) {
           </label>
         </div>
         <label className="field">
-          <span>provenance *</span>
+          <span>{isNew ? "provenance *" : "type"}</span>
           <select value={form.type} onChange={(e) => set("type", e.target.value)}>
-            {SOURCES.map(([v, label]) => (
+            {TYPES.map(([v, label]) => (
               <option key={v} value={v}>
                 {label}
               </option>
@@ -123,10 +140,14 @@ export function LeadForm({ onClose, onCreated }: Props) {
             style={{ minHeight: 60 }}
           />
         </label>
-        {error && <p className="error" style={{ color: "var(--danger)" }}>{error}</p>}
+        {error && (
+          <p className="error" style={{ color: "var(--danger)" }}>
+            {error}
+          </p>
+        )}
         <div className="actions" style={{ display: "flex", gap: "0.6rem" }}>
           <button className="btn primary" disabled={busy}>
-            {busy ? "…" : "Ajouter"}
+            {busy ? "…" : isNew ? "Ajouter" : "Enregistrer"}
           </button>
           <button type="button" className="btn ghost" onClick={onClose}>
             Annuler

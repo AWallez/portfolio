@@ -17,7 +17,8 @@ export function Messages() {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<ContactList | null>(null);
   const [selected, setSelected] = useState<Contact | null>(null);
-  const [showLead, setShowLead] = useState(false);
+  // null = fermé · "new" = ajout · Contact = édition
+  const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [toast, setToast] = useState<{ text: string; err?: boolean } | null>(
     null,
   );
@@ -43,6 +44,18 @@ export function Messages() {
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
+
+  async function removeContact(c: Contact) {
+    if (!window.confirm(`Supprimer « ${c.firstname} ${c.lastname} » ?`)) return;
+    try {
+      await api.del(`/api/contacts/${c.id}`);
+      setToast({ text: "Supprimé" });
+      if (selected?.id === c.id) setSelected(null);
+      load().catch(() => {});
+    } catch {
+      setToast({ text: "Échec de la suppression", err: true });
+    }
+  }
 
   const pages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
 
@@ -83,61 +96,73 @@ export function Messages() {
             setPage(1);
           }}
         />
-        <button className="btn primary" onClick={() => setShowLead(true)}>
+        <button className="btn primary" onClick={() => setEditing("new")}>
           + Lead
         </button>
       </div>
 
-      <div className="card">
-        {data && data.items.length === 0 ? (
+      {data && data.items.length === 0 ? (
+        <div className="card">
           <div className="empty">aucun message</div>
-        ) : (
-          <table className="messages-table">
-            <thead>
-              <tr>
-                <th>contact</th>
-                <th>type</th>
-                <th>message</th>
-                <th>statut</th>
-                <th>reçu le</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data?.items.map((c) => (
-                <tr
-                  key={c.id}
-                  className={`row ${c.status === "non_lu" ? "unread" : ""}`}
-                  onClick={() => setSelected(c)}
+        </div>
+      ) : (
+        <div className="msg-grid">
+          {data?.items.map((c) => (
+            <article
+              key={c.id}
+              className={`msg-card ${c.status === "non_lu" ? "unread" : ""}`}
+              style={{ ["--st" as string]: `var(--st-${c.status})` }}
+              onClick={() => setSelected(c)}
+            >
+              <header>
+                <div className="who">
+                  <span className="name">
+                    {c.firstname} {c.lastname}{" "}
+                    {c.manual && <span className="manual-tag">· manuel</span>}
+                  </span>
+                  <span className="mail">{c.email ?? c.phone ?? "—"}</span>
+                </div>
+                <span
+                  className="status-badge"
+                  style={{ color: `var(--st-${c.status})` }}
                 >
-                  <td className="who">
-                    <span className="name">
-                      {c.firstname} {c.lastname}{" "}
-                      {c.manual && <span className="manual-tag">· manuel</span>}
-                    </span>
-                    <span className="mail">{c.email ?? "—"}</span>
-                  </td>
-                  <td className="cell-type">
-                    <span className="tag">{TYPE_LABELS[c.type] ?? c.type}</span>
-                  </td>
-                  <td className="cell-snippet">
-                    <div className="snippet">{c.message ?? "—"}</div>
-                  </td>
-                  <td className="cell-status">
-                    <span
-                      className="status-badge"
-                      style={{ color: `var(--st-${c.status})` }}
-                    >
-                      <span className="dot" />
-                      {STATUS_LABELS[c.status]}
-                    </span>
-                  </td>
-                  <td className="date cell-date">{fmtDate(c.created_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                  <span className="dot" />
+                  {STATUS_LABELS[c.status]}
+                </span>
+              </header>
+              {c.message && <p className="preview">{c.message}</p>}
+              {c.note && <p className="note-line">📝 {c.note}</p>}
+              <footer>
+                <span className="tag">{TYPE_LABELS[c.type] ?? c.type}</span>
+                <span className="date">{fmtDate(c.created_at)}</span>
+                <span className="spacer" />
+                <button
+                  className="icon-btn"
+                  title="Modifier"
+                  aria-label="Modifier"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditing(c);
+                  }}
+                >
+                  ✎
+                </button>
+                <button
+                  className="icon-btn danger"
+                  title="Supprimer"
+                  aria-label="Supprimer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeContact(c);
+                  }}
+                >
+                  🗑
+                </button>
+              </footer>
+            </article>
+          ))}
+        </div>
+      )}
 
       {pages > 1 && (
         <div className="pager">
@@ -163,6 +188,10 @@ export function Messages() {
         <Detail
           contact={selected}
           onClose={() => setSelected(null)}
+          onEdit={() => {
+            setEditing(selected);
+            setSelected(null);
+          }}
           onChanged={(updated) => {
             if (updated) setSelected(updated);
             else setSelected(null); // supprimé
@@ -171,12 +200,13 @@ export function Messages() {
           onToast={(text, err) => setToast({ text, err })}
         />
       )}
-      {showLead && (
+      {editing && (
         <LeadForm
-          onClose={() => setShowLead(false)}
-          onCreated={() => {
-            setShowLead(false);
-            setToast({ text: "Lead ajouté ✓" });
+          contact={editing === "new" ? null : editing}
+          onClose={() => setEditing(null)}
+          onSaved={(isNew) => {
+            setEditing(null);
+            setToast({ text: isNew ? "Lead ajouté ✓" : "Modifié ✓" });
             load().catch(() => {});
           }}
         />
