@@ -78,6 +78,35 @@ services:
       timeout: 5s
       retries: 3
 
+  # --- Outil admin/CRM interne. Port 8100 = LAN/VPN uniquement (jamais NATé,
+  # pas de bloc Caddy) : suivi des messages du formulaire + explorateur BDD. ---
+  admin:
+    build:
+      context: ../admin
+      # réseau hôte pendant le build : les RUN (npm ci) sont sinon droppés par
+      # le pare-feu UGOS en « Accès refusé » (même piège que caddy-ratelimit)
+      network: host
+    container_name: portfolio-admin
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      HOST: 0.0.0.0
+      # user PostgreSQL dédié aux droits limités (SELECT partout, écriture
+      # uniquement sur contacts) — créé une fois via psql, cf. .env.example
+      DATABASE_URL_ADMIN: postgres://${ADMIN_DB_USER}:${ADMIN_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
+      SESSION_SECRET: ${ADMIN_SESSION_SECRET}
+    ports:
+      - "8100:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3002/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
   # --- Frontend : Nginx sert dist/ et proxy /api → api (même origine, zéro CORS). ---
   web:
     build: ../frontend

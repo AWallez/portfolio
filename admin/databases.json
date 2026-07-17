@@ -1,0 +1,11 @@
+{
+  "_comment": "Registre des bases consultables par l'explorateur. La clé = nom court (URL). L'URL de connexion vient de l'env (urlEnv) pour garder les secrets dans .env. crm: true = base qui porte la table contacts (module CRM, lecture/écriture). Les autres bases sont en LECTURE SEULE.",
+  "databases": {
+    "portfolio": {
+      "label": "Portfolio (PostgreSQL)",
+      "driver": "pg",
+      "urlEnv": "DATABASE_URL_ADMIN",
+      "crm": true
+    }
+  }
+}
