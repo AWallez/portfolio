@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Contact, Status } from "../api";
-import { api, STATUSES, STATUS_LABELS, TYPE_LABELS } from "../api";
+import { api, STATUSES, STATUS_LABELS, typeLabel } from "../api";
 import { fmtDate } from "./Messages";
 
 type Props = {
@@ -93,7 +93,7 @@ export function Detail({ contact, onClose, onEdit, onChanged, onToast }: Props) 
 
         <dl className="kv">
           <dt>type</dt>
-          <dd>{TYPE_LABELS[contact.type] ?? contact.type}</dd>
+          <dd>{typeLabel(contact.type)}</dd>
           <dt>email</dt>
           <dd>
             {contact.email ? (

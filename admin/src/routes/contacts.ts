@@ -7,6 +7,7 @@ export const STATUSES = [
   "en_attente",
   "a_recontacter",
   "valide",
+  "annule",
 ] as const;
 type Status = (typeof STATUSES)[number];
 
@@ -27,16 +28,6 @@ type PatchBody = {
   type?: string;
   message?: string | null;
 };
-
-// Types acceptés (formulaire public + provenances des leads manuels).
-const CONTACT_TYPES = [
-  "project",
-  "hiring",
-  "other",
-  "malt",
-  "linkedin",
-  "telephone",
-];
 
 type CreateBody = {
   firstname: string;
@@ -122,6 +113,14 @@ export async function contactRoutes(app: FastifyInstance) {
     },
   );
 
+  // Types présents en base (alimente le menu déroulant, évolue avec les données).
+  app.get("/api/contacts/types", async () => {
+    const res = await crmPool().query<{ type: string }>(
+      `SELECT DISTINCT type FROM contacts WHERE type IS NOT NULL AND type <> '' ORDER BY type`,
+    );
+    return res.rows.map((r) => r.type);
+  });
+
   // Détail complet (inclut ip / user_agent, utiles pour repérer le spam).
   app.get(
     "/api/contacts/:id",
@@ -161,7 +160,8 @@ export async function contactRoutes(app: FastifyInstance) {
               maxLength: 200,
             },
             phone: { type: ["string", "null"], maxLength: 40 },
-            type: { type: "string", enum: CONTACT_TYPES },
+            // type libre (la liste du front vient de SELECT DISTINCT en base)
+            type: { type: "string", minLength: 1, maxLength: 60 },
             message: { type: ["string", "null"], maxLength: 5000 },
           },
         },
@@ -229,17 +229,8 @@ export async function contactRoutes(app: FastifyInstance) {
               maxLength: 200,
             },
             phone: { type: "string", maxLength: 40 },
-            type: {
-              type: "string",
-              enum: [
-                "project",
-                "hiring",
-                "other",
-                "malt",
-                "linkedin",
-                "telephone",
-              ],
-            },
+            // type libre (créer un nouveau type à la volée depuis le front)
+            type: { type: "string", minLength: 1, maxLength: 60 },
             message: { type: "string", maxLength: 5000 },
             note: { type: "string", maxLength: 5000 },
           },

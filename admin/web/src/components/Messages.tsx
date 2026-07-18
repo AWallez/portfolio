@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Contact, ContactList, Status } from "../api";
-import { api, STATUSES, STATUS_LABELS, TYPE_LABELS } from "../api";
+import { api, STATUSES, STATUS_LABELS } from "../api";
 import { Detail } from "./Detail";
 import { LeadForm } from "./LeadForm";
+import { MessageCard } from "./MessageCard";
 
 export function fmtDate(s: string): string {
   return new Date(s).toLocaleString("fr-FR", {
@@ -31,7 +32,6 @@ export function Messages() {
     setData(await api.get<ContactList>(`/api/contacts?${params}`));
   }, [status, q, page]);
 
-  // rechargement (léger debounce pour la recherche au clavier)
   useEffect(() => {
     const t = setTimeout(() => {
       load().catch(() => setToast({ text: "Erreur de chargement", err: true }));
@@ -55,6 +55,12 @@ export function Messages() {
     } catch {
       setToast({ text: "Échec de la suppression", err: true });
     }
+  }
+
+  // met à jour la carte sélectionnée + rafraîchit les compteurs
+  function afterChange(updated: Contact) {
+    if (selected?.id === updated.id) setSelected(updated);
+    load().catch(() => {});
   }
 
   const pages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
@@ -108,58 +114,15 @@ export function Messages() {
       ) : (
         <div className="msg-grid">
           {data?.items.map((c) => (
-            <article
+            <MessageCard
               key={c.id}
-              className={`msg-card ${c.status === "non_lu" ? "unread" : ""}`}
-              style={{ ["--st" as string]: `var(--st-${c.status})` }}
-              onClick={() => setSelected(c)}
-            >
-              <header>
-                <div className="who">
-                  <span className="name">
-                    {c.firstname} {c.lastname}{" "}
-                    {c.manual && <span className="manual-tag">· manuel</span>}
-                  </span>
-                  <span className="mail">{c.email ?? c.phone ?? "—"}</span>
-                </div>
-                <span
-                  className="status-badge"
-                  style={{ color: `var(--st-${c.status})` }}
-                >
-                  <span className="dot" />
-                  {STATUS_LABELS[c.status]}
-                </span>
-              </header>
-              {c.message && <p className="preview">{c.message}</p>}
-              {c.note && <p className="note-line">📝 {c.note}</p>}
-              <footer>
-                <span className="tag">{TYPE_LABELS[c.type] ?? c.type}</span>
-                <span className="date">{fmtDate(c.created_at)}</span>
-                <span className="spacer" />
-                <button
-                  className="icon-btn"
-                  title="Modifier"
-                  aria-label="Modifier"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditing(c);
-                  }}
-                >
-                  ✎
-                </button>
-                <button
-                  className="icon-btn danger"
-                  title="Supprimer"
-                  aria-label="Supprimer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeContact(c);
-                  }}
-                >
-                  🗑
-                </button>
-              </footer>
-            </article>
+              contact={c}
+              onOpen={() => setSelected(c)}
+              onEdit={() => setEditing(c)}
+              onDelete={() => removeContact(c)}
+              onChanged={afterChange}
+              onToast={(text, err) => setToast({ text, err })}
+            />
           ))}
         </div>
       )}
@@ -194,7 +157,7 @@ export function Messages() {
           }}
           onChanged={(updated) => {
             if (updated) setSelected(updated);
-            else setSelected(null); // supprimé
+            else setSelected(null);
             load().catch(() => {});
           }}
           onToast={(text, err) => setToast({ text, err })}

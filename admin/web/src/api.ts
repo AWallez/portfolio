@@ -45,6 +45,7 @@ export const STATUSES = [
   "en_attente",
   "a_recontacter",
   "valide",
+  "annule",
 ] as const;
 export type Status = (typeof STATUSES)[number];
 
@@ -53,9 +54,11 @@ export const STATUS_LABELS: Record<Status, string> = {
   en_attente: "En attente",
   a_recontacter: "À recontacter",
   valide: "Validé",
+  annule: "Annulé",
 };
 
-export const TYPE_LABELS: Record<string, string> = {
+// Libellés « jolis » pour les types connus ; les types libres s'affichent tels quels.
+const TYPE_LABELS: Record<string, string> = {
   project: "Projet",
   hiring: "Recrutement",
   other: "Autre",
@@ -63,6 +66,21 @@ export const TYPE_LABELS: Record<string, string> = {
   linkedin: "LinkedIn",
   telephone: "Téléphone",
 };
+export function typeLabel(t: string): string {
+  return TYPE_LABELS[t] ?? t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+// Couleur stable dérivée du nom du type (hash → teinte HSL) : n'importe quel
+// type — connu ou créé à la volée — obtient une couleur cohérente et distincte.
+export function typeColor(t: string): string {
+  // hash FNV-ish (Math.imul = bon brassage) → teinte + saturation variables,
+  // pour que deux types proches ne tombent pas sur la même couleur.
+  let h = 2166136261;
+  for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619) >>> 0;
+  const hue = h % 360;
+  const sat = 60 + ((h >>> 9) % 22); // 60–82 %
+  return `hsl(${hue}, ${sat}%, 63%)`;
+}
 
 export type Contact = {
   id: number;

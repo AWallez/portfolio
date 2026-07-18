@@ -1,53 +1,79 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import type { Contact } from "../api";
-import { api } from "../api";
+import { api, typeLabel } from "../api";
 
 type Props = {
-  // null = création d'un lead · Contact = édition de l'existant
-  contact: Contact | null;
+  contact: Contact | null; // null = création
   onClose: () => void;
   onSaved: (isNew: boolean) => void;
 };
 
-const TYPES = [
-  ["malt", "Malt"],
-  ["linkedin", "LinkedIn"],
-  ["telephone", "Téléphone"],
-  ["project", "Projet"],
-  ["hiring", "Recrutement"],
-  ["other", "Autre"],
-] as const;
+const NEW = "__new__";
 
 export function LeadForm({ contact, onClose, onSaved }: Props) {
   const isNew = contact === null;
+  const [types, setTypes] = useState<string[]>([]);
   const [form, setForm] = useState({
     firstname: contact?.firstname ?? "",
     lastname: contact?.lastname ?? "",
     email: contact?.email ?? "",
     phone: contact?.phone ?? "",
-    type: contact?.type ?? "malt",
+    type: contact?.type ?? "",
     message: contact?.message ?? "",
     note: contact?.note ?? "",
   });
+  // quand l'utilisateur choisit « Nouveau type… »
+  const [newType, setNewType] = useState("");
+  const [creatingType, setCreatingType] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // charge la liste des types depuis la base (SELECT DISTINCT)
+  useEffect(() => {
+    api
+      .get<string[]>("/api/contacts/types")
+      .then((list) => {
+        setTypes(list);
+        // valeur par défaut à la création : premier type existant, sinon création
+        if (isNew && !form.type) {
+          if (list.length > 0) setForm((f) => ({ ...f, type: list[0] }));
+          else setCreatingType(true);
+        }
+      })
+      .catch(() => setTypes([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  function onTypeSelect(value: string) {
+    if (value === NEW) {
+      setCreatingType(true);
+      setNewType("");
+    } else {
+      setCreatingType(false);
+      set("type", value);
+    }
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault();
+    const finalType = (creatingType ? newType : form.type).trim();
+    if (!finalType) {
+      setError("Choisis ou saisis un type.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
       if (isNew) {
-        // création : on n'envoie que les champs remplis
         const body: Record<string, string> = {
           firstname: form.firstname.trim(),
           lastname: form.lastname.trim(),
-          type: form.type,
+          type: finalType,
         };
         if (form.email.trim()) body.email = form.email.trim();
         if (form.phone.trim()) body.phone = form.phone.trim();
@@ -55,13 +81,12 @@ export function LeadForm({ contact, onClose, onSaved }: Props) {
         if (form.note.trim()) body.note = form.note.trim();
         await api.post("/api/contacts", body);
       } else {
-        // édition : tout est envoyé, chaîne vide = effacement côté API
         await api.patch(`/api/contacts/${contact.id}`, {
           firstname: form.firstname.trim(),
           lastname: form.lastname.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
-          type: form.type,
+          type: finalType,
           message: form.message,
           note: form.note,
         });
@@ -72,6 +97,12 @@ export function LeadForm({ contact, onClose, onSaved }: Props) {
       setBusy(false);
     }
   }
+
+  // dans la liste, la valeur courante peut être un type qui n'est pas (encore)
+  // dans le SELECT DISTINCT si on édite : on l'ajoute pour ne pas le perdre.
+  const options = types.includes(form.type) || !form.type
+    ? types
+    : [form.type, ...types];
 
   return (
     <>
@@ -97,16 +128,45 @@ export function LeadForm({ contact, onClose, onSaved }: Props) {
             />
           </label>
         </div>
+
         <label className="field">
-          <span>{isNew ? "provenance *" : "type"}</span>
-          <select value={form.type} onChange={(e) => set("type", e.target.value)}>
-            {TYPES.map(([v, label]) => (
-              <option key={v} value={v}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <span>type *</span>
+          {!creatingType ? (
+            <select
+              value={form.type}
+              onChange={(e) => onTypeSelect(e.target.value)}
+            >
+              {options.map((t) => (
+                <option key={t} value={t}>
+                  {typeLabel(t)}
+                </option>
+              ))}
+              <option value={NEW}>+ Nouveau type…</option>
+            </select>
+          ) : (
+            <div className="inline-new">
+              <input
+                value={newType}
+                onChange={(e) => setNewType(e.target.value)}
+                placeholder="nom du nouveau type"
+                autoFocus
+              />
+              {types.length > 0 && (
+                <button
+                  type="button"
+                  className="btn ghost sm"
+                  onClick={() => {
+                    setCreatingType(false);
+                    set("type", types[0]);
+                  }}
+                >
+                  Annuler
+                </button>
+              )}
+            </div>
+          )}
         </label>
+
         <div className="grid-2">
           <label className="field">
             <span>email</span>
@@ -124,9 +184,11 @@ export function LeadForm({ contact, onClose, onSaved }: Props) {
             />
           </label>
         </div>
+
         <label className="field">
           <span>demande / contexte</span>
           <textarea
+            className="tall"
             value={form.message}
             onChange={(e) => set("message", e.target.value)}
             placeholder="ce que cherche le prospect…"
@@ -140,6 +202,7 @@ export function LeadForm({ contact, onClose, onSaved }: Props) {
             style={{ minHeight: 60 }}
           />
         </label>
+
         {error && (
           <p className="error" style={{ color: "var(--danger)" }}>
             {error}
