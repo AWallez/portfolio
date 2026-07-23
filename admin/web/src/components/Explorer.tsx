@@ -108,32 +108,32 @@ export function Explorer() {
         )}
         {!error && table && data && (
           <>
-            <div className="card table-scroll">
-              <table>
-                <thead>
-                  <tr>
+            {data.rows.length === 0 ? (
+              <div className="card">
+                <div className="empty">
+                  {q.trim() ? "aucun résultat pour cette recherche" : "table vide"}
+                </div>
+              </div>
+            ) : (
+              <div className="row-grid">
+                {data.rows.map((row, i) => (
+                  <article className="row-card" key={i}>
                     {data.columns.map((c) => (
-                      <th key={c.name} title={c.type}>
-                        {c.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.rows.map((row, i) => (
-                    <tr key={i}>
-                      {data.columns.map((c) => (
-                        <td key={c.name} data-label={c.name}>
+                      <div className="rc-field" key={c.name}>
+                        <span className="rc-label" title={c.type}>
+                          {c.name}
+                        </span>
+                        <span className="rc-value">
                           <Cell value={row[c.name]} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </span>
+                      </div>
+                    ))}
+                  </article>
+                ))}
+              </div>
+            )}
             <div className="pager">
-              {data.total} lignes
+              {data.total} ligne{data.total > 1 ? "s" : ""}
               <button
                 className="btn ghost"
                 disabled={page <= 1}
