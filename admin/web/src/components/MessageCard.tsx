@@ -44,7 +44,10 @@ export function MessageCard({
   const tColor = typeColor(contact.type);
 
   return (
-    <article className={`msg-card ${contact.status === "non_lu" ? "unread" : ""}`}>
+    <article
+      className={`msg-card ${contact.status === "non_lu" ? "unread" : ""}`}
+      style={{ ["--st" as string]: `var(--st-${contact.status})` }}
+    >
       {/* Badge type en haut, couleur dérivée du type */}
       <div className="card-top">
         <span
