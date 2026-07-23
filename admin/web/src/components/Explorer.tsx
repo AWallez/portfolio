@@ -17,6 +17,7 @@ export function Explorer() {
   const [tables, setTables] = useState<TableInfo[]>([]);
   const [table, setTable] = useState<string>("");
   const [page, setPage] = useState(1);
+  const [q, setQ] = useState("");
   const [data, setData] = useState<TableRows | null>(null);
   const [error, setError] = useState("");
 
@@ -34,22 +35,27 @@ export function Explorer() {
     if (!db) return;
     setTable("");
     setData(null);
+    setQ("");
     api
       .get<TableInfo[]>(`/api/explorer/dbs/${db}/tables`)
       .then(setTables)
       .catch(() => setError("Impossible de lister les tables."));
   }, [db]);
 
+  // léger debounce : évite une requête par frappe dans la recherche
   useEffect(() => {
     if (!db || !table) return;
     setError("");
-    api
-      .get<TableRows>(
-        `/api/explorer/dbs/${db}/tables/${table}/rows?page=${page}`,
-      )
-      .then(setData)
-      .catch(() => setError("Impossible de lire la table."));
-  }, [db, table, page]);
+    const t = setTimeout(() => {
+      const params = new URLSearchParams({ page: String(page) });
+      if (q.trim()) params.set("q", q.trim());
+      api
+        .get<TableRows>(`/api/explorer/dbs/${db}/tables/${table}/rows?${params}`)
+        .then(setData)
+        .catch(() => setError("Impossible de lire la table."));
+    }, 200);
+    return () => clearTimeout(t);
+  }, [db, table, page, q]);
 
   const pages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
 
@@ -74,6 +80,7 @@ export function Explorer() {
             onClick={() => {
               setTable(t.name);
               setPage(1);
+              setQ("");
             }}
           >
             {t.name} <span className="n">{t.approx_rows}</span>
@@ -82,6 +89,17 @@ export function Explorer() {
       </aside>
 
       <div>
+        {table && (
+          <input
+            className="explorer-search"
+            placeholder={`rechercher dans ${table}…`}
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1);
+            }}
+          />
+        )}
         {error && <div className="empty">{error}</div>}
         {!error && !table && (
           <div className="card">

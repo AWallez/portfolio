@@ -287,6 +287,7 @@ textarea.tall { min-height: 190px; }
 }
 .table-scroll tbody td span { overflow-wrap: anywhere; white-space: normal; }
 .cell-null { color: var(--faint); font-style: italic; }
+.explorer-search { display: block; max-width: 340px; margin-bottom: 0.8rem; }
 
 /* ---- toast ---- */
 .toast {

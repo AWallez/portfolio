@@ -78,6 +78,7 @@ export async function explorerRoutes(app: FastifyInstance) {
           properties: {
             page: { type: "integer", minimum: 1, default: 1 },
             limit: { type: "integer", minimum: 1, maximum: 100, default: 25 },
+            q: { type: "string", maxLength: 200 },
           },
         },
       },
@@ -85,18 +86,28 @@ export async function explorerRoutes(app: FastifyInstance) {
     async (
       req: FastifyRequest<{
         Params: { db: string; table: string };
-        Querystring: { page?: number; limit?: number };
+        Querystring: { page?: number; limit?: number; q?: string };
       }>,
       reply,
     ) => {
       const { db, table } = req.params;
-      const { page = 1, limit = 25 } = req.query;
+      const { page = 1, limit = 25, q } = req.query;
       if (!config.databases[db]) {
         return reply.code(404).send({ ok: false, error: "unknown_db" });
       }
       const safeTable = await resolveTable(db, table);
       if (!safeTable) {
         return reply.code(404).send({ ok: false, error: "unknown_table" });
+      }
+
+      // Recherche générique : la ligne entière sérialisée en JSON, comparée en
+      // ILIKE — marche sur n'importe quelle table sans connaître ses colonnes.
+      // (Pas d'index possible, mais tables petites + outil mono-utilisateur.)
+      const params: unknown[] = [];
+      let where = "";
+      if (q && q.trim()) {
+        params.push(`%${q.trim()}%`);
+        where = ` WHERE to_jsonb(t)::text ILIKE $1`;
       }
 
       const [columns, total, rows] = await Promise.all([
@@ -110,13 +121,15 @@ export async function explorerRoutes(app: FastifyInstance) {
         ),
         queryReadOnly<{ n: string }>(
           db,
-          `SELECT count(*)::bigint AS n FROM ${safeTable}`,
+          `SELECT count(*)::bigint AS n FROM ${safeTable} t${where}`,
+          params,
         ),
         queryReadOnly(
           db,
-          `SELECT * FROM ${safeTable}
+          `SELECT t.* FROM ${safeTable} t${where}
             ORDER BY 1 DESC
             LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
+          params,
         ),
       ]);
 
