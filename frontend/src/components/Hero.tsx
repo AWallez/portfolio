@@ -393,7 +393,17 @@ export default function Hero() {
       // (on garde le biseau inset pour l'épaisseur, sinon il sauterait au survol)
       const sx = (-nx * 22).toFixed(0);
       const sy = (-ny * 22 + 14).toFixed(0);
-      el.style.boxShadow = `${sx}px ${sy}px 45px -8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15)`;
+      // ombre thème-consciente : une ombre noire discrète (0.35) est quasi
+      // invisible sur le fond sombre → aucun fondu. On la creuse et l'adoucit.
+      const dark = document.documentElement.classList.contains("dark");
+      // sombre : le biseau 3D (teinté à l'accent) est géré par la classe CSS
+      // `.term-bevel` → on laisse l'ombre à la classe (le tilt fait déjà le relief).
+      if (dark) {
+        el.style.boxShadow = "";
+      } else {
+        // clair : ombre portée + biseau (rim clair en haut, ombre douce en bas) → 3D
+        el.style.boxShadow = `${sx}px ${sy}px 45px -8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 12px 28px -20px rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.1), inset 0 -14px 28px -18px rgba(0,0,0,0.14)`;
+      }
       // reflet : un point lumineux suit le curseur, d'autant plus fort que l'on
       // est loin du centre (la surface « accroche » la lumière en s'inclinant).
       // Teinté avec --accent (teal) qui s'adapte déjà clair/sombre → visible sur
@@ -405,9 +415,9 @@ export default function Hero() {
         const intensity = Math.min(1, Math.hypot(nx, ny));
         // le teal sombre (clair) ressort moins que le teal vif (sombre) : on
         // monte un peu l'opacité en thème clair, on la baisse en thème sombre
-        const dark = document.documentElement.classList.contains("dark");
+        // (`dark` est déjà calculé plus haut pour l'ombre)
         const pct = dark
-          ? (5 + 13 * intensity).toFixed(1) // sombre : 5 % → 18 %
+          ? (2 + 6 * intensity).toFixed(1) // sombre : 2 % → 8 % (reflet discret)
           : (10 + 24 * intensity).toFixed(1); // clair : 10 % → 34 %
         g.style.background = `radial-gradient(circle at ${gx}% ${gy}%, color-mix(in srgb, var(--accent) ${pct}%, transparent), transparent 60%)`;
       }
@@ -446,8 +456,9 @@ export default function Hero() {
       <div
         ref={cardRef}
         onClick={focusPrompt}
-        className="relative rounded-xl border border-line bg-base/20 backdrop-blur-[3px] overflow-hidden
-                   shadow-[0_18px_45px_-12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(0,0,0,0.15)]
+        className="relative rounded-xl border border-line dark:border-line/30 bg-base/20 backdrop-blur-[3px] overflow-hidden
+                   shadow-[0_18px_45px_-12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_12px_28px_-20px_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(0,0,0,0.1),inset_0_-14px_28px_-18px_rgba(0,0,0,0.14)]
+                   term-bevel
                    transition-[transform,box-shadow] duration-150 ease-out will-change-transform motion-reduce:transition-none"
       >
         {/* Barre de titre */}

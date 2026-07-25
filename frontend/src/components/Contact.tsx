@@ -1,4 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import {
+  User,
+  IdCard,
+  Mail,
+  Phone,
+  ClipboardList,
+  MessageSquare,
+} from "lucide-react";
 import PhoneInput, {
   isValidPhoneNumber,
   type Country,
@@ -143,7 +151,9 @@ export default function Contact() {
   const field =
     "w-full rounded-lg border bg-surface/70 px-3 py-2 text-ink " +
     "placeholder:text-muted/50 focus:outline-none transition";
-  const label = "font-mono text-xs text-muted mb-1 block";
+  // label avec petite icône lucide (raccord avec les badges du site)
+  const label = "font-mono text-xs text-muted mb-1 flex items-center gap-1.5";
+  const labelIcon = "text-accent shrink-0";
 
   function validate(v: Fields): Errors {
     const e: Errors = {};
@@ -236,10 +246,26 @@ export default function Contact() {
         </p>
 
         {status === "sent" ? (
-          <div className="w-fit max-w-full mx-auto rounded-xl border border-accent/40 bg-accent/5 px-6 py-5 text-center shadow-sm backdrop-blur-xs">
-            <p className="text-accent font-mono">
-              ✓ {t("contact", "success", lang)}
-            </p>
+          /* écran de succès façon terminal : la commande a tourné, exit 0 */
+          <div className="w-full max-w-105 mx-auto rounded-xl border border-line bg-base/60 backdrop-blur-[3px] shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+              <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+              <span className="ml-2 font-mono text-[11px] text-muted">
+                alexis@wallez:~/contact$
+              </span>
+            </div>
+            <div className="p-5 font-mono text-sm space-y-1.5">
+              <p className="wrap-break-word">
+                <span className="text-accent">$ </span>
+                <span className="text-ink">./contact.sh</span>
+              </p>
+              <p className="text-accent wrap-break-word">
+                ✓ {t("contact", "success", lang)}
+              </p>
+              <p className="text-xs text-muted">exit 0</p>
+            </div>
           </div>
         ) : (
           <form
@@ -271,6 +297,7 @@ export default function Contact() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={label} htmlFor="firstname">
+                  <User size={12} aria-hidden className={labelIcon} />
                   {t("contact", "firstname", lang)}
                   <span aria-hidden="true" className="text-accent"> *</span>
                 </label>
@@ -299,6 +326,7 @@ export default function Contact() {
               {/* Type de demande */}
               <div>
                 <label className={label} htmlFor="lastname">
+                  <IdCard size={12} aria-hidden className={labelIcon} />
                   {t("contact", "lastname", lang)}
                   <span aria-hidden="true" className="text-accent"> *</span>
                 </label>
@@ -329,6 +357,7 @@ export default function Contact() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={label} htmlFor="email">
+                  <Mail size={12} aria-hidden className={labelIcon} />
                   {t("contact", "email", lang)}
                   <span aria-hidden="true" className="text-accent"> *</span>
                 </label>
@@ -354,6 +383,7 @@ export default function Contact() {
               </div>
               <div>
                 <label className={label} htmlFor="phone">
+                  <Phone size={12} aria-hidden className={labelIcon} />
                   {t("contact", "phone", lang)}
                 </label>
                 <PhoneInput
@@ -384,6 +414,7 @@ export default function Contact() {
 
             <div>
               <label className={label} htmlFor="type">
+                <ClipboardList size={12} aria-hidden className={labelIcon} />
                 {t("contact", "reqType", lang)}
                 <span aria-hidden="true" className="text-accent"> *</span>
               </label>
@@ -418,6 +449,7 @@ export default function Contact() {
             {/* Message */}
             <div>
               <label className={label} htmlFor="message">
+                <MessageSquare size={12} aria-hidden className={labelIcon} />
                 {t("contact", "message", lang)}
                 <span aria-hidden="true" className="text-accent"> *</span>
               </label>
@@ -452,19 +484,32 @@ export default function Contact() {
             {/* widget anti-bot Turnstile (invisible la plupart du temps) */}
             <div ref={widgetRef} className="flex justify-center empty:hidden" />
 
-            {/* Bouton */}
+            {/* Bouton : lift + halo accent au survol, flèche qui glisse (façon badges) */}
             <button
               type="submit"
               disabled={status === "sending"}
-              className="w-full font-mono text-sm px-4 py-2.5 rounded-lg
-                         bg-accent text-base font-medium
-                         hover:opacity-90 disabled:opacity-60 transition"
+              className="group w-full font-mono text-sm px-4 py-2.5 rounded-lg
+                         bg-accent text-base font-medium transition
+                         hover:-translate-y-0.5 hover:opacity-95
+                         hover:shadow-[0_8px_22px_-6px_color-mix(in_srgb,var(--accent)_55%,transparent)]
+                         disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none
+                         motion-reduce:hover:translate-y-0"
             >
-              {status === "sending"
-                ? t("contact", "sending", lang)
-                : status === "error"
-                  ? t("contact", "retry", lang)
-                  : `→ ${t("contact", "send", lang)}`}
+              {status === "sending" ? (
+                t("contact", "sending", lang)
+              ) : status === "error" ? (
+                t("contact", "retry", lang)
+              ) : (
+                <>
+                  <span
+                    aria-hidden
+                    className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0"
+                  >
+                    →
+                  </span>{" "}
+                  {t("contact", "send", lang)}
+                </>
+              )}
             </button>
           </form>
         )}

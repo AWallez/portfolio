@@ -5,6 +5,10 @@ import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 import ProjectVisual from "./ProjectVisual";
+import Tag from "./Tag";
+import { TIPS } from "../lib/tips";
+import { SKILL_ICONS } from "../lib/skill-icons";
+import { GENERIC_ICONS } from "../lib/generic-icons";
 // chargée à la demande : seulement quand on agrandit une image
 const Lightbox = lazy(() => import("./Lightbox"));
 // Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
@@ -51,16 +55,19 @@ const PROJECTS: Project[] = [
     tags: ["React", "TypeScript", "Fastify", "PostgreSQL", "Docker"],
     asset: "portfolio",
   },
-  {
-    name: "reseau",
-    folder: { fr: "reseau", en: "network" },
-    title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
-    desc: {
-      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, filtrage DNS (AdGuard Home — pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Objectif atteint : un réseau cloisonné, sécurisé et performant, administré sous Linux.",
-      en: "Pro-grade home network: VLAN segmentation, firewall, DNS filtering (AdGuard Home — ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. Outcome: a segmented, secure and high-throughput network, administered on Linux.",
+   {
+    name: "monitoring",
+    folder: { fr: "Supervision", en: "monitoring" },
+    title: {
+      fr: "Supervision & observabilité",
+      en: "Monitoring & observability",
     },
-    tags: ["Réseau", "VLAN", "AdGuard", "10 GbE", "iptables"],
-    asset: "reseau",
+    desc: {
+      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) tandis que Beszel trace les métriques système (CPU, RAM, disque, température). Un watchdog externe (UptimeRobot) vérifie le site depuis l'extérieur, et toute panne déclenche une alerte push instantanée sur mobile (ntfy, canaux dédiés). Dockge pilote les stacks et une page de statut centralise l'état des services. Détection de bout en bout, 100 % auto-hébergé.",
+      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) while Beszel tracks system metrics (CPU, RAM, disk, temperature). An external watchdog (UptimeRobot) checks the site from the outside, and any failure fires an instant mobile push alert (ntfy, dedicated channels). Dockge manages the stacks and a status page centralizes service health. End-to-end detection, fully self-hosted.",
+    },
+    tags: ["Uptime Kuma", "Beszel", "ntfy", "UptimeRobot", "Alerting"],
+    asset: "monitoring",
   },
   {
     name: "homelab",
@@ -77,6 +84,17 @@ const PROJECTS: Project[] = [
     asset: "homelab",
   },
   {
+    name: "reseau",
+    folder: { fr: "reseau", en: "network" },
+    title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
+    desc: {
+      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, filtrage DNS (AdGuard Home — pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Objectif atteint : un réseau cloisonné, sécurisé et performant, administré sous Linux.",
+      en: "Pro-grade home network: VLAN segmentation, firewall, DNS filtering (AdGuard Home — ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. Outcome: a segmented, secure and high-throughput network, administered on Linux.",
+    },
+    tags: ["Réseau", "VLAN", "AdGuard", "10 GbE", "iptables"],
+    asset: "reseau",
+  },
+  {
     name: "lab",
     folder: { fr: "lab", en: "lab" },
     title: {
@@ -89,20 +107,6 @@ const PROJECTS: Project[] = [
     },
     tags: ["Docker", "Kubernetes", "Terraform", "Ansible", "Bash"],
     asset: "perso",
-  },
-  {
-    name: "monitoring",
-    folder: { fr: "Supervision", en: "monitoring" },
-    title: {
-      fr: "Supervision & observabilité",
-      en: "Monitoring & observability",
-    },
-    desc: {
-      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) tandis que Beszel trace les métriques système (CPU, RAM, disque, température). Un watchdog externe (UptimeRobot) vérifie le site depuis l'extérieur, et toute panne déclenche une alerte push instantanée sur mobile (ntfy, canaux dédiés). Dockge pilote les stacks et une page de statut centralise l'état des services. Détection de bout en bout, 100 % auto-hébergé.",
-      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) while Beszel tracks system metrics (CPU, RAM, disk, temperature). An external watchdog (UptimeRobot) checks the site from the outside, and any failure fires an instant mobile push alert (ntfy, dedicated channels). Dockge manages the stacks and a status page centralizes service health. End-to-end detection, fully self-hosted.",
-    },
-    tags: ["Uptime Kuma", "Beszel", "ntfy", "UptimeRobot", "Alerting"],
-    asset: "monitoring",
   },
   {
     name: "resilience",
@@ -119,17 +123,6 @@ const PROJECTS: Project[] = [
     asset: "resilience",
   },
 ];
-
-function Tag({ children }: { children: string }) {
-  return (
-    <span
-      className="badge-hover px-2 py-0.5 rounded text-xs font-mono
-                     bg-accent/10 text-accent border border-accent/30"
-    >
-      {children}
-    </span>
-  );
-}
 
 export default function Projects() {
   const { lang } = useLang();
@@ -203,7 +196,14 @@ export default function Projects() {
 
               <div className="flex flex-wrap gap-2 mb-4">
                 {p.tags.map((tag) => (
-                  <Tag key={tag}>{tag}</Tag>
+                  <Tag
+                    key={tag}
+                    size="sm"
+                    tip={TIPS[tag]?.[lang]}
+                    icon={SKILL_ICONS[tag] ?? GENERIC_ICONS[tag]}
+                  >
+                    {tag}
+                  </Tag>
                 ))}
               </div>
             </article>
