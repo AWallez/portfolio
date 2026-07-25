@@ -291,7 +291,8 @@
   font: inherit;
 }
 .PhoneInputInput::placeholder {
-  color: var(--muted);
+  /* placeholder discret (aligné sur placeholder:text-muted/50 des autres champs) */
+  color: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 .PhoneInputCountrySelectArrow {
   color: var(--muted);

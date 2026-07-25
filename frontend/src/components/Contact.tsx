@@ -142,7 +142,7 @@ export default function Contact() {
   // styles réutilisés pour les champs
   const field =
     "w-full rounded-lg border bg-surface/70 px-3 py-2 text-ink " +
-    "placeholder:text-muted focus:outline-none transition";
+    "placeholder:text-muted/50 focus:outline-none transition";
   const label = "font-mono text-xs text-muted mb-1 block";
 
   function validate(v: Fields): Errors {

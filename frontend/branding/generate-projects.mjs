@@ -289,17 +289,17 @@ function portfolio(p, lang) {
   s += field(66, 570, 338, 22, p, "Message…");
   s += `<rect x="66" y="600" width="338" height="26" rx="8" fill="${a}"/>${T(235, 618, 11, p.accentInk, tr("→ Envoyer", "→ Send"), { w: "bold", anchor: "middle" })}`;
 
-  s += `<line x1="424" y1="500" x2="482" y2="500" stroke="${p.muted}" stroke-width="2" marker-end="url(#arrow)"/>`;
+  s += `<line x1="424" y1="480" x2="482" y2="480" stroke="${p.muted}" stroke-width="2" marker-end="url(#arrow)"/>`;
   // la requête transite par le reverse proxy Caddy (HTTPS) avant d'atteindre l'API
-  s += `<rect x="424" y="474" width="58" height="20" rx="10" fill="${p.base}"/><rect x="424" y="474" width="58" height="20" rx="10" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(453, 488, 10, a, "Caddy", { w: "bold", anchor: "middle", mono: true })}`;
-  s += T(453, 516, 10, p.muted, "POST", { anchor: "middle" });
-  s += card(488, 470, 168, 76, p, { r: 12, fill: p.chrome, stroke: p.chrome });
-  s += `<circle cx="510" cy="500" r="6" fill="${a}"/>${T(524, 497, 13, p.chromeInk, "Fastify API", { w: "bold" })}`;
-  s += T(506, 524, 11, p.chromeInk, "/api/contact", { mono: true, op: 0.7 });
-  s += T(506, 540, 10, p.chromeInk, "PostgreSQL · validation", { op: 0.55 });
+  s += `<rect x="424" y="442" width="58" height="20" rx="10" fill="${p.base}"/><rect x="424" y="442" width="58" height="20" rx="10" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(453, 456, 10, a, "Caddy", { w: "bold", anchor: "middle", mono: true })}`;
+  s += T(453, 496, 10, p.muted, "POST", { anchor: "middle" });
+  s += card(488, 450, 168, 76, p, { r: 12, fill: p.chrome, stroke: p.chrome });
+  s += `<circle cx="510" cy="480" r="6" fill="${a}"/>${T(524, 477, 13, p.chromeInk, "Fastify API", { w: "bold" })}`;
+  s += T(506, 504, 11, p.chromeInk, "/api/contact", { mono: true, op: 0.7 });
+  s += T(506, 520, 10, p.chromeInk, "PostgreSQL · validation", { op: 0.55 });
 
-  s += `<line x1="656" y1="508" x2="712" y2="520" stroke="${p.muted}" stroke-width="2" marker-end="url(#arrow)"/>`;
-  s += T(684, 500, 10, p.muted, tr("publie", "publish"), { anchor: "middle" });
+  s += `<line x1="656" y1="504" x2="715" y2="556" stroke="${p.muted}" stroke-width="2" marker-end="url(#arrow)"/>`;
+  s += T(684, 492, 10, p.muted, tr("publie", "publish"), { anchor: "middle" });
 
   s += T(718, 452, 13, p.muted, tr("Notification push", "Push notification"));
   s += card(718, 462, 434, 156, p, { r: 14 });
@@ -313,13 +313,25 @@ function portfolio(p, lang) {
   s += T(738, 580, 11, p.muted, tr("marie@example.com · Projet freelance", "marie@example.com · Freelance project"));
   s += T(738, 600, 11, p.muted, tr("&quot;Bonjour, j'aimerais un devis pour refondre mon site…&quot;", "&quot;Hi, I'd like a quote to redesign my website…&quot;"), { op: 0.85 });
 
-  // ---- Back-office : la même base PostgreSQL alimente une interface d'admin des
-  // leads, auto-hébergée et joignable uniquement par VPN (aucun accès public) ----
-  s += `<path d="M572 546 L572 566" stroke="${a}" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#arrow)"/>`;
-  s += card(486, 568, 172, 60, p, { r: 12 });
-  s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="502" y="591" width="16" height="13" rx="2"/><path d="M505 591 v-4 a5 5 0 0 1 10 0 v4"/></g>`;
-  s += T(528, 592, 12, p.ink, "Back-office", { w: "bold" });
-  s += T(528, 610, 9.5, p.muted, tr("leads · accès VPN", "leads · VPN access"), { mono: true });
+  // ---- Back-office : mini-CRM développé SUR MESURE (React + Fastify, auth) qui
+  // pilote les leads sur la même base PostgreSQL — auto-hébergé, accès sécurisé
+  // (VPN), pipeline avec statuts → vitrine full-stack (remplace l'outil sur étagère).
+  const won = "#22c55e"; // statut « validé » (couleur de statut universelle, hors thème)
+  s += `<path d="M572 526 L572 562" stroke="${a}" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#arrow)"/>`;
+  s += card(430, 566, 256, 72, p, { r: 12 });
+  // en-tête : cadenas (accès sécurisé/VPN) + titre + pastille « sur mesure »
+  s += `<g stroke="${a}" stroke-width="1.8" fill="none"><rect x="446" y="581" width="12" height="10" rx="2"/><path d="M448 581 v-3 a4 4 0 0 1 8 0 v3"/></g>`;
+  s += T(466, 590, 10.5, p.ink, "Mini-CRM · leads", { w: "bold" });
+  const badge = tr("sur mesure", "custom");
+  const bw = Math.round(badge.length * 5 + 14);
+  s += `<rect x="${674 - bw}" y="580" width="${bw}" height="15" rx="7" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(674 - bw / 2, 591, 8.5, a, badge, { anchor: "middle", mono: true })}`;
+  // pipeline : quelques leads avec pastille de statut (validé / à recontacter)
+  const lead = (y, name, label, col) => {
+    const w = Math.round(label.length * 5 + 14);
+    return `<circle cx="450" cy="${y}" r="3" fill="${col}"/>${T(462, y + 3.5, 9.5, p.muted, name)}<rect x="${674 - w}" y="${y - 7}" width="${w}" height="14" rx="4" fill="${col}" fill-opacity="0.14" stroke="${col}" stroke-opacity="0.35"/>${T(674 - w / 2, y + 3, 8.5, col, label, { anchor: "middle", mono: true })}`;
+  };
+  s += lead(610, "Marie Dupont", tr("validé", "validated"), won);
+  s += lead(628, "Thomas Roche", tr("à recontacter", "to follow up"), a);
 
   return frame(p, s);
 }
@@ -661,7 +673,7 @@ function resilience(p, lang) {
   // l'écart restic→PC (100 px) est trop étroit pour le libellé complet : pastille
   // « SFTP » au-dessus de la flèche + précision « à l'allumage » juste en dessous
   // (l'ancien badge de 170 px, centré à 829, passait sous la carte PC → tronqué).
-  s += `<rect x="748" y="250" width="64" height="24" rx="12" fill="${p.base}"/><rect x="748" y="250" width="64" height="24" rx="12" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(780, 266, 11, a, "SFTP", { anchor: "middle", mono: true, w: "bold" })}`;
+  s += `<rect x="748" y="242" width="64" height="24" rx="12" fill="${p.base}"/><rect x="748" y="242" width="64" height="24" rx="12" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(780, 258, 11, a, "SFTP", { anchor: "middle", mono: true, w: "bold" })}`;
   s += T(780, 296, 10, p.muted, tr("à l'allumage", "on power-on"), { anchor: "middle", mono: true });
 
   // dead-man's-switch : branche descendante depuis restic
