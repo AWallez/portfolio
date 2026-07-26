@@ -138,11 +138,11 @@ export default function Services() {
             variant={i % 2 === 0 ? "left" : "right"}
             className="w-full sm:w-[calc(50%-0.625rem)] flex"
           >
-           <article
+            <article
               {...spotlight}
-              className="spotlight w-full flex flex-col rounded-xl border border-line
-                                bg-base/60 backdrop-blur-[3px] p-5 shadow-sm overflow-hidden
-                                hover:border-accent/50 hover:-translate-y-1 hover:shadow-md transition"
+              className="spotlight card-bevel w-full flex flex-col rounded-xl border border-line
+                         bg-base/60 backdrop-blur-[3px] p-5 overflow-hidden
+                         hover:border-accent/50 hover:-translate-y-1 transition"
             >
               <div className="flex items-center gap-3 mb-3">
                 <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent/10 border border-accent/30 text-accent">
@@ -152,7 +152,7 @@ export default function Services() {
               </div>
 
               <h3 className="text-ink font-semibold mb-2">{s.name[lang]}</h3>
-              <p className="text-sm text-muted leading-relaxed mb-4">
+              <p className="text-sm text-muted leading-relaxed text-justify mb-4">
                 {s.desc[lang]}
               </p>
 

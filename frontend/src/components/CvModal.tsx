@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react";
+import { X, Download, Loader2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { useZoomPan } from "../hooks/useZoomPan";
+import ZoomControls from "./ZoomControls";
 
 // Fichiers du CV selon la langue : PDF téléchargeable + SVG affiché (clair/sombre).
 const CV_FILES = {
@@ -18,8 +20,6 @@ const CV_FILES = {
   },
 } as const;
 const A4_RATIO = 0.7071; // largeur / hauteur, avant lecture du ratio réel du SVG
-const MIN_SCALE = 1;
-const MAX_SCALE = 5;
 
 // Dimensions d'affichage (px CSS) calculées depuis la fenêtre + un ratio donné.
 function computeSizeFor(ratio: number) {
@@ -36,11 +36,6 @@ function computeSizeFor(ratio: number) {
   return { w: Math.floor(w), h: Math.floor(h) };
 }
 
-const clamp = (s: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
-
-type Transform = { scale: number; tx: number; ty: number };
-const IDENTITY: Transform = { scale: 1, tx: 0, ty: 0 };
-
 type Props = { onClose: () => void };
 
 /**
@@ -54,92 +49,27 @@ export default function CvModal({ onClose }: Props) {
   const cv = CV_FILES[lang]; // CV de la langue courante (FR/EN)
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const viewerRef = useRef<HTMLDivElement>(null);
   const ratioRef = useRef(A4_RATIO);
   const pressedBackdrop = useRef(false);
+  // zoom / déplacement (molette, pinch, drag, double-clic) — partagé avec Lightbox.
+  // Destructuré (et non gardé en objet) : la règle react-hooks/refs interdit de lire
+  // une propriété d'un objet qui contient un ref pendant le rendu.
+  const {
+    ref: viewerRef,
+    transform,
+    style: transformStyle,
+    handlers: zoomHandlers,
+    zoomByCenter,
+    reset: resetZoom,
+    canZoomIn,
+    canZoomOut,
+    isReset,
+  } = useZoomPan();
 
   const computeSize = useCallback(() => computeSizeFor(ratioRef.current), []);
   const [size, setSize] = useState(() => computeSizeFor(A4_RATIO));
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-
-  // transform (zoom/déplacement) : ref = source de vérité, state = rendu
-  const [transform, setTransform] = useState<Transform>(IDENTITY);
-  const transformRef = useRef<Transform>(IDENTITY);
-  const apply = useCallback((next: Transform) => {
-    transformRef.current = next;
-    setTransform(next);
-  }, []);
-  const reset = useCallback(() => apply(IDENTITY), [apply]);
-
-  // zoom centré sur un point (coords écran) en le gardant fixe
-  const zoomAt = useCallback(
-    (clientX: number, clientY: number, factor: number) => {
-      const el = viewerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const px = clientX - rect.left - rect.width / 2;
-      const py = clientY - rect.top - rect.height / 2;
-      const cur = transformRef.current;
-      const ns = clamp(cur.scale * factor);
-      if (ns === cur.scale) return;
-      if (ns === 1) {
-        apply(IDENTITY);
-        return;
-      }
-      const r = ns / cur.scale;
-      apply({ scale: ns, tx: px - r * (px - cur.tx), ty: py - r * (py - cur.ty) });
-    },
-    [apply],
-  );
-
-  const zoomByCenter = useCallback(
-    (factor: number) => {
-      const el = viewerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      zoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, factor);
-    },
-    [zoomAt],
-  );
-
-  // --- gestes : molette (zoom), drag (déplacement), pinch (zoom tactile) ---
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const pinchDist = useRef(0);
-
-  const onWheel = (e: React.WheelEvent) => {
-    zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12);
-  };
-  const onPointerDown = (e: React.PointerEvent) => {
-    viewerRef.current?.setPointerCapture(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.current.size === 2) {
-      const [a, b] = [...pointers.current.values()];
-      pinchDist.current = Math.hypot(a.x - b.x, a.y - b.y);
-    }
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    const p = pointers.current.get(e.pointerId);
-    if (!p) return;
-    const dx = e.clientX - p.x;
-    const dy = e.clientY - p.y;
-    p.x = e.clientX;
-    p.y = e.clientY;
-    if (pointers.current.size >= 2) {
-      const [a, b] = [...pointers.current.values()];
-      const dist = Math.hypot(a.x - b.x, a.y - b.y);
-      if (pinchDist.current > 0)
-        zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, dist / pinchDist.current);
-      pinchDist.current = dist;
-    } else if (transformRef.current.scale > 1) {
-      const cur = transformRef.current;
-      apply({ ...cur, tx: cur.tx + dx, ty: cur.ty + dy });
-    }
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    pointers.current.delete(e.pointerId);
-    if (pointers.current.size < 2) pinchDist.current = 0;
-  };
 
   // --- recalcule la taille au redimensionnement / zoom / rotation ---
   useEffect(() => {
@@ -200,15 +130,6 @@ export default function CvModal({ onClose }: Props) {
     };
   }, [onClose]);
 
-  const zoomBtn =
-    "grid h-8 w-8 place-items-center rounded-md text-ink hover:text-accent " +
-    "disabled:opacity-40 disabled:hover:text-ink transition";
-
-  const transformStyle = {
-    transform: `translate(${transform.tx}px, ${transform.ty}px) scale(${transform.scale})`,
-    transformOrigin: "center" as const,
-  };
-
   return createPortal(
     <div
       ref={dialogRef}
@@ -247,37 +168,13 @@ export default function CvModal({ onClose }: Props) {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {!error && (
-              <div className="flex items-center rounded-lg border border-line">
-                <button
-                  type="button"
-                  onClick={() => zoomByCenter(1 / 1.3)}
-                  disabled={transform.scale <= MIN_SCALE}
-                  aria-label={t("a11y", "zoomOut", lang)}
-                  className={zoomBtn}
-                >
-                  <ZoomOut size={16} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={reset}
-                  disabled={
-                    transform.scale === 1 && transform.tx === 0 && transform.ty === 0
-                  }
-                  aria-label={t("a11y", "zoomReset", lang)}
-                  className={zoomBtn}
-                >
-                  <Maximize2 size={15} aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => zoomByCenter(1.3)}
-                  disabled={transform.scale >= MAX_SCALE}
-                  aria-label={t("a11y", "zoomIn", lang)}
-                  className={zoomBtn}
-                >
-                  <ZoomIn size={16} aria-hidden />
-                </button>
-              </div>
+              <ZoomControls
+                zoomByCenter={zoomByCenter}
+                reset={resetZoom}
+                canZoomIn={canZoomIn}
+                canZoomOut={canZoomOut}
+                isReset={isReset}
+              />
             )}
             <button
               ref={closeRef}
@@ -296,14 +193,7 @@ export default function CvModal({ onClose }: Props) {
         <div className="p-3.5">
           <div
             ref={viewerRef}
-            onWheel={onWheel}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            onDoubleClick={(e) =>
-              zoomAt(e.clientX, e.clientY, transform.scale > 1 ? 1 / transform.scale : 2.2)
-            }
+            {...zoomHandlers}
             className="relative touch-none select-none overflow-hidden rounded shadow-md
                        bg-white dark:bg-[#0d1418]"
             style={{

@@ -15,6 +15,7 @@ import { getExampleNumber } from "libphonenumber-js";
 import examples from "libphonenumber-js/examples.mobile.json";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import Select from "./Select";
 
 type Status = "idle" | "sending" | "sent" | "error";
 type Fields = {
@@ -85,6 +86,12 @@ export default function Contact() {
   const phonePlaceholder = getExampleNumber(country, examples)?.formatNational();
   // anti-bot Turnstile : token récupéré quand le widget se valide (managed → auto)
   const [captchaToken, setCaptchaToken] = useState("");
+  // Le widget affiche-t-il réellement quelque chose ? Turnstile injecte TOUJOURS un
+  // iframe (invisible en `interaction-only`), donc `:empty` ne suffit pas. On mesure
+  // la hauteur réelle du widget plutôt que de se fier aux callbacks
+  // `before/after-interactive` : au chargement, le widget entre puis ressort
+  // brièvement du mode interactif, ce qui faisait clignoter le cadre.
+  const [captchaVisible, setCaptchaVisible] = useState(false);
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -122,6 +129,22 @@ export default function Contact() {
     return () => io.disconnect();
   }, [armed]);
 
+  // n'habille le widget que s'il occupe vraiment de la place à l'écran. On mesure
+  // l'ENFANT (l'iframe) et non le conteneur : sa hauteur ne dépend pas du cadre
+  // qu'on ajoute, donc pas de boucle observateur → style → observateur.
+  useEffect(() => {
+    const el = widgetRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const child = el.firstElementChild;
+      setCaptchaVisible(
+        !!child && child.getBoundingClientRect().height > 20,
+      );
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // (re)rend le widget Turnstile en suivant la langue (i18n) et le thème du site
   useEffect(() => {
     if (!armed) return;
@@ -133,6 +156,9 @@ export default function Contact() {
         theme: dark ? "dark" : "light", // calé sur le thème clair/sombre du site
         language: lang, // FR/EN selon le sélecteur du header
         appearance: "interaction-only", // discret : visible seulement si défi nécessaire
+        // `flexible` : le widget épouse la largeur du formulaire (aligné sur les
+        // champs). Son intérieur n'est pas stylable (iframe cross-origin).
+        size: "flexible",
         callback: (token: string) => setCaptchaToken(token),
         "expired-callback": () => setCaptchaToken(""),
         "error-callback": () => setCaptchaToken(""),
@@ -271,7 +297,7 @@ export default function Contact() {
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="w-full max-w-150 mx-auto rounded-xl border border-line bg-base/60 backdrop-blur-[3px] p-6 space-y-4 shadow-sm"
+            className="card-bevel no-glow w-full max-w-150 mx-auto rounded-xl border border-line bg-base/60 backdrop-blur-[3px] p-6 space-y-4"
           >
             {/* honeypot anti-spam : hors écran et hors tabulation */}
             <div aria-hidden className="absolute left-[-9999px]">
@@ -413,32 +439,28 @@ export default function Contact() {
             </div>
 
             <div>
-              <label className={label} htmlFor="type">
+              <label className={label} htmlFor="type" id="type-label">
                 <ClipboardList size={12} aria-hidden className={labelIcon} />
                 {t("contact", "reqType", lang)}
                 <span aria-hidden="true" className="text-accent"> *</span>
               </label>
-              <select
+              {/* liste déroulante maison (cf. Select.tsx) : rendue dans la page,
+                  donc stylable — un <select> natif délègue son popup à l'OS */}
+              <Select
                 id="type"
-                name="type"
+                labelledBy="type-label"
                 value={values.type}
-                onChange={(e) => setField("type", e.target.value)}
-                aria-required="true"
-                aria-invalid={!!errors.type}
-                aria-describedby={errors.type ? "err-type" : undefined}
+                onChange={(v) => setField("type", v)}
+                options={[
+                  { value: "project", label: t("contact", "optProject", lang) },
+                  { value: "hiring", label: t("contact", "optHiring", lang) },
+                  { value: "other", label: t("contact", "optOther", lang) },
+                ]}
+                required
+                invalid={!!errors.type}
+                describedBy={errors.type ? "err-type" : undefined}
                 className={fieldClass("type", "min-h-10.5")}
-              >
-                <option value="" disabled>
-                  —
-                </option>
-                <option value="project">
-                  {t("contact", "optProject", lang)}
-                </option>
-                <option value="hiring">
-                  {t("contact", "optHiring", lang)}
-                </option>
-                <option value="other">{t("contact", "optOther", lang)}</option>
-              </select>
+              />
               {errors.type && (
                 <p id="err-type" className="mt-1 text-xs text-red-500">
                   {errors.type}
@@ -481,8 +503,28 @@ export default function Contact() {
               </p>
             )}
 
-            {/* widget anti-bot Turnstile (invisible la plupart du temps) */}
-            <div ref={widgetRef} className="flex justify-center empty:hidden" />
+            {/* Widget anti-bot Turnstile — invisible la plupart du temps.
+                `empty:hidden` : aucun cadre tant que Cloudflare n'affiche rien.
+                Quand il apparaît, il est encadré comme les autres champs pour
+                faire partie du formulaire (seul l'extérieur est stylable). */}
+            <div
+              ref={widgetRef}
+              className={
+                // Pleine largeur (widget en `size: flexible`), habillage identique
+                // aux champs (cf. `field`) quand le widget est visible.
+                // `leading-[0]` : l'iframe du widget vit dans un shadow DOM (hors de
+                // portée de notre CSS) et s'aligne sur la ligne de base du texte →
+                // ~6 px d'espace fantôme sous elle (place des jambages) qui faisaient
+                // dépasser le cadre. line-height s'hérite à travers le shadow DOM.
+                // `[&>div]:w-full` : la div injectée par Turnstile (hôte du shadow
+                // DOM, en DOM clair → stylable) doit s'étirer pour que le widget
+                // `flexible` remplisse vraiment le formulaire.
+                "empty:hidden leading-[0] [&>div]:w-full " +
+                (captchaVisible
+                  ? "rounded-lg border border-line bg-surface/70 p-2"
+                  : "")
+              }
+            />
 
             {/* Bouton : lift + halo accent au survol, flèche qui glisse (façon badges) */}
             <button

@@ -23,10 +23,16 @@ export default function Background() {
     const mouse = { x: -9999, y: -9999, active: false };
     const MOUSE_DIST = 190;
 
-    const accent = () =>
+    // Couleur d'accent MISE EN CACHE : `getComputedStyle` force un recalcul de
+    // style, on ne peut donc pas l'appeler à chaque frame (c'était le cas avant →
+    // 60 lectures/seconde, et un vrai ralentissement pendant le fondu de thème,
+    // où --accent est animée). On relit seulement quand le thème change.
+    const readAccent = () =>
       getComputedStyle(document.documentElement)
         .getPropertyValue("--accent")
         .trim() || "#0e9b8c";
+    let color = readAccent();
+    let isLight = !document.documentElement.classList.contains("dark");
 
     function resize() {
       const prevW = width || cv.clientWidth;
@@ -74,8 +80,6 @@ export default function Background() {
 
     function draw() {
       ctx.clearRect(0, 0, width, height);
-      const color = accent();
-      const isLight = !document.documentElement.classList.contains("dark");
       const boost = isLight ? 1.8 : 1; // particules ~80% plus marquées en clair
 
       for (const p of points) {
@@ -148,6 +152,17 @@ export default function Background() {
       if (!document.hidden) raf = requestAnimationFrame(draw);
     };
 
+    // bascule de thème → on relit la couleur et le clair/sombre (la bascule est
+    // instantanée, la nouvelle valeur est donc disponible immédiatement)
+    const themeObs = new MutationObserver(() => {
+      isLight = !document.documentElement.classList.contains("dark");
+      color = readAccent();
+    });
+    themeObs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
     resize();
     draw();
     window.addEventListener("resize", resize);
@@ -156,6 +171,7 @@ export default function Background() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
+      themeObs.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseleave", onLeave);

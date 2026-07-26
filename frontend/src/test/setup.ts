@@ -19,6 +19,14 @@ if (!window.matchMedia) {
   }));
 }
 
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
 if (!window.IntersectionObserver) {
   window.IntersectionObserver = class {
     observe() {}

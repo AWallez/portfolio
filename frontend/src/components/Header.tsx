@@ -156,11 +156,15 @@ export default function Header() {
               </span>
             </button>
             <button
-              onClick={(e) => toggle(e)}
+              onClick={toggle}
               aria-label={t("a11y", theme === "dark" ? "toLight" : "toDark", lang)}
               className="font-mono text-sm px-3 py-1 rounded border border-line hover:border-accent hover:text-accent transition"
             >
-              {theme === "dark" ? "☀" : "☾"}
+              {/* boîte de largeur fixe : ☀ et ☾ n'ont pas la même avance dans la
+                  police, ce qui décalait tout le header à chaque bascule */}
+              <span aria-hidden className="inline-block w-5 text-center">
+                {theme === "dark" ? "☀" : "☾"}
+              </span>
             </button>
           </div>
         </div>

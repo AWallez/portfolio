@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import { flushSync } from "react-dom";
 type Theme = "light" | "dark";
-
-// startViewTransition n'est pas encore dans tous les types DOM → on le déclare nous-mêmes.
-type VTDocument = Document & {
-  startViewTransition?: (cb: () => void) => { ready: Promise<void> };
-};
 
 export function useTheme() {
   // lit l'état déjà posé par le script anti-flash → une seule source de vérité
@@ -17,54 +11,24 @@ export function useTheme() {
     localStorage.theme = theme;
   }, [theme]);
 
-  function apply(next: Theme) {
+  /**
+   * Bascule clair/sombre — INSTANTANÉE, volontairement sans animation.
+   *
+   * Deux tentatives ont été retirées, ne pas les re-proposer :
+   * 1. Révélation circulaire (View Transitions API) : ses snapshots ne savent pas
+   *    rendre `backdrop-filter` (l'élément capturé devient son propre backdrop
+   *    root) → toutes les surfaces en backdrop-blur perdaient leur flou pendant
+   *    l'animation, puis le retrouvaient (flash visible). Limitation navigateur.
+   * 2. Fondu des couleurs (transition des variables de thème) : pas fluide sur
+   *    Chromium/Brave — repeindre toute la page pendant 400 ms par-dessus le
+   *    canvas de particules, l'aurora floutée et les surfaces en backdrop-filter
+   *    sature le thread principal.
+   * Une bascule instantanée est nette et fluide partout.
+   */
+  function toggle() {
+    const next: Theme = theme === "dark" ? "light" : "dark";
     document.documentElement.classList.toggle("dark", next === "dark");
     setTheme(next);
-  }
-
-  function toggle(e?: { clientX: number; clientY: number }) {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    const doc = document as VTDocument;
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // pas de View Transitions, mouvement réduit, ou pas de coordonnées → bascule simple
-    if (!doc.startViewTransition || reduce || !e) {
-      apply(next);
-      return;
-    }
-
-    const x = e.clientX;
-    const y = e.clientY;
-    // rayon pour couvrir le coin le plus éloigné depuis le bouton
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y),
-    );
-
-    const transition = doc.startViewTransition(() => {
-      flushSync(() => apply(next));
-    });
-
-    transition.ready
-      .then(() => {
-        document.documentElement.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${endRadius}px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 450,
-            easing: "ease-in-out",
-            // garde le calque neuf plein à la fin (la base CSS est circle(0),
-            // sans 'forwards' on aurait un flash inverse en fin d'animation)
-            fill: "forwards",
-            pseudoElement: "::view-transition-new(root)",
-          },
-        );
-      })
-      .catch(() => {});
   }
 
   return { theme, toggle };

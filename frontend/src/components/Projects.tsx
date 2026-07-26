@@ -190,7 +190,7 @@ export default function Projects() {
               </p>
 
               <h3 className="text-ink font-semibold mb-2">{p.title[lang]}</h3>
-              <p className="text-sm text-muted leading-relaxed mb-4 grow">
+              <p className="text-sm text-muted leading-relaxed text-justify mb-4 grow">
                 {p.desc[lang]}
               </p>
 
