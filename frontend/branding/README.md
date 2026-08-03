@@ -46,6 +46,25 @@ dessinées par Alexis : elles sont inlinées et recolorées à la volée par
 `user-icons.mjs` (leurs aplats noirs deviennent l'accent, les contre-formes
 blanches deviennent la couleur de fond).
 
+## Visuel d'architecture
+
+`linkedin-archi.mjs` génère le schéma d'architecture du site (**1200×675**,
+le format d'image du fil LinkedIn) : le chemin d'une requête, du visiteur
+jusqu'à PostgreSQL. C'est la version dessinée du diagramme Mermaid du
+[README racine](../../README.md), aux couleurs du site et en deux thèmes.
+
+```bash
+node branding/linkedin-archi.mjs   # -> 2 SVG (cwd = frontend)
+# puis PNG, avec resvg comme ci-dessus, en 2× (value: 2400) :
+npm i -D @resvg/resvg-js
+node -e "import('@resvg/resvg-js').then(({Resvg})=>{const fs=require('node:fs');for(const v of ['','-clair']){const r=new Resvg(fs.readFileSync('branding/linkedin-archi'+v+'.svg','utf8'),{font:{fontFiles:['C:/Windows/Fonts/consola.ttf','C:/Windows/Fonts/consolab.ttf','C:/Windows/Fonts/arial.ttf','C:/Windows/Fonts/arialbd.ttf'],loadSystemFonts:false,defaultFontFamily:'Arial'},fitTo:{mode:'width',value:2400}});fs.writeFileSync('branding/linkedin-archi'+v+'.png',r.render().asPng());}console.log('ok')})"
+npm un @resvg/resvg-js
+```
+
+⚠️ LinkedIn affiche l'image du fil à **~50 % de sa largeur** → aucun texte sous
+16 px, et les libellés de nœuds à 22 px. Les libellés de flèche sont posés sur
+une pastille de fond : sans elle, celui du port tombe sur la bordure du panneau.
+
 ## Images des projets
 
 Les 5 visuels de la section Projets (1200×675) sont **générés par script** à partir des
