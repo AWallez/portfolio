@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { useLang } from "./i18n/LangContext";
 import { t } from "./i18n/translations";
 import NotFound from "./components/NotFound";
+import { currentPath, matchLegal } from "./lib/routes";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -13,15 +14,20 @@ import Services from "./components/Services";
 // - Contact tire react-phone-number-input (~155 ko de métadonnées).
 const Projects = lazy(() => import("./components/Projects"));
 const Contact = lazy(() => import("./components/Contact"));
+// - LegalPage embarque toute la prose juridique : hors du bundle de l'accueil,
+//   que quasiment personne ne quitte pour aller la lire.
+const LegalPage = lazy(() => import("./components/LegalPage"));
 import Footer from "./components/Footer";
 import Background from "./components/Background";
 import Reveal from "./components/Reveal";
 import BackToTop from "./components/BackToTop";
 import ScrollProgress from "./components/ScrollProgress";
 
-// La page ne vit qu'à la racine ; Nginx renvoie index.html pour toute route
-// inconnue (fallback SPA) → c'est ici qu'on décide d'afficher la 404.
-const isHome = ["/", "/index.html"].includes(window.location.pathname);
+// Nginx renvoie index.html pour toute route inconnue (fallback SPA) → c'est
+// ici qu'on aiguille : l'accueil, une page légale, ou la 404.
+const path = currentPath();
+const isHome = ["/", "/index.html"].includes(path);
+const legal = matchLegal(path);
 
 export default function App() {
   const { lang } = useLang();
@@ -53,6 +59,12 @@ export default function App() {
     };
   }, []);
 
+  if (legal)
+    return (
+      <Suspense fallback={<div className="min-h-screen" />}>
+        <LegalPage kind={legal} />
+      </Suspense>
+    );
   if (!isHome) return <NotFound />;
 
   return (

@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import process from "node:process";
 import { config } from "./config";
 import { contactRoutes } from "./routes/contact";
+import { schedulePurge } from "./retention";
 
 // trustProxy : derrière Caddy → Nginx, sans ça req.ip vaudrait l'IP interne du
 // proxy pour TOUS les visiteurs (rate-limit global partagé au lieu de par IP,
@@ -27,6 +28,11 @@ app.get("/health", async () => ({ status: "ok" }));
 // vers l'API → utilisé par le badge « infra live » du footer.
 app.get("/api/health", async () => ({ status: "ok" }));
 await app.register(contactRoutes);
+
+// durées de conservation RGPD appliquées par l'API elle-même : pas de cron à
+// maintenir sur le NAS, et la purge suit le conteneur partout où il tourne.
+const stopPurge = schedulePurge(app.log);
+app.addHook("onClose", async () => stopPurge());
 
 try {
   await app.listen({ port: config.port, host: config.host });

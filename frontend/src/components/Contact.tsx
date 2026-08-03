@@ -15,6 +15,7 @@ import { getExampleNumber } from "libphonenumber-js";
 import examples from "libphonenumber-js/examples.mobile.json";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { LEGAL_PATHS } from "../lib/routes";
 import Select from "./Select";
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -553,6 +554,19 @@ export default function Contact() {
                 </>
               )}
             </button>
+
+            {/* RGPD art. 13 : la personne doit être informée AU MOMENT où elle
+                saisit ses données, pas seulement dans une page qu'elle ne lira
+                pas. D'où l'essentiel en clair ici, et le détail derrière le lien. */}
+            <p className="text-xs text-muted leading-relaxed">
+              {t("contact", "rgpdNotice", lang)}{" "}
+              <a
+                href={LEGAL_PATHS.privacy}
+                className="text-accent underline-offset-2 hover:underline"
+              >
+                {t("contact", "rgpdLink", lang)}
+              </a>
+            </p>
           </form>
         )}
       </div>

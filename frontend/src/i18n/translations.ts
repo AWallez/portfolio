@@ -93,6 +93,16 @@ export const translations = {
       en: "Invalid phone number.",
     },
     sendingStatus: { fr: "Envoi du message en cours…", en: "Sending message…" },
+    // information au point de collecte (RGPD art. 13) — le lien complète, il ne
+    // remplace pas : l'essentiel doit être lisible sans quitter le formulaire
+    rgpdNotice: {
+      fr: "Vos informations servent uniquement à traiter votre demande. Elles ne sont ni vendues ni transmises, et sont supprimées automatiquement au bout de 3 ans.",
+      en: "Your details are used solely to handle your request. They are never sold or shared, and are deleted automatically after 3 years.",
+    },
+    rgpdLink: {
+      fr: "En savoir plus",
+      en: "Learn more",
+    },
   },
   a11y: {
     skip: { fr: "Aller au contenu", en: "Skip to content" },
@@ -135,6 +145,8 @@ export const translations = {
     },
     connect: { fr: "Me contacter", en: "Get in touch" },
     rights: { fr: "Tous droits réservés.", en: "All rights reserved." },
+    legal: { fr: "Mentions légales", en: "Legal notice" },
+    privacy: { fr: "Confidentialité", en: "Privacy" },
     // badge « infra live » : état réel renvoyé par l'API auto-hébergée (/api/health)
     hostOnline: {
       fr: "infra en ligne — hébergée sur mon NAS",

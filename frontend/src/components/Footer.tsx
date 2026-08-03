@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { LEGAL_PATHS } from "../lib/routes";
 
 // même convention que Contact.tsx : URL directe en dev, même origine en prod
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
@@ -174,12 +175,29 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-line">
-        <p
-          className="max-w-300 container-page py-4
-                      font-mono text-xs text-muted text-center"
+        <div
+          className="max-w-300 container-page py-4 font-mono text-xs text-muted
+                     flex flex-col sm:flex-row items-center justify-center
+                     gap-2 sm:gap-4 text-center"
         >
-          © {year} Alexis Wallez — {t("footer", "rights", lang)}
-        </p>
+          <p>
+            © {year} Alexis Wallez — {t("footer", "rights", lang)}
+          </p>
+          <nav className="flex items-center gap-4">
+            <a
+              href={LEGAL_PATHS.mentions}
+              className="hover:text-accent transition underline-offset-4 hover:underline"
+            >
+              {t("footer", "legal", lang)}
+            </a>
+            <a
+              href={LEGAL_PATHS.privacy}
+              className="hover:text-accent transition underline-offset-4 hover:underline"
+            >
+              {t("footer", "privacy", lang)}
+            </a>
+          </nav>
+        </div>
       </div>
     </footer>
   );

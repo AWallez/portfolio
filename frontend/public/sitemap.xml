@@ -5,4 +5,17 @@
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- Pages légales : indexables (un éditeur joignable et transparent est un
+       signal de confiance), mais priorité basse — ce n'est pas par elles qu'on
+       doit entrer sur le site. -->
+  <url>
+    <loc>https://alexiswallez.fr/mentions-legales</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://alexiswallez.fr/confidentialite</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
 </urlset>
