@@ -58,11 +58,11 @@ function node(x, y, w, h, title, sub, o = {}) {
     fill="${dashed ? "none" : P.surface}" stroke="${strong ? P.accent : P.line}"
     stroke-width="${strong ? 2.5 : 2}"${dashed ? ` stroke-dasharray="7 6"` : ""}/>`;
   // sans sous-titre le titre est centré verticalement, sinon les deux se partagent la hauteur
-  s += T(cx, y + (sub ? h / 2 - 2 : h / 2 + 8), 22, strong ? P.accent : P.ink, title, {
+  s += T(cx, y + (sub ? h / 2 - 3 : h / 2 + 7), 20, strong ? P.accent : P.ink, title, {
     anchor: "middle",
     w: "bold",
   });
-  if (sub) s += T(cx, y + h / 2 + 24, 16, P.muted, sub, { anchor: "middle" });
+  if (sub) s += T(cx, y + h / 2 + 22, 15, P.muted, sub, { anchor: "middle" });
   return s;
 }
 
@@ -108,31 +108,32 @@ function build() {
   });
 
   /* --- panneau NAS --- */
-  s += `<rect x="380" y="196" width="788" height="338" rx="16" fill="none"
+  s += `<rect x="396" y="196" width="768" height="338" rx="16" fill="none"
     stroke="${P.line}" stroke-width="2.5" stroke-dasharray="10 7"/>`;
-  s += T(410, 236, 19, P.muted, "NAS · Docker Compose", {});
+  s += T(426, 236, 19, P.muted, "NAS · Docker Compose", {});
 
   /* --- nœuds --- */
-  // la chaîne principale est centrée entre PostgreSQL (haut) et ntfy (bas)
+  // la chaîne principale est centrée entre PostgreSQL (haut) et ntfy (bas) ;
+  // les écarts laissent au moins 9 px entre un libellé de flèche et un bloc
   const y = 338;
   const h = 68;
   const cy = y + h / 2;
 
   s += node(40, y, 130, h, "Visiteur", null, { dashed: true });
-  s += node(220, y, 130, h, "Box", "NAT 443", { dashed: true });
-  s += node(410, y, 146, h, "Caddy", "reverse proxy", { strong: true });
-  s += node(600, y, 140, h, "Nginx", "SPA React");
-  s += node(784, y, 116, h, "API", "Fastify");
-  s += node(950, 250, 172, h, "PostgreSQL", "contacts");
-  s += node(950, 426, 172, h, "ntfy", "push iOS");
+  s += node(248, y, 110, h, "Box", "NAT", { dashed: true });
+  s += node(428, y, 145, h, "Caddy", "reverse proxy", { strong: true });
+  s += node(628, y, 120, h, "Nginx", "SPA React");
+  s += node(826, y, 105, h, "API", "Fastify");
+  s += node(981, 250, 150, h, "PostgreSQL", "contacts");
+  s += node(981, 426, 150, h, "ntfy", "push iOS");
 
   /* --- liens --- */
-  s += arrow(170, 220, cy, "HTTPS");
-  s += arrow(350, 410, cy, "→ 8443");
-  s += arrow(556, 600, cy);
-  s += arrow(740, 784, cy, "/api");
-  s += elbow(900, cy - 14, 950, 284);
-  s += elbow(900, cy + 14, 950, 460);
+  s += arrow(170, 248, cy, "HTTPS");
+  s += arrow(358, 428, cy);
+  s += arrow(573, 628, cy);
+  s += arrow(748, 826, cy, "/api");
+  s += elbow(931, cy - 14, 981, 284);
+  s += elbow(931, cy + 14, 981, 460);
 
   /* --- pied : le point qui compte --- */
   s += T(
