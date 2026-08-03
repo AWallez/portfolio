@@ -34,12 +34,14 @@ export async function purgeContacts(): Promise<PurgeResult> {
     [ANONYMIZE_AFTER],
   );
 
-  // `updated_at` (CRM) fait foi quand il existe : répondre à quelqu'un relance
-  // le délai, sinon un échange en cours serait effacé au 3e anniversaire du
-  // premier message.
+  // Le délai court depuis `created_at`, jamais depuis `updated_at` : la CNIL
+  // compte à partir du dernier contact ÉMANANT DU PROSPECT, pas d'une action de
+  // notre côté. Relancer le compteur en modifiant une note du CRM reviendrait à
+  // conserver indéfiniment quelqu'un qui ne nous a plus jamais écrit.
+  // Une nouvelle prise de contact crée une nouvelle ligne, avec son propre
+  // délai : le compte est donc juste, message par message.
   const deleted = await pool.query(
-    `DELETE FROM contacts
-      WHERE COALESCE(updated_at, created_at) < now() - $1::interval`,
+    `DELETE FROM contacts WHERE created_at < now() - $1::interval`,
     [DELETE_AFTER],
   );
 

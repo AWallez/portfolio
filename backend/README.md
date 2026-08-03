@@ -55,16 +55,19 @@ pas la même finalité :
 | Donnée | Durée | Action | Pourquoi |
 | --- | --- | --- | --- |
 | `ip`, `user_agent` | **1 an** | mises à `NULL` | collectées pour l'anti-spam ; cette finalité s'éteint bien avant l'intérêt du message |
-| la ligne entière | **3 ans** après le dernier échange | `DELETE` | durée de référence CNIL en prospection |
+| la ligne entière | **3 ans** après réception | `DELETE` | durée de référence CNIL en prospection |
 
 La purge tourne **dans l'API** : une passe au démarrage (le conteneur peut avoir
 été arrêté plusieurs jours), puis une fois par jour. Pas de cron à maintenir sur
 le NAS, et elle suit le conteneur partout où il tourne. Une erreur SQL est
 journalisée sans faire tomber l'API.
 
-Le délai de suppression court depuis `COALESCE(updated_at, created_at)` :
-répondre via le CRM relance le compteur, sinon un échange en cours serait effacé
-au 3ᵉ anniversaire du premier message.
+Le délai de suppression court depuis `created_at`, **jamais depuis
+`updated_at`** : la CNIL compte à partir du dernier contact *émanant du
+prospect*, pas d'une action de notre côté. Relancer le compteur en modifiant une
+note du CRM reviendrait à conserver indéfiniment quelqu'un qui n'a plus jamais
+écrit. Une nouvelle prise de contact crée une nouvelle ligne, avec son propre
+délai — le compte reste juste, message par message.
 
 ⚠️ Ces durées sont **annoncées aux visiteurs** dans
 `frontend/src/i18n/legal.ts` : modifier l'une oblige à modifier l'autre.

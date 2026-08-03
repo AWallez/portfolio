@@ -219,8 +219,8 @@ export const PRIVACY: LegalDoc = {
               en: "IP address and user-agent: erased after one year, once their security purpose has lapsed. The message itself is kept — it is simply stripped of that technical data.",
             },
             {
-              fr: "Message et coordonnées : supprimés trois ans après notre dernier échange, durée de référence retenue par la CNIL en matière de prospection.",
-              en: "Message and contact details: deleted three years after our last exchange, the reference period used by the French data protection authority (CNIL) for business prospecting.",
+              fr: "Message et coordonnées : supprimés trois ans après la réception de votre message, durée de référence retenue par la CNIL en matière de prospection. Si vous me réécrivez, seul le nouveau message repart pour trois ans.",
+              en: "Message and contact details: deleted three years after your message is received, the reference period used by the French data protection authority (CNIL) for business prospecting. If you write again, only the new message starts a fresh three-year period.",
             },
           ],
         },

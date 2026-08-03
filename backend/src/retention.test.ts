@@ -39,13 +39,12 @@ describe("purgeContacts", () => {
     expect(params).toEqual([DELETE_AFTER]);
   });
 
-  it("fait courir le délai de suppression depuis le dernier échange", async () => {
-    // sinon un échange toujours en cours serait effacé au 3e anniversaire du
-    // tout premier message
+  it("fait courir le délai de suppression depuis la réception, pas depuis le CRM", async () => {
+    // la CNIL compte depuis le dernier contact émanant du prospect : repartir
+    // sur `updated_at` laisserait une note retouchée prolonger la conservation
     await purgeContacts();
-    expect(query.mock.calls[1][0]).toMatch(
-      /COALESCE\(updated_at, created_at\)/,
-    );
+    expect(query.mock.calls[1][0]).toMatch(/created_at < now\(\)/);
+    expect(query.mock.calls[1][0]).not.toMatch(/updated_at/);
   });
 
   it("remonte le nombre de lignes traitées", async () => {
