@@ -28,7 +28,6 @@ export const IDENTITY = {
   name: "Alexis Wallez",
   address: "5 allée des Aravis, 77176 Savigny-le-Temple, France",
   siret: "952 663 938 00019",
-  vat: "FR25952663938",
   ape: "6201Z",
   email: "wallezalexis@gmail.com",
   phone: "+33 6 49 28 06 73",
@@ -57,9 +56,14 @@ export const MENTIONS: LegalDoc = {
               fr: `SIRET : ${IDENTITY.siret} — code APE ${IDENTITY.ape} (programmation informatique)`,
               en: `Business ID (SIRET): ${IDENTITY.siret} — activity code ${IDENTITY.ape} (computer programming)`,
             },
+            // Franchise en base : c'est la mention réglementaire qui est
+            // attendue, pas le numéro intracommunautaire. Celui-ci existe et
+            // sert en B2B intra-UE, mais l'afficher ici laisserait croire que
+            // les tarifs annoncés sont hors taxes. À remplacer par le numéro
+            // le jour où le seuil de franchise est dépassé.
             {
-              fr: `TVA intracommunautaire : ${IDENTITY.vat}`,
-              en: `EU VAT number: ${IDENTITY.vat}`,
+              fr: "TVA non applicable, article 293 B du CGI",
+              en: "VAT not applicable, article 293 B of the French tax code",
             },
             {
               fr: `Email : ${IDENTITY.email}`,
