@@ -19,22 +19,19 @@ export type LegalDoc = {
 };
 
 /* ------------------------------------------------------------------ */
-/* IDENTITÉ — les seules valeurs à renseigner                          */
+/* IDENTITÉ — faits bruts uniquement                                   */
 /* ------------------------------------------------------------------ */
-// TODO(alexis) : remplacer les 4 valeurs marquées « À COMPLÉTER ». Elles sont
-// obligatoires (LCEN art. 6-III) : sans elles les mentions légales ne valent
-// rien. L'adresse est publique — cf. la discussion sur la domiciliation.
+// Mentions obligatoires (LCEN art. 6-III). Volontairement sans prose : les
+// libellés sont traduits dans les sections, sinon « entrepreneur individuel »
+// resterait en français dans la version anglaise.
 export const IDENTITY = {
   name: "Alexis Wallez",
-  status: "À COMPLÉTER — ex. entrepreneur individuel (micro-entreprise)",
-  address: "À COMPLÉTER — adresse postale complète",
-  city: "Savigny-le-Temple (77), France",
-  siret: "À COMPLÉTER — n° SIRET (14 chiffres)",
-  vat: "À COMPLÉTER — « TVA non applicable, art. 293 B du CGI » ou n° de TVA",
+  address: "5 allée des Aravis, 77176 Savigny-le-Temple, France",
+  siret: "952 663 938 00019",
+  vat: "FR25952663938",
+  ape: "6201Z",
   email: "wallezalexis@gmail.com",
   phone: "+33 6 49 28 06 73",
-  site: "alexiswallez.fr",
-  repo: "https://github.com/AWallez/portfolio",
 };
 
 const UPDATED = "2026-08-03";
@@ -52,15 +49,18 @@ export const MENTIONS: LegalDoc = {
         {
           ul: [
             {
-              fr: `${IDENTITY.name} — ${IDENTITY.status}`,
-              en: `${IDENTITY.name} — ${IDENTITY.status}`,
+              fr: `${IDENTITY.name} — entrepreneur individuel`,
+              en: `${IDENTITY.name} — sole trader (entrepreneur individuel)`,
             },
             { fr: IDENTITY.address, en: IDENTITY.address },
             {
-              fr: `SIRET : ${IDENTITY.siret}`,
-              en: `Business ID (SIRET): ${IDENTITY.siret}`,
+              fr: `SIRET : ${IDENTITY.siret} — code APE ${IDENTITY.ape} (programmation informatique)`,
+              en: `Business ID (SIRET): ${IDENTITY.siret} — activity code ${IDENTITY.ape} (computer programming)`,
             },
-            { fr: IDENTITY.vat, en: IDENTITY.vat },
+            {
+              fr: `TVA intracommunautaire : ${IDENTITY.vat}`,
+              en: `EU VAT number: ${IDENTITY.vat}`,
+            },
             {
               fr: `Email : ${IDENTITY.email}`,
               en: `Email: ${IDENTITY.email}`,
