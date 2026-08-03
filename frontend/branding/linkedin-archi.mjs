@@ -72,11 +72,18 @@ function arrow(x1, x2, y, label, accent = true) {
   let s = `<path d="M${x1} ${y} H${x2 - 9}" stroke="${c}" stroke-width="2.5" fill="none"
     marker-end="url(#ah-${accent ? "a" : "m"})"/>`;
   if (label) {
-    // pastille de fond : un libellé peut tomber sur la bordure du panneau NAS
+    // libellé mono 15 px, sur une pastille de fond (il peut tomber sur la
+    // bordure du panneau NAS) ; un tableau empile plusieurs lignes vers le haut
+    const lines = Array.isArray(label) ? label : [label];
     const cx = (x1 + x2) / 2;
-    const w = label.length * 9.6 + 12;
-    s += `<rect x="${cx - w / 2}" y="${y - 30}" width="${w}" height="22" fill="${P.base}"/>`;
-    s += T(cx, y - 14, 16, P.muted, label, { anchor: "middle" });
+    const LH = 19;
+    const w = Math.max(...lines.map((l) => l.length)) * 9 + 12;
+    const first = y - 14 - (lines.length - 1) * LH;
+    s += `<rect x="${cx - w / 2}" y="${first - 15}" width="${w}"
+      height="${(lines.length - 1) * LH + 21}" fill="${P.base}"/>`;
+    lines.forEach((l, i) => {
+      s += T(cx, first + i * LH, 15, P.muted, l, { anchor: "middle" });
+    });
   }
   return s;
 }
@@ -108,9 +115,11 @@ function build() {
   });
 
   /* --- panneau NAS --- */
-  s += `<rect x="396" y="196" width="768" height="338" rx="16" fill="none"
+  // sa bordure gauche est posée après le libellé « redirection de port », qui
+  // sinon percerait les pointillés avec sa pastille de fond
+  s += `<rect x="452" y="196" width="723" height="338" rx="16" fill="none"
     stroke="${P.line}" stroke-width="2.5" stroke-dasharray="10 7"/>`;
-  s += T(426, 236, 19, P.muted, "NAS · Docker Compose", {});
+  s += T(482, 236, 19, P.muted, "NAS · Docker Compose", {});
 
   /* --- nœuds --- */
   // la chaîne principale est centrée entre PostgreSQL (haut) et ntfy (bas) ;
@@ -119,21 +128,21 @@ function build() {
   const h = 68;
   const cy = y + h / 2;
 
-  s += node(40, y, 130, h, "Visiteur", null, { dashed: true });
-  s += node(248, y, 110, h, "Box", "NAT", { dashed: true });
-  s += node(428, y, 145, h, "Caddy", "reverse proxy", { strong: true });
-  s += node(628, y, 120, h, "Nginx", "SPA React");
-  s += node(826, y, 105, h, "API", "Fastify");
-  s += node(981, 250, 150, h, "PostgreSQL", "contacts");
-  s += node(981, 426, 150, h, "ntfy", "push iOS");
+  s += node(24, y, 110, h, "Visiteur", null, { dashed: true });
+  s += node(206, y, 100, h, "Box", "NAT", { dashed: true });
+  s += node(482, y, 140, h, "Caddy", "reverse proxy", { strong: true });
+  s += node(662, y, 120, h, "Nginx", "SPA React");
+  s += node(860, y, 105, h, "API", "Fastify");
+  s += node(1005, 250, 140, h, "PostgreSQL", "contacts");
+  s += node(1005, 426, 140, h, "ntfy", "push iOS");
 
   /* --- liens --- */
-  s += arrow(170, 248, cy, "HTTPS");
-  s += arrow(358, 428, cy);
-  s += arrow(573, 628, cy);
-  s += arrow(748, 826, cy, "/api");
-  s += elbow(931, cy - 14, 981, 284);
-  s += elbow(931, cy + 14, 981, 460);
+  s += arrow(134, 206, cy, "HTTPS");
+  s += arrow(306, 452, cy, ["redirection", "de port"]);
+  s += arrow(622, 662, cy);
+  s += arrow(782, 860, cy, "/api");
+  s += elbow(965, cy - 14, 1005, 284);
+  s += elbow(965, cy + 14, 1005, 460);
 
   /* --- pied : le point qui compte --- */
   s += T(
