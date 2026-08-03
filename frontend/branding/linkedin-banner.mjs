@@ -91,9 +91,13 @@ const ICON = {
        <rect x="-28" y="14" width="56" height="19" rx="3"/>
        <path d="M-17 -22.5 h0 M-17 0.5 h0 M-17 23.5 h0" stroke-width="5.5"/>`,
     ),
-  pompier: (x, y) => userIcon("pompier.svg", x, y, 82, P.accent, P.base),
+  // Le 7e argument est un faux-gras (en px) : ces deux dessins sont au trait
+  // fin et paraissaient délavés à côté des pictos en aplats. Les valeurs calent
+  // leur intensité d'encre sur celle du rugby, pris comme étalon (cf. user-icons.mjs).
+  pompier: (x, y) => userIcon("pompier.svg", x, y, 82, P.accent, P.base, 1.1),
   rugby: (x, y) => userIcon("rugby.svg", x, y, 74, P.accent, P.base),
-  plongee: (x, y) => userIcon("tuba-et-masque.svg", x, y, 74, P.accent, P.base),
+  plongee: (x, y) =>
+    userIcon("tuba-et-masque.svg", x, y, 74, P.accent, P.base, 1.4),
 };
 
 function facettes() {
