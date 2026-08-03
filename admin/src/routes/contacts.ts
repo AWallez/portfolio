@@ -86,7 +86,7 @@ export async function contactRoutes(app: FastifyInstance) {
       const [items, total, counts] = await Promise.all([
         pool.query(
           `SELECT id, firstname, lastname, email, type, phone, message,
-                  status, note, created_at, updated_at, manual
+                  status, note, created_at, updated_at, manual, ip
              FROM contacts ${whereSql}
             ORDER BY created_at DESC
             LIMIT ${limit} OFFSET ${(page - 1) * limit}`,

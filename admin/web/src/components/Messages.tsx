@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Contact, ContactList, Status } from "../api";
 import { api, STATUSES, STATUS_LABELS } from "../api";
-import { Detail } from "./Detail";
 import { LeadForm } from "./LeadForm";
 import { MessageCard } from "./MessageCard";
 
@@ -17,7 +16,6 @@ export function Messages() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<ContactList | null>(null);
-  const [selected, setSelected] = useState<Contact | null>(null);
   // null = fermé · "new" = ajout · Contact = édition
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [toast, setToast] = useState<{ text: string; err?: boolean } | null>(
@@ -50,16 +48,14 @@ export function Messages() {
     try {
       await api.del(`/api/contacts/${c.id}`);
       setToast({ text: "Supprimé" });
-      if (selected?.id === c.id) setSelected(null);
       load().catch(() => {});
     } catch {
       setToast({ text: "Échec de la suppression", err: true });
     }
   }
 
-  // met à jour la carte sélectionnée + rafraîchit les compteurs
-  function afterChange(updated: Contact) {
-    if (selected?.id === updated.id) setSelected(updated);
+  // rafraîchit la liste et les compteurs après une modification inline
+  function afterChange() {
     load().catch(() => {});
   }
 
@@ -117,7 +113,6 @@ export function Messages() {
             <MessageCard
               key={c.id}
               contact={c}
-              onOpen={() => setSelected(c)}
               onEdit={() => setEditing(c)}
               onDelete={() => removeContact(c)}
               onChanged={afterChange}
@@ -147,22 +142,6 @@ export function Messages() {
         </div>
       )}
 
-      {selected && (
-        <Detail
-          contact={selected}
-          onClose={() => setSelected(null)}
-          onEdit={() => {
-            setEditing(selected);
-            setSelected(null);
-          }}
-          onChanged={(updated) => {
-            if (updated) setSelected(updated);
-            else setSelected(null);
-            load().catch(() => {});
-          }}
-          onToast={(text, err) => setToast({ text, err })}
-        />
-      )}
       {editing && (
         <LeadForm
           contact={editing === "new" ? null : editing}

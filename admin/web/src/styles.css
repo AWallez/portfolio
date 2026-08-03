@@ -170,17 +170,24 @@ textarea.tall { min-height: 190px; }
 }
 .manual-tag { color: var(--faint); font-size: 0.7rem; font-weight: 500; }
 
-/* zone cliquable (bouton reset) → ouvre le panneau lecture */
-.card-body {
-  display: flex; flex-direction: column; gap: 0.3rem; width: 100%;
-  background: transparent; border: none; text-align: left; padding: 0; cursor: pointer;
-}
+/* identité + message (plus de clic : tout s'édite sur la carte) */
+.card-body { display: flex; flex-direction: column; gap: 0.3rem; width: 100%; }
 .card-body .name { font-weight: 600; }
 .card-body .mail { display: block; font-size: 0.8rem; color: var(--muted); }
 .card-body .preview {
   color: var(--muted); font-size: 0.88rem; line-height: 1.45; margin-top: 0.15rem;
   display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
+/* déplié : `display: block` libère le clamp, qui n'existe que sur -webkit-box */
+.card-body .preview.open {
+  display: block; overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.more-toggle {
+  align-self: flex-start; background: none; border: none; padding: 0;
+  font-size: 0.78rem; color: var(--muted); cursor: pointer; text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.more-toggle:hover { color: var(--ink); }
 
 /* statut modifiable inline */
 .status-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
@@ -210,8 +217,13 @@ textarea.tall { min-height: 190px; }
 .note-edit { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
 .note-edit textarea { min-height: 70px; }
 
-.msg-card footer { display: flex; align-items: center; }
+.msg-card footer { display: flex; flex-direction: column; gap: 0.2rem; }
+.msg-card .card-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .msg-card .date { font-family: var(--mono); font-size: 0.74rem; color: var(--faint); }
+.msg-card .ip { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); }
+/* échéances RGPD : discrètes, sauf à moins d'un mois */
+.msg-card .card-expiry { font-size: 0.72rem; color: var(--faint); }
+.msg-card .card-expiry .soon { color: var(--st-a_recontacter); }
 
 .card { background: var(--glass); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; backdrop-filter: var(--blur); }
 .empty { padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.9rem; }

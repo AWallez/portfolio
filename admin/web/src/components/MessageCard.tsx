@@ -1,21 +1,20 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Contact } from "../api";
 import { api, STATUSES, STATUS_LABELS, typeColor, typeLabel } from "../api";
 import { fmtDate } from "./Messages";
+import { deletion, ipErasure, relative } from "../retention";
 import { IconPencil, IconTrash, IconNote } from "./icons";
 
 type Props = {
   contact: Contact;
-  onOpen: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onChanged: (updated: Contact) => void;
+  onChanged: () => void;
   onToast: (text: string, err?: boolean) => void;
 };
 
 export function MessageCard({
   contact,
-  onOpen,
   onEdit,
   onDelete,
   onChanged,
@@ -24,15 +23,23 @@ export function MessageCard({
   const [busy, setBusy] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState(contact.note ?? "");
+  const [expanded, setExpanded] = useState(false);
+  const [clamped, setClamped] = useState(false);
+  const msgRef = useRef<HTMLSpanElement>(null);
+
+  // « Afficher plus » n'a de sens que si le message déborde réellement des trois
+  // lignes de l'aperçu. On ne re-mesure pas une fois déplié : le texte remplit
+  // alors sa boîte, la mesure conclurait à tort qu'il n'y a plus rien à replier.
+  useEffect(() => {
+    const el = msgRef.current;
+    if (el && !expanded) setClamped(el.scrollHeight > el.clientHeight + 1);
+  }, [contact.message, expanded]);
 
   async function patch(body: Record<string, unknown>, okMsg?: string) {
     setBusy(true);
     try {
-      const updated = await api.patch<Contact>(
-        `/api/contacts/${contact.id}`,
-        body,
-      );
-      onChanged(updated);
+      await api.patch<Contact>(`/api/contacts/${contact.id}`, body);
+      onChanged();
       if (okMsg) onToast(okMsg);
     } catch {
       onToast("Échec de la mise à jour", true);
@@ -42,6 +49,8 @@ export function MessageCard({
   }
 
   const tColor = typeColor(contact.type);
+  const ipExp = ipErasure(contact.created_at);
+  const delExp = deletion(contact.created_at);
 
   return (
     <article
@@ -80,16 +89,34 @@ export function MessageCard({
         </button>
       </div>
 
-      {/* Zone cliquable → panneau de lecture */}
-      <button className="card-body" onClick={onOpen}>
+      {/* Identité + message. Plus de clic vers un panneau : tout est éditable
+          ici ou via « Modifier ». */}
+      <div className="card-body">
         <span className="who">
           <span className="name">
             {contact.firstname} {contact.lastname}
           </span>
           <span className="mail">{contact.email ?? contact.phone ?? "—"}</span>
         </span>
-        {contact.message && <span className="preview">{contact.message}</span>}
-      </button>
+        {contact.message && (
+          <>
+            <span
+              ref={msgRef}
+              className={`preview${expanded ? " open" : ""}`}
+            >
+              {contact.message}
+            </span>
+            {clamped && (
+              <button
+                className="more-toggle"
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? "Réduire" : "Afficher plus"}
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Statut modifiable directement */}
       <div className="status-pills">
@@ -141,7 +168,28 @@ export function MessageCard({
       </div>
 
       <footer>
-        <span className="date">{fmtDate(contact.created_at)}</span>
+        <div className="card-meta">
+          <span className="date">{fmtDate(contact.created_at)}</span>
+          {contact.ip && <span className="ip">{contact.ip}</span>}
+        </div>
+        {/* Échéances de la purge RGPD (backend/src/retention.ts) */}
+        <div className="card-expiry">
+          {!contact.manual && (
+            <>
+              {contact.ip ? (
+                <span className={ipExp.soon ? "soon" : undefined}>
+                  ip effacée {relative(ipExp.days)}
+                </span>
+              ) : (
+                <span>ip déjà effacée</span>
+              )}
+              {" · "}
+            </>
+          )}
+          <span className={delExp.soon ? "soon" : undefined}>
+            fiche supprimée {relative(delExp.days)}
+          </span>
+        </div>
       </footer>
     </article>
   );
