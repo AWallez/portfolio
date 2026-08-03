@@ -86,7 +86,7 @@ export async function contactRoutes(app: FastifyInstance) {
       const [items, total, counts] = await Promise.all([
         pool.query(
           `SELECT id, firstname, lastname, email, type, phone, message,
-                  status, note, created_at, updated_at, (ip IS NULL) AS manual
+                  status, note, created_at, updated_at, manual
              FROM contacts ${whereSql}
             ORDER BY created_at DESC
             LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
@@ -127,7 +127,7 @@ export async function contactRoutes(app: FastifyInstance) {
     { schema: { params: idParam } },
     async (req: FastifyRequest<{ Params: { id: string } }>, reply) => {
       const res = await crmPool().query(
-        `SELECT *, (ip IS NULL) AS manual FROM contacts WHERE id = $1`,
+        `SELECT * FROM contacts WHERE id = $1`,
         [req.params.id],
       );
       if (res.rowCount === 0) {
@@ -186,7 +186,7 @@ export async function contactRoutes(app: FastifyInstance) {
       const res = await crmPool().query(
         `UPDATE contacts SET ${sets.join(", ")}, updated_at = now()
           WHERE id = $${params.length}
-          RETURNING *, (ip IS NULL) AS manual`,
+          RETURNING *`,
         params,
       );
       if (res.rowCount === 0) {
@@ -211,7 +211,9 @@ export async function contactRoutes(app: FastifyInstance) {
   );
 
   // Ajout manuel d'un lead (prospect venu de Malt, LinkedIn, téléphone…).
-  // ip/user_agent restent NULL → c'est le marqueur « ajouté à la main ».
+  // L'origine est portée par la colonne `manual`, et non plus déduite de
+  // `ip IS NULL` : la purge RGPD anonymise les IP au bout d'un an, ce qui aurait
+  // fini par faire passer tous les vrais messages pour des saisies manuelles.
   app.post(
     "/api/contacts",
     {
@@ -240,9 +242,9 @@ export async function contactRoutes(app: FastifyInstance) {
     async (req: FastifyRequest<{ Body: CreateBody }>, reply) => {
       const b = req.body;
       const res = await crmPool().query(
-        `INSERT INTO contacts (firstname, lastname, email, type, phone, message, note, status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'non_lu')
-         RETURNING *, (ip IS NULL) AS manual`,
+        `INSERT INTO contacts (firstname, lastname, email, type, phone, message, note, status, manual)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'non_lu', true)
+         RETURNING *`,
         [
           b.firstname,
           b.lastname,

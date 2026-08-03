@@ -2,6 +2,27 @@ import { useState } from "react";
 import type { Contact, Status } from "../api";
 import { api, STATUSES, STATUS_LABELS, typeLabel } from "../api";
 import { fmtDate } from "./Messages";
+import {
+  deletion,
+  fmtDay,
+  ipErasure,
+  relative,
+  type Expiry,
+} from "../retention";
+
+// Échéance RGPD : la date, puis le délai restant en gris. Teintée à moins d'un
+// mois — c'est le seul moment où elle appelle une décision (relancer, ou laisser
+// la fiche partir).
+function Deadline({ e }: { e: Expiry }) {
+  return (
+    <span style={e.soon ? { color: "var(--st-a_recontacter)" } : undefined}>
+      {fmtDay(e.date)}{" "}
+      <span style={{ color: "var(--faint)", fontSize: "0.85em" }}>
+        ({relative(e.days)})
+      </span>
+    </span>
+  );
+}
 
 type Props = {
   contact: Contact;
@@ -122,6 +143,25 @@ export function Detail({ contact, onClose, onEdit, onChanged, onToast }: Props) 
               </dd>
             </>
           )}
+
+          {/* Échéances de la purge RGPD. Un lead saisi à la main n'a jamais eu
+              d'ip : la première ligne n'aurait aucun sens pour lui. */}
+          {!contact.manual && (
+            <>
+              <dt>ip effacée</dt>
+              <dd>
+                {contact.ip ? (
+                  <Deadline e={ipErasure(contact.created_at)} />
+                ) : (
+                  <span style={{ color: "var(--faint)" }}>déjà effacée</span>
+                )}
+              </dd>
+            </>
+          )}
+          <dt>fiche supprimée</dt>
+          <dd>
+            <Deadline e={deletion(contact.created_at)} />
+          </dd>
         </dl>
 
         {contact.message && <div className="message-box">{contact.message}</div>}
