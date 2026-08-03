@@ -26,16 +26,20 @@ définition, deux palettes, comme le générateur de visuels projets.
 
 ```bash
 node branding/linkedin-banner.mjs   # -> 2 SVG (cwd = frontend)
-# puis PNG, avec resvg comme ci-dessus (value: 1584) :
+# puis PNG, avec resvg comme ci-dessus, en 2× (value: 3168) :
 npm i -D @resvg/resvg-js
-node -e "import('@resvg/resvg-js').then(({Resvg})=>{const fs=require('node:fs');for(const v of ['facettes','facettes-clair']){const r=new Resvg(fs.readFileSync('branding/linkedin-banner-'+v+'.svg','utf8'),{font:{fontFiles:['C:/Windows/Fonts/consola.ttf','C:/Windows/Fonts/consolab.ttf','C:/Windows/Fonts/arial.ttf','C:/Windows/Fonts/arialbd.ttf'],loadSystemFonts:false,defaultFontFamily:'Arial'},fitTo:{mode:'width',value:1584}});fs.writeFileSync('branding/linkedin-banner-'+v+'.png',r.render().asPng());}console.log('ok')})"
+node -e "import('@resvg/resvg-js').then(({Resvg})=>{const fs=require('node:fs');for(const v of ['facettes','facettes-clair']){const r=new Resvg(fs.readFileSync('branding/linkedin-banner-'+v+'.svg','utf8'),{font:{fontFiles:['C:/Windows/Fonts/consola.ttf','C:/Windows/Fonts/consolab.ttf','C:/Windows/Fonts/arial.ttf','C:/Windows/Fonts/arialbd.ttf'],loadSystemFonts:false,defaultFontFamily:'Arial'},fitTo:{mode:'width',value:3168}});fs.writeFileSync('branding/linkedin-banner-'+v+'.png',r.render().asPng());}console.log('ok')})"
 npm un @resvg/resvg-js
 ```
 
 ⚠️ **Contraintes de la bannière LinkedIn :**
 - la **photo de profil recouvre le coin inférieur gauche** (~430 px) → ne rien y
   placer d'important (l'accroche est donc calée en HAUT à gauche) ;
-- la bannière est souvent affichée à ~50 % de sa taille → **aucun texte sous 20 px**.
+- la bannière est souvent affichée à ~50 % de sa taille → **aucun texte sous 20 px** ;
+- 1584×396 est la taille d'affichage **logique** : rastériser à cette taille donne
+  un rendu flou sur les écrans haute densité, qui doivent alors agrandir l'image.
+  D'où le **2×** (3168×792, ratio 4:1 conservé, ~170 Ko) — la densité exacte d'un
+  écran retina. Au-delà, LinkedIn n'affiche pas plus de pixels.
 
 Les icônes **sapeur-pompier / rugby / plongée** (`branding/icons/*.svg`) ont été
 dessinées par Alexis : elles sont inlinées et recolorées à la volée par
