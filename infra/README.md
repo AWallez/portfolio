@@ -45,12 +45,21 @@ Toute la stack du portfolio via **Docker Compose** : front, API, base de donnée
 
 ### Mettre à jour
 
-`git pull` (via conteneur, cf. *Spécificités NAS*) puis rebuild du **service
-concerné** : `docker compose up -d --build web`, ou `api`, ou `admin`.
+```bash
+./deploy.sh admin       # un service · web api admin si aucun argument
+```
+
+[`deploy.sh`](deploy.sh) fait le `git pull` (via conteneur, `--network host`)
+puis reconstruit les services demandés. Il se repère tout seul : appelable
+depuis n'importe quel dossier, contrairement aux commandes manuelles qui
+supposent d'être dans `infra/`.
+
+À la main, ce serait `git pull` puis `docker compose up -d --build <service>`
+**depuis `infra/`** — sinon `docker-compose.override.yml` n'est pas chargé.
 
 ⚠️ **Si le pull touche `backend/db/schema.sql`, l'ordre compte** — `schema.sql`
 est embarqué dans l'image de l'`api`, et l'`admin` interroge les colonnes qu'il
-définit :
+définit. Le script s'en charge, mais à la main :
 
 ```bash
 docker compose up -d --build api              # 1. nouvelle image = nouveau schema.sql
