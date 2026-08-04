@@ -120,7 +120,11 @@ export function MessageCard({
           <span className="name">
             {contact.firstname} {contact.lastname}
           </span>
-          <span className="mail">{contact.email ?? contact.phone ?? "—"}</span>
+          {/* les deux, quand les deux existent : `email ?? phone` masquait le
+              téléphone dès qu'il y avait un email */}
+          <span className="mail">
+            {[contact.email, contact.phone].filter(Boolean).join("  ·  ") || "—"}
+          </span>
         </span>
         {contact.message && (
           <>
