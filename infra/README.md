@@ -49,10 +49,19 @@ Toute la stack du portfolio via **Docker Compose** : front, API, base de donnée
 ./deploy.sh admin       # un service · web api admin si aucun argument
 ```
 
-[`deploy.sh`](deploy.sh) fait le `git pull` (via conteneur, `--network host`)
-puis reconstruit les services demandés. Il se repère tout seul : appelable
-depuis n'importe quel dossier, contrairement aux commandes manuelles qui
-supposent d'être dans `infra/`.
+[`deploy.sh`](deploy.sh) fait le `git pull` (via conteneur, `--network host`),
+**valide le Caddyfile**, puis reconstruit les services demandés. Il se repère
+tout seul : appelable depuis n'importe quel dossier, contrairement aux commandes
+manuelles qui supposent d'être dans `infra/`.
+
+⚠️ **Pourquoi valider le Caddyfile à chaque fois** : une erreur de configuration
+ne se voit **pas** tant que Caddy tourne — il garde sa config en mémoire et ne
+relit rien. Elle n'éclate qu'au prochain redémarrage (mise à jour du NAS,
+coupure de courant) et emporte alors **tous les sites** d'un coup. C'est arrivé
+le 2026-08-04 : un bloc `ntfy.alexiswallez.fr` dupliqué entre le `Caddyfile` et
+`conf.d/` dormait depuis des semaines, et a fait boucler Caddy en `Restarting`
+après une mise à jour d'UGOS. La validation tourne dans un conteneur jetable,
+donc elle fonctionne même quand Caddy est déjà à terre.
 
 À la main, ce serait `git pull` puis `docker compose up -d --build <service>`
 **depuis `infra/`** — sinon `docker-compose.override.yml` n'est pas chargé.

@@ -25,6 +25,34 @@ docker run --rm --network host -w /repo \
 
 cd "$REPO/infra"
 
+# Une erreur dans le Caddyfile ne se voit PAS tant que Caddy tourne : il garde
+# sa configuration en mémoire et ne relit rien. Elle n'éclate qu'au prochain
+# redémarrage — mise à jour du NAS, coupure de courant — et emporte alors tous
+# les sites d'un coup. Vécu le 2026-08-04 : un bloc `ntfy` dupliqué entre le
+# Caddyfile et conf.d/ dormait depuis des semaines.
+#
+# On valide donc à chaque déploiement, dans un conteneur jetable : ça marche
+# même quand Caddy est déjà à terre, ce qui est justement le cas à réparer.
+CADDY_IMG=$(docker compose config --images 2>/dev/null | grep -i caddy | head -1)
+if [ -n "${CADDY_IMG:-}" ] && docker image inspect "$CADDY_IMG" >/dev/null 2>&1; then
+  echo "→ validation du Caddyfile"
+  if ! docker run --rm \
+      -v "$REPO/infra/Caddyfile:/etc/caddy/Caddyfile:ro" \
+      -v "$REPO/infra/conf.d:/etc/caddy/conf.d:ro" \
+      --entrypoint caddy "$CADDY_IMG" \
+      validate --config /etc/caddy/Caddyfile >/dev/null 2>&1; then
+    echo "✗ Caddyfile invalide — déploiement interrompu. Détail :" >&2
+    docker run --rm \
+      -v "$REPO/infra/Caddyfile:/etc/caddy/Caddyfile:ro" \
+      -v "$REPO/infra/conf.d:/etc/caddy/conf.d:ro" \
+      --entrypoint caddy "$CADDY_IMG" \
+      validate --config /etc/caddy/Caddyfile 2>&1 | grep -i error >&2
+    exit 1
+  fi
+else
+  echo "→ validation du Caddyfile ignorée (image Caddy absente en local)"
+fi
+
 # schema.sql est embarqué dans l'image de l'api, et l'admin interroge les
 # colonnes qu'il définit → l'api passe en premier, puis la migration, puis le
 # reste. Migrer avant de reconstruire l'api rejouerait l'ancien schéma sans
