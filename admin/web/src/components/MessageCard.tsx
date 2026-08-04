@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import type { Contact } from "../api";
 import { api, STATUSES, STATUS_LABELS, typeColor, typeLabel } from "../api";
 import { fmtDate } from "./Messages";
-import { deletion, ipErasure, relative } from "../retention";
+import { deletion, ipErasure, relative, shortDelay } from "../retention";
 import { IconPencil, IconTrash, IconNote } from "./icons";
 
 type Props = {
@@ -88,6 +88,11 @@ export function MessageCard({
   const tColor = typeColor(contact.type);
   const ipExp = ipErasure(contact.created_at);
   const delExp = deletion(contact.created_at);
+  const expiryTitle =
+    (contact.manual
+      ? ""
+      : (contact.ip ? `ip effacée ${relative(ipExp.days)}` : "ip déjà effacée") +
+        " · ") + `fiche supprimée ${relative(delExp.days)}`;
 
   return (
     <article
@@ -108,6 +113,17 @@ export function MessageCard({
         </span>
         {contact.manual && <span className="manual-tag">manuel</span>}
         <span className="spacer" />
+        {/* La note rejoint les autres actions : isolée en bas de carte, son
+            icône restait seule sous un séparateur qui n'annonçait plus rien. */}
+        <button
+          className={`icon-btn${contact.note ? " has-note" : ""}`}
+          title={contact.note ? "Note" : "Ajouter une note"}
+          aria-label={contact.note ? "Note" : "Ajouter une note"}
+          aria-expanded={noteOpen}
+          onClick={() => setNoteOpen((v) => !v)}
+        >
+          <IconNote />
+        </button>
         <button
           className="icon-btn"
           title="Modifier"
@@ -214,67 +230,45 @@ export function MessageCard({
           )}
       </div>
 
-      {/* Note. Sans note, le libellé disparaît : il ne reste qu'une icône
-          discrète, au lieu d'une ligne pleine répétée sur chaque carte. */}
-      <div className={`note-block${contact.note ? " has-note" : ""}`}>
-        <button
-          className="note-toggle"
-          title={contact.note ? undefined : "Ajouter une note"}
-          aria-label={contact.note ? undefined : "Ajouter une note"}
-          onClick={() => setNoteOpen((v) => !v)}
-        >
-          <IconNote />
-          {contact.note
-            ? noteOpen
-              ? "Masquer la note"
-              : "Note : " +
-                contact.note.slice(0, 60) +
-                (contact.note.length > 60 ? "…" : "")
-            : noteOpen
-              ? "Masquer"
-              : null}
-        </button>
-        {noteOpen && (
-          <div className="note-edit">
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="relance prévue, contexte, montant du devis…"
-            />
-            <button
-              className="btn primary sm"
-              disabled={busy || note === (contact.note ?? "")}
-              onClick={() => patch({ note }, "Note enregistrée ✓")}
-            >
-              Enregistrer
-            </button>
-          </div>
-        )}
-      </div>
-
-      <footer>
-        <div className="card-meta">
-          <span className="date">{fmtDate(contact.created_at)}</span>
-          {contact.ip && <span className="ip">{contact.ip}</span>}
-        </div>
-        {/* Échéances de la purge RGPD (backend/src/retention.ts) */}
-        <div className="card-expiry">
-          {!contact.manual && (
-            <>
-              {contact.ip ? (
-                <span className={ipExp.soon ? "soon" : undefined}>
-                  ip effacée {relative(ipExp.days)}
-                </span>
-              ) : (
-                <span>ip déjà effacée</span>
-              )}
-              {" · "}
-            </>
+      {/* Le bloc n'existe que s'il y a quelque chose à montrer : ni séparateur
+          ni ligne vide sur les fiches sans note. */}
+      {(contact.note || noteOpen) && (
+        <div className="note-block">
+          {contact.note && !noteOpen && (
+            <p className="note-text">{contact.note}</p>
           )}
-          <span className={delExp.soon ? "soon" : undefined}>
-            fiche supprimée {relative(delExp.days)}
-          </span>
+          {noteOpen && (
+            <div className="note-edit">
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="relance prévue, contexte, montant du devis…"
+              />
+              <button
+                className="btn primary sm"
+                disabled={busy || note === (contact.note ?? "")}
+                onClick={() => patch({ note }, "Note enregistrée ✓")}
+              >
+                Enregistrer
+              </button>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Une seule ligne de métadonnées : date, ip, puis les échéances de la
+          purge RGPD sous forme courte — la phrase entière est en infobulle. */}
+      <footer title={expiryTitle}>
+        <span className="date">{fmtDate(contact.created_at)}</span>
+        {contact.ip && <span className="ip">{contact.ip}</span>}
+        {!contact.manual && (
+          <span className={ipExp.soon ? "soon" : undefined}>
+            {contact.ip ? `ip ${shortDelay(ipExp.days)}` : "ip effacée"}
+          </span>
+        )}
+        <span className={delExp.soon ? "soon" : undefined}>
+          fiche {shortDelay(delExp.days)}
+        </span>
       </footer>
     </article>
   );

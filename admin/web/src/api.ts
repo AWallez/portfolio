@@ -73,6 +73,10 @@ export function typeLabel(t: string): string {
 // Couleur stable dérivée du nom du type (hash → teinte HSL) : n'importe quel
 // type — connu ou créé à la volée — obtient une couleur cohérente et distincte.
 export function typeColor(t: string): string {
+  // « other » couvre l'écrasante majorité des fiches : lui donner une teinte
+  // revenait à colorer presque toutes les cartes, donc à n'en signaler aucune.
+  // En gris il s'efface, et « Projet » / « Recrutement » ressortent enfin.
+  if (t === "other") return "#8e8e93";
   // hash FNV-ish (Math.imul = bon brassage) → teinte + saturation variables,
   // pour que deux types proches ne tombent pas sur la même couleur.
   let h = 2166136261;

@@ -46,6 +46,14 @@ export function relative(days: number): string {
   return rtf.format(Math.round(days / 365.25), "year");
 }
 
+/** « 12 mois », « 3 ans » — forme courte, pour tenir sur la ligne du pied de carte. */
+export function shortDelay(days: number): string {
+  if (Math.abs(days) < 45) return `${days} j`;
+  const months = Math.round(days / 30.44);
+  if (Math.abs(months) < 18) return `${months} mois`;
+  return `${Math.round(days / 365.25)} ans`;
+}
+
 export function fmtDay(d: Date): string {
   return d.toLocaleDateString("fr-FR", { dateStyle: "long" });
 }
