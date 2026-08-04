@@ -154,10 +154,10 @@ textarea.tall { min-height: 190px; }
   display: grid; gap: 1.1rem;
   /* 400px : de quoi tenir une ligne de ~60 caractères, la longueur de lecture
      confortable. À 320 le message se hachait en lignes trop courtes. */
+  /* hauteurs égales par rangée (`stretch` par défaut) : le pied de carte est
+     poussé en bas par `margin-top: auto`, sinon l'étirement laisserait un vide
+     au milieu au lieu d'une carte qui se remplit proprement. */
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  /* sans ça, chaque carte prend la hauteur de la plus grande de sa rangée →
-     grands vides sous les messages courts */
-  align-items: start;
 }
 .msg-card {
   display: flex; flex-direction: column; gap: 0.85rem;
@@ -202,6 +202,11 @@ textarea.tall { min-height: 190px; }
 .more-toggle:hover { color: var(--ink); }
 
 /* statut modifiable inline */
+/* Carte dont le menu de statut est ouvert : elle doit passer devant ses
+   voisines. Son `backdrop-filter` en fait un contexte d'empilement, donc le
+   z-index du menu ne peut pas en sortir — c'est la CARTE qu'on remonte. */
+.msg-card.menu-open { position: relative; z-index: 30; }
+
 /* statut : une seule pastille, les autres se déroulent au clic */
 .status-menu { position: relative; align-self: flex-start; }
 .status-menu .chev { margin-left: 0.15rem; font-size: 0.7em; opacity: 0.7; }
@@ -252,7 +257,7 @@ textarea.tall { min-height: 190px; }
 .note-edit { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
 .note-edit textarea { min-height: 70px; }
 
-.msg-card footer { display: flex; flex-direction: column; gap: 0.2rem; }
+.msg-card footer { display: flex; flex-direction: column; gap: 0.2rem; margin-top: auto; }
 .msg-card .card-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 /* plancher à 0,8rem (12,8px) : en dessous, les libellés mono deviennent pénibles */
 .msg-card .date { font-family: var(--mono); font-size: 0.8rem; color: var(--faint); }

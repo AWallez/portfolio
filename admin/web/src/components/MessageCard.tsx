@@ -70,18 +70,15 @@ export function MessageCard({
   const tColor = typeColor(contact.type);
   const ipExp = ipErasure(contact.created_at);
   const delExp = deletion(contact.created_at);
-  // seuil d'affichage : à plus de 3 mois, l'échéance n'appelle aucune décision
-  const NEAR_DAYS = 90;
-  const expirySoon = ipExp.days <= NEAR_DAYS || delExp.days <= NEAR_DAYS;
-  const expiryText =
-    (contact.manual
-      ? ""
-      : (contact.ip ? `ip effacée ${relative(ipExp.days)}` : "ip déjà effacée") +
-        " · ") + `fiche supprimée ${relative(delExp.days)}`;
 
   return (
+    // `menu-open` remonte la carte au-dessus de ses voisines : son
+    // `backdrop-filter` crée un contexte d'empilement dans lequel le z-index du
+    // menu reste prisonnier — sans ça il passe sous les cartes suivantes.
     <article
-      className={`msg-card ${contact.status === "non_lu" ? "unread" : ""}`}
+      className={`msg-card${contact.status === "non_lu" ? " unread" : ""}${
+        statusOpen ? " menu-open" : ""
+      }`}
       style={{ ["--st" as string]: `var(--st-${contact.status})` }}
     >
       {/* Badge type en haut, couleur dérivée du type */}
@@ -226,33 +223,28 @@ export function MessageCard({
       </div>
 
       <footer>
-        {/* Échéances RGPD (backend/src/retention.ts). Affichées seulement quand
-            elles approchent : sur des contacts tous créés à la même période,
-            elles répétaient la même phrase sur chaque carte sans rien apprendre.
-            Le reste du temps elles restent consultables en infobulle. */}
-        <div className="card-meta" title={expiryText}>
+        <div className="card-meta">
           <span className="date">{fmtDate(contact.created_at)}</span>
           {contact.ip && <span className="ip">{contact.ip}</span>}
         </div>
-        {expirySoon && (
-          <div className="card-expiry">
-            {!contact.manual && (
-              <>
-                {contact.ip ? (
-                  <span className={ipExp.soon ? "soon" : undefined}>
-                    ip effacée {relative(ipExp.days)}
-                  </span>
-                ) : (
-                  <span>ip déjà effacée</span>
-                )}
-                {" · "}
-              </>
-            )}
-            <span className={delExp.soon ? "soon" : undefined}>
-              fiche supprimée {relative(delExp.days)}
-            </span>
-          </div>
-        )}
+        {/* Échéances de la purge RGPD (backend/src/retention.ts) */}
+        <div className="card-expiry">
+          {!contact.manual && (
+            <>
+              {contact.ip ? (
+                <span className={ipExp.soon ? "soon" : undefined}>
+                  ip effacée {relative(ipExp.days)}
+                </span>
+              ) : (
+                <span>ip déjà effacée</span>
+              )}
+              {" · "}
+            </>
+          )}
+          <span className={delExp.soon ? "soon" : undefined}>
+            fiche supprimée {relative(delExp.days)}
+          </span>
+        </div>
       </footer>
     </article>
   );
