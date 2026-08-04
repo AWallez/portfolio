@@ -155,6 +155,9 @@ textarea.tall { min-height: 190px; }
   /* 400px : de quoi tenir une ligne de ~60 caractères, la longueur de lecture
      confortable. À 320 le message se hachait en lignes trop courtes. */
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  /* sans ça, chaque carte prend la hauteur de la plus grande de sa rangée →
+     grands vides sous les messages courts */
+  align-items: start;
 }
 .msg-card {
   display: flex; flex-direction: column; gap: 0.85rem;
@@ -199,7 +202,25 @@ textarea.tall { min-height: 190px; }
 .more-toggle:hover { color: var(--ink); }
 
 /* statut modifiable inline */
-.status-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+/* statut : une seule pastille, les autres se déroulent au clic */
+.status-menu { position: relative; align-self: flex-start; }
+.status-menu .chev { margin-left: 0.15rem; font-size: 0.7em; opacity: 0.7; }
+.status-list {
+  position: absolute; z-index: 20; top: calc(100% + 0.35rem); left: 0;
+  margin: 0; padding: 0.3rem; list-style: none; min-width: 11rem;
+  background: var(--glass-hi); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); backdrop-filter: var(--blur);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.status-list button {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  background: transparent; border: none; border-radius: 7px;
+  padding: 0.4rem 0.55rem; font-size: 0.85rem; color: var(--muted); text-align: left;
+}
+.status-list button .dot { background: var(--sc); }
+.status-list button:hover { background: var(--glass-2); color: var(--ink); }
+.status-list button.on { color: var(--sc); font-weight: 600; }
+
 .spill {
   display: inline-flex; align-items: center; gap: 0.35rem;
   font-size: 0.8rem; color: var(--muted);
@@ -223,6 +244,11 @@ textarea.tall { min-height: 190px; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .note-toggle:hover { color: var(--ink); }
+/* sans note, il ne reste que l'icône : discrète au repos, franche au survol de
+   la carte — au lieu d'une ligne « Ajouter une note » répétée 24 fois */
+.note-block:not(.has-note) .note-toggle { color: var(--faint); opacity: 0.55; }
+.msg-card:hover .note-block:not(.has-note) .note-toggle,
+.note-block:not(.has-note) .note-toggle:focus-visible { opacity: 1; }
 .note-edit { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
 .note-edit textarea { min-height: 70px; }
 
@@ -231,7 +257,7 @@ textarea.tall { min-height: 190px; }
 /* plancher à 0,8rem (12,8px) : en dessous, les libellés mono deviennent pénibles */
 .msg-card .date { font-family: var(--mono); font-size: 0.8rem; color: var(--faint); }
 .msg-card .ip { font-family: var(--mono); font-size: 0.8rem; color: var(--faint); }
-/* échéances RGPD : discrètes, sauf à moins d'un mois */
+/* échéances RGPD : affichées seulement à moins de 3 mois (cf. MessageCard) */
 .msg-card .card-expiry { font-size: 0.8rem; color: var(--faint); }
 .msg-card .card-expiry .soon { color: var(--st-a_recontacter); }
 
