@@ -6,7 +6,9 @@
   --bg: #0a0a0b;
   --ink: #f5f5f7;
   --muted: #9a9aa2;
-  --faint: #6b6b73;
+  /* #6b6b73 tombait à 3,49:1 sur le fond des cartes — sous le minimum WCAG AA
+     (4,5:1), et justement porté par les plus petits textes (date, ip, échéances). */
+  --faint: #86868e;
   --line: rgba(255, 255, 255, 0.09);
   --line-strong: rgba(255, 255, 255, 0.16);
   /* surfaces en verre */
@@ -35,7 +37,10 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 15px;
+  /* 16px = défaut navigateur. À 15px, toutes les tailles en `rem` (relatives à
+     la racine, pas au body) donnaient un rendu déséquilibré : titres calés sur
+     16px, corps sur 15px. */
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   /* halo doux gris en fond, façon macOS */
   background-image:
@@ -132,7 +137,7 @@ textarea.tall { min-height: 190px; }
 .pill:hover { border-color: var(--line-strong); color: var(--ink); }
 .pill.active { border-color: var(--line-strong); color: var(--ink); background: var(--glass-hi); }
 .pill .dot { width: 8px; height: 8px; border-radius: 999px; }
-.pill .n { font-family: var(--mono); font-size: 0.74rem; color: var(--faint); }
+.pill .n { font-family: var(--mono); font-size: 0.8rem; color: var(--faint); }
 
 .status-badge {
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -146,15 +151,17 @@ textarea.tall { min-height: 190px; }
    CARTES DE MESSAGES
    ============================================================ */
 .msg-grid {
-  display: grid; gap: 0.9rem;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  display: grid; gap: 1.1rem;
+  /* 400px : de quoi tenir une ligne de ~60 caractères, la longueur de lecture
+     confortable. À 320 le message se hachait en lignes trop courtes. */
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 }
 .msg-card {
-  display: flex; flex-direction: column; gap: 0.7rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
   background: var(--glass); border-radius: var(--radius);
   /* contour à la couleur du statut (--st posé par la carte) → repérage immédiat */
   border: 1px solid color-mix(in srgb, var(--st, var(--line)) 55%, transparent);
-  padding: 0.9rem 1rem 0.8rem; backdrop-filter: var(--blur);
+  padding: 1.1rem 1.2rem 1rem; backdrop-filter: var(--blur);
   transition: border-color 0.15s, transform 0.08s, box-shadow 0.15s;
 }
 .msg-card:hover {
@@ -165,17 +172,19 @@ textarea.tall { min-height: 190px; }
 .card-top { display: flex; align-items: center; gap: 0.5rem; }
 .card-top .spacer { flex: 1; }
 .type-badge {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
   padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid; white-space: nowrap;
 }
-.manual-tag { color: var(--faint); font-size: 0.7rem; font-weight: 500; }
+.manual-tag { color: var(--faint); font-size: 0.78rem; font-weight: 500; }
 
 /* identité + message (plus de clic : tout s'édite sur la carte) */
 .card-body { display: flex; flex-direction: column; gap: 0.3rem; width: 100%; }
-.card-body .name { font-weight: 600; }
-.card-body .mail { display: block; font-size: 0.8rem; color: var(--muted); }
+.card-body .name { font-weight: 600; font-size: 1.05rem; }
+.card-body .mail { display: block; font-size: 0.85rem; color: var(--muted); }
+/* le message est le contenu principal de la carte : il mérite la taille et
+   l'interligne d'un texte qu'on lit, pas d'une légende */
 .card-body .preview {
-  color: var(--muted); font-size: 0.88rem; line-height: 1.45; margin-top: 0.15rem;
+  color: var(--muted); font-size: 0.95rem; line-height: 1.55; margin-top: 0.25rem;
   display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 /* déplié : `display: block` libère le clamp, qui n'existe que sur -webkit-box */
@@ -193,7 +202,7 @@ textarea.tall { min-height: 190px; }
 .status-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .spill {
   display: inline-flex; align-items: center; gap: 0.35rem;
-  font-size: 0.75rem; color: var(--muted);
+  font-size: 0.8rem; color: var(--muted);
   border: 1px solid var(--line); background: transparent;
   padding: 0.2rem 0.55rem; border-radius: 999px; transition: all 0.12s;
 }
@@ -219,15 +228,16 @@ textarea.tall { min-height: 190px; }
 
 .msg-card footer { display: flex; flex-direction: column; gap: 0.2rem; }
 .msg-card .card-meta { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-.msg-card .date { font-family: var(--mono); font-size: 0.74rem; color: var(--faint); }
-.msg-card .ip { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); }
+/* plancher à 0,8rem (12,8px) : en dessous, les libellés mono deviennent pénibles */
+.msg-card .date { font-family: var(--mono); font-size: 0.8rem; color: var(--faint); }
+.msg-card .ip { font-family: var(--mono); font-size: 0.8rem; color: var(--faint); }
 /* échéances RGPD : discrètes, sauf à moins d'un mois */
-.msg-card .card-expiry { font-size: 0.72rem; color: var(--faint); }
+.msg-card .card-expiry { font-size: 0.8rem; color: var(--faint); }
 .msg-card .card-expiry .soon { color: var(--st-a_recontacter); }
 
 .card { background: var(--glass); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; backdrop-filter: var(--blur); }
 .empty { padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
-.tag { font-size: 0.75rem; font-weight: 600; color: var(--ink); background: var(--glass-2); padding: 0.14rem 0.5rem; border-radius: 6px; white-space: nowrap; }
+.tag { font-size: 0.8rem; font-weight: 600; color: var(--ink); background: var(--glass-2); padding: 0.14rem 0.5rem; border-radius: 6px; white-space: nowrap; }
 
 /* ---- pagination ---- */
 .pager { display: flex; gap: 0.5rem; align-items: center; justify-content: center; margin-top: 1.1rem; font-size: 0.82rem; color: var(--muted); }
@@ -270,7 +280,7 @@ textarea.tall { min-height: 190px; }
    ============================================================ */
 .explorer { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 1rem; align-items: start; }
 .side { display: flex; flex-direction: column; gap: 0.25rem; }
-.side .section { font-size: 0.72rem; font-weight: 600; color: var(--muted); margin: 0.6rem 0 0.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.side .section { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin: 0.6rem 0 0.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .side button {
   text-align: left; background: transparent; border: 1px solid transparent;
   color: var(--ink); border-radius: 8px; padding: 0.42rem 0.65rem; font-size: 0.88rem;
@@ -278,7 +288,7 @@ textarea.tall { min-height: 190px; }
 }
 .side button:hover { background: var(--glass); }
 .side button.active { background: var(--glass-2); border-color: var(--line); }
-.side button .n { color: var(--faint); font-family: var(--mono); font-size: 0.75rem; }
+.side button .n { color: var(--faint); font-family: var(--mono); font-size: 0.8rem; }
 /* min-width:0 : sans lui, la colonne 1fr de la grid refuse de rétrécir. */
 .explorer > div { min-width: 0; }
 /* Résultats en CARTES (même langage visuel que les messages) : une carte par

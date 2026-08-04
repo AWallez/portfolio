@@ -43,7 +43,24 @@ Toute la stack du portfolio via **Docker Compose** : front, API, base de donnée
    docker compose ps      # caddy / web / api / postgres / ntfy → "healthy"
    ```
 
-Mettre à jour ensuite = `git pull` puis `docker compose up -d --build web` (rebuild du service concerné).
+### Mettre à jour
+
+`git pull` (via conteneur, cf. *Spécificités NAS*) puis rebuild du **service
+concerné** : `docker compose up -d --build web`, ou `api`, ou `admin`.
+
+⚠️ **Si le pull touche `backend/db/schema.sql`, l'ordre compte** — `schema.sql`
+est embarqué dans l'image de l'`api`, et l'`admin` interroge les colonnes qu'il
+définit :
+
+```bash
+docker compose up -d --build api              # 1. nouvelle image = nouveau schema.sql
+docker compose run --rm api npm run migrate   # 2. applique le schéma
+docker compose up -d --build admin            # 3. l'admin peut lire les colonnes
+```
+
+Migrer avant de rebuilder l'`api` rejouerait l'**ancien** schéma sans rien
+signaler ; rebuilder l'`admin` avant de migrer le ferait tomber en 500 sur une
+colonne inexistante.
 
 ## Sécurité (en place)
 
