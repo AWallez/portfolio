@@ -207,20 +207,16 @@ textarea.tall { min-height: 190px; }
 .more-toggle:hover { color: var(--ink); }
 
 /* statut modifiable inline */
-/* Carte dont le menu de statut est ouvert : elle doit passer devant ses
-   voisines. Son `backdrop-filter` en fait un contexte d'empilement, donc le
-   z-index du menu ne peut pas en sortir — c'est la CARTE qu'on remonte. */
-.msg-card.menu-open { position: relative; z-index: 30; }
-
 /* statut : une seule pastille, les autres se déroulent au clic */
-.status-menu { position: relative; align-self: flex-start; }
+.status-menu { align-self: flex-start; }
 .status-menu .chev { margin-left: 0.15rem; font-size: 0.7em; opacity: 0.7; }
+/* Posé dans le <body> par un portail (cf. MessageCard) → coordonnées écran, et
+   le flou porte enfin sur la page. Même verre que la barre du haut. */
 .status-list {
-  position: absolute; z-index: 20; top: calc(100% + 0.35rem); left: 0;
+  position: fixed; z-index: 60;
   margin: 0; padding: 0.3rem; list-style: none; min-width: 11rem;
-  /* fond volontairement peu opaque : à 0,7 le flou ne se voyait pas, la surface
-     paraissait pleine. C'est le même verre que le reste de l'interface. */
-  background: rgba(44, 44, 46, 0.55); border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm); backdrop-filter: var(--blur);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
 }
