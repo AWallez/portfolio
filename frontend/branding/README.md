@@ -46,6 +46,38 @@ dessinées par Alexis : elles sont inlinées et recolorées à la volée par
 `user-icons.mjs` (leurs aplats noirs deviennent l'accent, les contre-formes
 blanches deviennent la couleur de fond).
 
+## CV (6 fichiers)
+
+Le visualiseur de CV (`CvModal.tsx`) affiche du **SVG vectoriel**, bi-langue ×
+bi-thème, et le PDF sert au téléchargement — soit six fichiers dans `public/` :
+
+```
+cv-alexis-wallez{,-en}.pdf         téléchargement
+cv-alexis-wallez{,-en}.svg         affichage, thème clair
+cv-alexis-wallez{,-en}-dark.svg    affichage, thème sombre
+```
+
+**La source est le `.docx`** d'Alexis (hors dépôt). Chaîne de régénération :
+
+1. `.docx` → PDF (export OnlyOffice), puis copier les deux PDF dans `public/`
+   sous les noms ci-dessus ;
+2. PDF → SVG avec **Poppler** (`pdftocairo`), en portable, rien à installer —
+   [oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows) :
+   ```bash
+   pdftocairo -svg public/cv-alexis-wallez.pdf    public/cv-alexis-wallez.svg
+   pdftocairo -svg public/cv-alexis-wallez-en.pdf public/cv-alexis-wallez-en.svg
+   ```
+3. variantes sombres = **remap de 6 couleurs**, pas une re-génération :
+   ```bash
+   node branding/cv-dark.mjs public/cv-alexis-wallez.svg    public/cv-alexis-wallez-dark.svg
+   node branding/cv-dark.mjs public/cv-alexis-wallez-en.svg public/cv-alexis-wallez-en-dark.svg
+   ```
+
+💡 **Vérifier une modification** : `pdftotext -layout` sur l'ancien et le nouveau
+PDF, puis `diff`. Une correction ponctuelle doit se voir comme une seule ligne —
+et le SVG régénéré ne doit différer de l'ancien que par les glyphes concernés.
+C'est le contrôle qui prouve qu'on n'a pas propagé autre chose au passage.
+
 ## Visuel d'architecture
 
 `linkedin-archi.mjs` génère le schéma d'architecture du site (**1200×675**,
