@@ -1,4 +1,4 @@
-# Alexis Wallez — Développeur Full-Stack & DevOps
+# Alexis Wallez · Développeur Full-Stack & DevOps
 
 > Portfolio d'Alexis Wallez, développeur web full-stack orienté DevOps. Il conçoit des applications de bout en bout (front-end, back-end, base de données, SEO, déploiement) et maîtrise Linux, Docker, le réseau et l'auto-hébergement. Basé à Savigny-le-Temple (77, Île-de-France), disponible pour des missions freelance et des opportunités professionnelles. Ce site est une SPA React + TypeScript, auto-hébergée sur son propre NAS via Docker.
 

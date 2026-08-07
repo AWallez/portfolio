@@ -108,7 +108,7 @@ function clients(p, lang) {
   let s = "";
 
   /* ---- Frame 1: showcase site ---- */
-  s += T(48, 56, 13, p.muted, tr("Site vitrine — artisan / indépendant", "Showcase site — craftsperson / freelancer"));
+  s += T(48, 56, 13, p.muted, tr("Site vitrine pour artisan / indépendant", "Showcase site for craftsperson / freelancer"));
   s += card(48, 66, 624, 300, p, { r: 12 });
   s += dots3(68, 83, p);
   s += `<rect x="118" y="75" width="220" height="16" rx="8" fill="${p.soft}"/>${T(130, 87, 10, p.muted, tr("menuiserie-dupont.fr", "dupont-carpentry.com"), { mono: true })}`;
@@ -130,7 +130,7 @@ function clients(p, lang) {
   s += T(392, 342, 11, a, tr("▸ Rénovation", "▸ Renovation"), { op: 0.85 });
 
   /* ---- Frame 2: custom web app (StockApp) ---- */
-  s += T(48, 400, 13, p.muted, tr("App web sur mesure — gestion", "Custom web app — management"));
+  s += T(48, 400, 13, p.muted, tr("App web de gestion sur mesure", "Custom web app for management"));
   s += card(48, 410, 624, 228, p, { r: 12 });
   s += `<circle cx="68" cy="430" r="6" fill="${a}"/>${T(82, 435, 12, p.ink, "StockApp", { w: "bold" })}`;
   s += `<line x1="48" y1="446" x2="672" y2="446" stroke="${p.line}"/>`;
@@ -232,7 +232,7 @@ function portfolio(p, lang) {
   let s = "";
 
   /* ---- Desktop: window + terminal hero ---- */
-  s += T(48, 56, 13, p.muted, "Portfolio — React · TypeScript · Vite · Tailwind");
+  s += T(48, 56, 13, p.muted, "Portfolio · React · TypeScript · Vite · Tailwind");
   s += card(48, 66, 556, 322, p, { r: 12 });
   s += `${T(70, 100, 14, p.muted, "// ", { w: "bold", mono: true })}${T(94, 100, 14, a, "alexis.wallez", { w: "bold", mono: true })}`;
   s += T(584, 99, 10, p.muted, tr("Compétences · Projets · Services · Contact", "Skills · Projects · Services · Contact"), { anchor: "end" });
@@ -240,12 +240,12 @@ function portfolio(p, lang) {
   s += `<rect x="70" y="130" width="512" height="182" rx="10" fill="${p.soft}" stroke="${p.line}"/>`;
   s += dots3(90, 150, p);
   s += `${T(90, 186, 13.5, a, "$ ", { mono: true })}${T(104, 186, 13.5, p.ink, "whoami", { mono: true })}`;
-  s += T(90, 206, 13.5, p.muted, "Alexis Wallez — Full-Stack &amp; DevOps", { mono: true });
+  s += T(90, 206, 13.5, p.muted, "Alexis Wallez · Full-Stack &amp; DevOps", { mono: true });
   s += `${T(90, 234, 13.5, a, "$ ", { mono: true })}${T(104, 234, 13.5, p.ink, "cat stack.txt", { mono: true })}`;
   s += T(90, 254, 13.5, p.muted, "React · TypeScript · Node · Fastify · PostgreSQL", { mono: true });
   s += `${T(90, 282, 13.5, a, "$ ", { mono: true })}${T(104, 282, 13.5, p.ink, "./deploy.sh → Docker · NAS", { mono: true })}`;
   s += T(70, 344, 11.5, p.muted, tr("Accessibilité · SEO · i18n FR/EN · tests · CI/CD", "Accessibility · SEO · i18n FR/EN · tests · CI/CD"), { op: 0.85 });
-  s += T(70, 368, 11.5, p.muted, tr("Full-stack, du front-end à la mise en ligne — esprit DevOps.", "Full-stack, from front-end to deployment — DevOps-minded."));
+  s += T(70, 368, 11.5, p.muted, tr("Full-stack, du front-end à la mise en ligne, esprit DevOps.", "Full-stack, from front-end to deployment, DevOps-minded."));
 
   /* ---- Mobile ---- */
   s += T(620, 76, 13, p.muted, "Responsive");
@@ -264,7 +264,7 @@ function portfolio(p, lang) {
   s += T(800, 76, 13, p.muted, "Open source");
   s += card(800, 86, 352, 128, p, { r: 12 });
   s += `<path transform="translate(822 108)" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" fill="${p.ink}"/>`;
-  s += T(860, 120, 15, p.ink, "GitHub — open source", { w: "bold" });
+  s += T(860, 120, 15, p.ink, "GitHub · open source", { w: "bold" });
   s += T(860, 140, 12, p.muted, "AWallez / portfolio");
   s += `<circle cx="824" cy="172" r="4" fill="${a}"/>${T(836, 176, 12, a, tr("Public · CI au vert", "Public · CI passing"))}`;
   s += T(824, 200, 11, p.muted, "React · TS · Fastify · PostgreSQL · Docker");
@@ -309,7 +309,7 @@ function portfolio(p, lang) {
   s += T(790, 515, 10.5, p.muted, tr("sur ton téléphone", "on your phone"));
   s += T(1134, 498, 10, p.muted, tr("maintenant", "now"), { anchor: "end", op: 0.8 });
   s += `<line x1="738" y1="536" x2="1132" y2="536" stroke="${p.line}"/>`;
-  s += T(738, 560, 13, p.ink, tr("Nouveau message — Marie Dupont", "New message — Marie Dupont"), { w: "bold" });
+  s += T(738, 560, 13, p.ink, tr("Nouveau message de Marie Dupont", "New message from Marie Dupont"), { w: "bold" });
   s += T(738, 580, 11, p.muted, tr("marie@example.com · Projet freelance", "marie@example.com · Freelance project"));
   s += T(738, 600, 11, p.muted, tr("&quot;Bonjour, j'aimerais un devis pour refondre mon site…&quot;", "&quot;Hi, I'd like a quote to redesign my website…&quot;"), { op: 0.85 });
 
@@ -602,7 +602,7 @@ function monitoring(p, lang) {
   // ---- Beszel : métriques système (dans l'espace libéré par la 6ᵉ sonde).
   // y=460 : même écart de 8 px qu'entre les sondes (la 5ᵉ finit à 452) ----
   s += card(dx + 24, 460, dw - 48, 92, p, { r: 10, fill: p.soft, shadow: false });
-  s += T(dx + 40, 482, 11.5, p.ink, tr("Beszel — métriques système", "Beszel — system metrics"), { w: "bold" });
+  s += T(dx + 40, 482, 11.5, p.ink, tr("Beszel · métriques système", "Beszel · system metrics"), { w: "bold" });
   const gauge = (gx, label, val, pct) => {
     let o = T(gx, 508, 11, p.muted, label, { mono: true });
     o += T(gx + 120, 508, 11, p.ink, val, { mono: true, anchor: "end", w: "bold" });
@@ -618,7 +618,7 @@ function monitoring(p, lang) {
 
   // ---- Dockge (gestion des stacks Compose) ----
   s += card(rx, dy, rw, 200, p, { r: 16 });
-  s += titlebar(rx, dy, rw, p, "dockge — stacks", { h: 36 });
+  s += titlebar(rx, dy, rw, p, "dockge · stacks", { h: 36 });
   const stacks = tr(
     [["portfolio", "5"], ["monitoring", "2"], ["jeux", "3"]],
     [["portfolio", "5"], ["monitoring", "2"], ["games", "3"]],
@@ -682,7 +682,7 @@ function resilience(p, lang) {
   // ---- NAS (source à sauvegarder) ----
   s += card(70, 150, 300, 252, p, { r: 14 });
   s += `<path d="M70 164 a14 14 0 0 1 14 -14 h272 a14 14 0 0 1 14 14 v30 h-300 z" fill="${p.chrome}"/>`;
-  s += T(92, 182, 14, p.chromeInk, tr("NAS — à sauvegarder", "NAS — source"), { w: "bold" });
+  s += T(92, 182, 14, p.chromeInk, tr("NAS · à sauvegarder", "NAS · source"), { w: "bold" });
   const src = tr(
     [
       ["/volume1/docker", "services & configs"],
@@ -703,7 +703,7 @@ function resilience(p, lang) {
     s += T(126, sy + 34, 9.5, p.muted, sub);
     sy += 52;
   });
-  s += T(90, 388, 10.5, p.muted, tr("+ RAID1 — redondance miroir locale", "+ RAID1 — local mirror redundancy"), { mono: true, op: 0.9 });
+  s += T(90, 388, 10.5, p.muted, tr("+ RAID1 · redondance miroir locale", "+ RAID1 · local mirror redundancy"), { mono: true, op: 0.9 });
 
   // ---- restic (moteur de sauvegarde) ----
   s += card(470, 208, 260, 140, p, { r: 14, fill: p.chrome, stroke: p.chrome });
@@ -715,7 +715,7 @@ function resilience(p, lang) {
   // ---- PC (copie hors-site) ----
   s += card(830, 150, 300, 252, p, { r: 14 });
   s += `<path d="M830 164 a14 14 0 0 1 14 -14 h272 a14 14 0 0 1 14 14 v30 h-300 z" fill="${p.chrome}"/>`;
-  s += T(852, 182, 14, p.chromeInk, tr("PC — copie hors-site", "PC — off-site copy"), { w: "bold" });
+  s += T(852, 182, 14, p.chromeInk, tr("PC · copie hors-site", "PC · off-site copy"), { w: "bold" });
   const snaps = [
     ["2026-07-12 08:14", "1.49 GiB"],
     ["2026-07-11 22:03", "1.48 GiB"],

@@ -38,8 +38,8 @@ const PROJECTS: Project[] = [
     folder: { fr: "clients", en: "clients" },
     title: { fr: "Projets web clients", en: "Client web projects" },
     desc: {
-      fr: "Sites vitrines et applications web sur mesure pour artisans et indépendants, du cahier des charges à la mise en ligne : front-end React, back-end, base de données, dashboards de gestion (CRM, stock, réservations) et espaces client. Soin particulier porté aux performances, au SEO et au responsive.",
-      en: "Showcase sites and custom web apps for craftspeople and freelancers, from brief to launch: React front-end, back-end, database, management dashboards (CRM, stock, bookings) and client areas. Strong focus on performance, SEO and responsive design.",
+      fr: "Sites vitrines et applications web sur mesure pour artisans et indépendants, du cahier des charges à la mise en ligne : front-end React, back-end, base de données, dashboards de gestion (CRM, stock, réservations) et espaces client. Je soigne les performances, le SEO et l'affichage mobile.",
+      en: "Showcase sites and custom web apps for craftspeople and freelancers, from brief to launch: React front-end, back-end, database, management dashboards (CRM, stock, bookings) and client areas. I put real work into performance, SEO and how it looks on mobile.",
     },
     tags: ["React", "Node.js", "PostgreSQL", "Responsive", "Docker"],
     asset: "web-clients",
@@ -63,8 +63,8 @@ const PROJECTS: Project[] = [
       en: "Monitoring & observability",
     },
     desc: {
-      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) tandis que Beszel trace les métriques système (CPU, RAM, disque, température). Un watchdog externe (UptimeRobot) vérifie le site depuis l'extérieur, et toute panne déclenche une alerte push instantanée sur mobile (ntfy, canaux dédiés). Dockge pilote les stacks et une page de statut centralise l'état des services. Détection de bout en bout, 100 % auto-hébergé.",
-      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) while Beszel tracks system metrics (CPU, RAM, disk, temperature). An external watchdog (UptimeRobot) checks the site from the outside, and any failure fires an instant mobile push alert (ntfy, dedicated channels). Dockge manages the stacks and a status page centralizes service health. End-to-end detection, fully self-hosted.",
+      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) tandis que Beszel trace les métriques système (CPU, RAM, disque, température). Un watchdog externe (UptimeRobot) vérifie le site depuis l'extérieur, et toute panne déclenche une alerte push instantanée sur mobile (ntfy, canaux dédiés). Dockge pilote les stacks et une page de statut centralise l'état des services.",
+      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) while Beszel tracks system metrics (CPU, RAM, disk, temperature). An external watchdog (UptimeRobot) checks the site from the outside, and any failure fires an instant mobile push alert (ntfy, dedicated channels). Dockge manages the stacks and a status page centralizes service health.",
     },
     tags: ["Uptime Kuma", "Beszel", "ntfy", "UptimeRobot", "Alerting"],
     asset: "monitoring",
@@ -77,8 +77,8 @@ const PROJECTS: Project[] = [
       en: "Self-hosted infrastructure (NAS)",
     },
     desc: {
-      fr: "Infrastructure auto-hébergée sur NAS Linux : une quinzaine de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), GED avec OCR (Paperless), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy — déployés et pilotés de façon reproductible.",
-      en: "Self-hosted infrastructure on a Linux NAS: around fifteen containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), document management with OCR (Paperless), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications — deployed and managed reproducibly.",
+      fr: "Infrastructure auto-hébergée sur NAS Linux : une quinzaine de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), GED avec OCR (Paperless), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy, déployés et pilotés de façon reproductible.",
+      en: "Self-hosted infrastructure on a Linux NAS: around fifteen containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), document management with OCR (Paperless), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications, deployed and managed reproducibly.",
     },
     tags: ["Docker", "Linux", "Caddy", "Vaultwarden", "self-hosting"],
     asset: "homelab",
@@ -88,8 +88,8 @@ const PROJECTS: Project[] = [
     folder: { fr: "reseau", en: "network" },
     title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
     desc: {
-      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, filtrage DNS (AdGuard Home — pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Objectif atteint : un réseau cloisonné, sécurisé et performant, administré sous Linux.",
-      en: "Pro-grade home network: VLAN segmentation, firewall, DNS filtering (AdGuard Home — ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. Outcome: a segmented, secure and high-throughput network, administered on Linux.",
+      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, filtrage DNS (AdGuard Home : pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Le tout administré sous Linux, en ligne de commande.",
+      en: "Pro-grade home network: VLAN segmentation, firewall, DNS filtering (AdGuard Home: ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. All administered on Linux, from the command line.",
     },
     tags: ["Réseau", "VLAN", "AdGuard", "10 GbE", "iptables"],
     asset: "reseau",
@@ -116,8 +116,8 @@ const PROJECTS: Project[] = [
       en: "Resilience & backups",
     },
     desc: {
-      fr: "Stratégie de sauvegarde de bout en bout : snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL) poussés vers un poste externe, déclenchés automatiquement à l'allumage du PC. Rétention 7 j / 4 sem / 6 mois, restauration testée, redondance RAID1 et dead-man's-switch (alerte si une sauvegarde manque). Objectif : pouvoir tout restaurer — et l'avoir prouvé.",
-      en: "End-to-end backup strategy: encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps) pushed to an external machine, triggered automatically when the PC powers on. 7-day / 4-week / 6-month retention, tested restore, RAID1 redundancy and a dead-man's-switch (alert if a backup is missing). Goal: be able to restore everything — and having proven it.",
+      fr: "Snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL), poussés vers un poste externe et déclenchés automatiquement à l'allumage du PC. Rétention 7 j / 4 sem / 6 mois, restauration testée, redondance RAID1 et dead-man's-switch (alerte si une sauvegarde manque). Restauration testée, pas seulement configurée.",
+      en: "Encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps), pushed to an external machine and triggered automatically when the PC powers on. 7-day / 4-week / 6-month retention, tested restore, RAID1 redundancy and a dead-man's-switch (alert if a backup is missing). The restore is tested, not just configured.",
     },
     tags: ["restic", "Chiffrement", "RAID1", "Automatisation", "PRA"],
     asset: "resilience",
@@ -163,7 +163,7 @@ export default function Projects() {
                   <button
                     type="button"
                     onClick={() => setZoomed(p)}
-                    aria-label={`${t("projects", "zoom", lang)} — ${p.title[lang]}`}
+                    aria-label={`${t("projects", "zoom", lang)} : ${p.title[lang]}`}
                     className="group/img relative block w-full cursor-zoom-in p-0"
                   >
                     <ProjectVisual

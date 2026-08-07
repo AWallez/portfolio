@@ -15,7 +15,7 @@ type Item = {
 const TIMELINE: Item[] = [
   {
     type: "exp",
-    date: { fr: "2023 — Maintenant", en: "2023 — Now" },
+    date: { fr: "2023 – Maintenant", en: "2023 – Now" },
     place: "Indépendant · Savigny-le-Temple (77)",
     role: { fr: "Développeur freelance", en: "Freelance Developer" },
     desc: {
@@ -25,7 +25,7 @@ const TIMELINE: Item[] = [
   },
   {
     type: "exp",
-    date: { fr: "2020 — Maintenant", en: "2020 — Now" },
+    date: { fr: "2020 – Maintenant", en: "2020 – Now" },
     place: "Caserne de Savigny-le-Temple (77)",
     role: { fr: "Sapeur-pompier volontaire", en: "Volunteer Firefighter" },
     desc: {
@@ -35,7 +35,7 @@ const TIMELINE: Item[] = [
   },
   {
     type: "exp",
-    date: { fr: "2023 — 2024", en: "2023 — 2024" },
+    date: { fr: "2023 – 2024", en: "2023 – 2024" },
     place: "Picnic Fulfilment Center · Moissy-Cramayel (77)",
     role: {
       fr: "Gestionnaire de stock (CDI)",
@@ -48,11 +48,11 @@ const TIMELINE: Item[] = [
   },
   {
     type: "edu",
-    date: { fr: "2021 — 2023", en: "2021 — 2023" },
+    date: { fr: "2021 – 2023", en: "2021 – 2023" },
     place: "IPSSI Paris · Lycée Jacques Prévert",
     role: {
-      fr: "BTS SIO SLAM — Solutions Logicielles & Applications Métiers",
-      en: "BTS SIO SLAM — Software Solutions & Business Applications",
+      fr: "BTS SIO SLAM, Solutions Logicielles & Applications Métiers",
+      en: "BTS SIO SLAM, Software Solutions & Business Applications",
     },
     desc: {
       fr: "Conception et développement d'applications, bases de données et programmation orientée objet.",
@@ -61,7 +61,7 @@ const TIMELINE: Item[] = [
   },
   {
     type: "exp",
-    date: { fr: "2021 — 2022", en: "2021 — 2022" },
+    date: { fr: "2021 – 2022", en: "2021 – 2022" },
     place: "LessonSharing · Saint-Pierre-du-Perray (91)",
     role: {
       fr: "Développeur Full-Stack Junior (alternance)",
@@ -74,11 +74,11 @@ const TIMELINE: Item[] = [
   },
   {
     type: "edu",
-    date: { fr: "2019 — 2020", en: "2019 — 2020" },
+    date: { fr: "2019 – 2020", en: "2019 – 2020" },
     place: "Lycée de la Mare Carrée · Moissy-Cramayel (77)",
     role: {
-      fr: "Bac STI2D SIN — Systèmes d'Information et Numérique",
-      en: "STI2D Baccalaureate SIN — Information & Digital Systems",
+      fr: "Bac STI2D SIN, Systèmes d'Information et Numérique",
+      en: "STI2D Baccalaureate SIN, Information & Digital Systems",
     },
     desc: {
       fr: "Bases du développement, des réseaux et des systèmes numériques ; premiers pas en programmation.",

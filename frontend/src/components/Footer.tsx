@@ -181,7 +181,7 @@ export default function Footer() {
                      gap-2 sm:gap-4 text-center"
         >
           <p>
-            © {year} Alexis Wallez — {t("footer", "rights", lang)}
+            © {year} Alexis Wallez · {t("footer", "rights", lang)}
           </p>
           <nav className="flex items-center gap-4">
             <a

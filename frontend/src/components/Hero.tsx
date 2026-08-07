@@ -8,7 +8,7 @@ const LINES_FR: Line[] = [
   {
     path: "~/portfolio",
     command: "whoami",
-    output: "Alexis Wallez — Développeur Full-Stack & DevOps",
+    output: "Alexis Wallez · Développeur Full-Stack & DevOps",
   },
   {
     path: "~/portfolio",
@@ -34,7 +34,7 @@ const LINES_EN: Line[] = [
   {
     path: "~/portfolio",
     command: "whoami",
-    output: "Alexis Wallez — Full-Stack Developer & DevOps",
+    output: "Alexis Wallez · Full-Stack Developer & DevOps",
   },
   {
     path: "~/portfolio",
@@ -66,50 +66,50 @@ const SPINNER = {
 const TERM = {
   fr: {
     hint: "tape help ↵",
-    ariaInput: "Terminal interactif — tape une commande (ex. help)",
+    ariaInput: "Terminal interactif, tape une commande (ex. help)",
     help: [
       "Commandes : whoami · ls · cd <section> · cv · theme · lang · clear",
       "Sections : a-propos · competences · parcours · projets · services · contact",
       "Astuce : quelques easter eggs se cachent ici… 😉",
     ],
-    whoami: "Alexis Wallez — Développeur Full-Stack & DevOps",
+    whoami: "Alexis Wallez · Développeur Full-Stack & DevOps",
     ls: "a-propos/   competences/   parcours/   projets/   services/   contact.sh",
     cv: "Ouverture du CV…",
-    goto: (s: string) => `cd /${s} — c'est parti ▸`,
-    home: "~ — retour en haut ▸",
+    goto: (s: string) => `cd /${s} · c'est parti ▸`,
+    home: "~ · retour en haut ▸",
     cdErr: (p: string) =>
       `bash : cd : ${p} : Aucun fichier ou dossier de ce type`,
     theme: "Bascule du thème ✓",
     langSame: "Déjà en français 😉  (essaie « lang en »)",
-    sudo: "[sudo] Mot de passe : ●●●●●●●● — accès refusé 😄",
+    sudo: "[sudo] Mot de passe : ●●●●●●●● · accès refusé 😄",
     coffee:
       "☕ Café en préparation… prêt ! Je le prends volontiers en vrai aussi.",
     rmrf: "🚨 Bien tenté ! Heureusement, tout est versionné sur GitHub.",
-    exit: "Pas de sortie ici — mais le formulaire de contact est juste en bas 😉",
+    exit: "Pas de sortie ici, mais le formulaire de contact est juste en bas 😉",
     notFound: (c: string) =>
-      `bash : ${c} : commande introuvable — tape « help »`,
+      `bash : ${c} : commande introuvable, tape « help »`,
   },
   en: {
     hint: "type help ↵",
-    ariaInput: "Interactive terminal — type a command (e.g. help)",
+    ariaInput: "Interactive terminal, type a command (e.g. help)",
     help: [
       "Commands: whoami · ls · cd <section> · cv · theme · lang · clear",
       "Sections: about · skills · career · projects · services · contact",
       "Hint: a few easter eggs are hiding here… 😉",
     ],
-    whoami: "Alexis Wallez — Full-Stack Developer & DevOps",
+    whoami: "Alexis Wallez · Full-Stack Developer & DevOps",
     ls: "about/   skills/   career/   projects/   services/   contact.sh",
     cv: "Opening the CV…",
-    goto: (s: string) => `cd /${s} — let's go ▸`,
-    home: "~ — back to top ▸",
+    goto: (s: string) => `cd /${s} · let's go ▸`,
+    home: "~ · back to top ▸",
     cdErr: (p: string) => `bash: cd: ${p}: No such file or directory`,
     theme: "Theme switched ✓",
     langSame: "Already in English 😉  (try “lang fr”)",
-    sudo: "[sudo] Password: ●●●●●●●● — permission denied 😄",
+    sudo: "[sudo] Password: ●●●●●●●● · permission denied 😄",
     coffee: "☕ Brewing coffee… done! Happy to grab a real one too.",
     rmrf: "🚨 Nice try! Luckily, everything is versioned on GitHub.",
-    exit: "No exit here — but the contact form is right below 😉",
-    notFound: (c: string) => `bash: ${c}: command not found — type “help”`,
+    exit: "No exit here, but the contact form is right below 😉",
+    notFound: (c: string) => `bash: ${c}: command not found, type “help”`,
   },
 };
 

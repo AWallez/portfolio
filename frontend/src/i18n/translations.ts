@@ -6,12 +6,12 @@ export const translations = {
     title: { fr: "À propos", en: "About" },
     command: { fr: "cat a-propos.md", en: "cat about.md" },
     body: {
-      fr: "Développeur web full-stack indépendant depuis 2023, je conçois des applications de bout en bout : du front-end à la mise en ligne.  Ma particularité, c'est de ne pas m'arrêter au code : Linux, Docker, le réseau et l'auto-hébergement font partie de mon quotidien. Le DevOps s'impose alors comme une évolution naturelle — il réunit mes deux centres d'intérêt, le développement et les systèmes & réseau.",
-      en: "I’ve been a freelance full-stack web developer since 2023, and I build applications from start to finish: from the front end to deployment. What sets me apart is that I don’t stop at just coding: Linux, Docker, networking, and self-hosting are all part of my daily routine. DevOps has therefore emerged as a natural progression — it brings together my two main areas of interest: development and systems & networking.",
+      fr: "Développeur web full-stack indépendant depuis 2023, je prends les projets de la maquette jusqu'à la mise en production. Ma particularité, c'est de ne pas m'arrêter au code : Linux, Docker, le réseau et l'auto-hébergement font partie de mon quotidien. Le DevOps, c'est la suite logique. Ça réunit mes deux centres d'intérêt : le développement et les systèmes.",
+      en: "I’ve been a freelance full-stack web developer since 2023, and I take projects from the mockup through to production. My thing is that I don’t stop at the code: Linux, Docker, networking and self-hosting are part of my daily routine. DevOps is the logical next step. It brings together the two things I care about: development and systems.",
     },
     extra: {
-      fr: "Autodidacte avant tout, j'apprends vite, je m'adapte et je trouve des solutions — par passion. Sapeur-pompier volontaire, j'y cultive rigueur, sang-froid et esprit d'équipe. Ouvert à toute opportunité professionnelle comme aux missions freelance.",
-      en: "Self-taught at heart, I learn fast, adapt and find solutions — driven by passion. As a volunteer firefighter, I've built rigor, composure and teamwork. Open to any professional opportunity as well as freelance projects.",
+      fr: "Autodidacte avant tout : j'apprends vite et je creuse jusqu'à ce que ça marche. Sapeur-pompier volontaire depuis 2020, j'y ai appris le sang-froid et le travail d'équipe, sous pression. Ouvert à toute opportunité professionnelle comme aux missions freelance.",
+      en: "Self-taught first and foremost: I learn fast and I dig until it works. I've been a volunteer firefighter since 2020, where I learned composure and teamwork under pressure. Open to any professional opportunity as well as freelance projects.",
     },
     factExp: { fr: "~4 ans d'expérience", en: "~4 years of experience" },
     factStatus: {
@@ -118,7 +118,7 @@ export const translations = {
       en: "Download résumé (PDF)",
     },
     viewCV: { fr: "Voir le CV", en: "View résumé" },
-    cvTitle: { fr: "CV — Alexis Wallez", en: "Résumé — Alexis Wallez" },
+    cvTitle: { fr: "CV · Alexis Wallez", en: "Résumé · Alexis Wallez" },
     loading: { fr: "Chargement…", en: "Loading…" },
     zoomIn: { fr: "Zoom avant", en: "Zoom in" },
     zoomOut: { fr: "Zoom arrière", en: "Zoom out" },
@@ -149,8 +149,8 @@ export const translations = {
     privacy: { fr: "Confidentialité", en: "Privacy" },
     // badge « infra live » : état réel renvoyé par l'API auto-hébergée (/api/health)
     hostOnline: {
-      fr: "infra en ligne — hébergée sur mon NAS",
-      en: "infra live — hosted on my NAS",
+      fr: "infra en ligne, hébergée sur mon NAS",
+      en: "infra live, hosted on my NAS",
     },
     hostOffline: {
       fr: "API momentanément hors ligne",

@@ -48,13 +48,13 @@ export const MENTIONS: LegalDoc = {
         {
           ul: [
             {
-              fr: `${IDENTITY.name} — entrepreneur individuel`,
-              en: `${IDENTITY.name} — sole trader (entrepreneur individuel)`,
+              fr: `${IDENTITY.name}, entrepreneur individuel`,
+              en: `${IDENTITY.name}, sole trader (entrepreneur individuel)`,
             },
             { fr: IDENTITY.address, en: IDENTITY.address },
             {
-              fr: `SIRET : ${IDENTITY.siret} — code APE ${IDENTITY.ape} (programmation informatique)`,
-              en: `Business ID (SIRET): ${IDENTITY.siret} — activity code ${IDENTITY.ape} (computer programming)`,
+              fr: `SIRET : ${IDENTITY.siret} · code APE ${IDENTITY.ape} (programmation informatique)`,
+              en: `Business ID (SIRET): ${IDENTITY.siret} · activity code ${IDENTITY.ape} (computer programming)`,
             },
             // Franchise en base : c'est la mention réglementaire qui est
             // attendue, pas le numéro intracommunautaire. Celui-ci existe et
@@ -97,8 +97,8 @@ export const MENTIONS: LegalDoc = {
       blocks: [
         {
           p: {
-            fr: `L'ensemble du contenu de ce site — textes, visuels, identité graphique et code — appartient à ${IDENTITY.name}, sauf mention contraire. Le code source est consultable publiquement sur GitHub à des fins de démonstration ; en l'absence de licence explicite, aucun droit d'exploitation, de reproduction ou de réutilisation n'est accordé.`,
-            en: `All content on this site — text, visuals, brand identity and code — belongs to ${IDENTITY.name} unless stated otherwise. The source code is publicly viewable on GitHub for demonstration purposes; absent an explicit licence, no right to use, reproduce or reuse it is granted.`,
+            fr: `L'ensemble du contenu de ce site (textes, visuels, identité graphique et code) appartient à ${IDENTITY.name}, sauf mention contraire. Le code source est consultable publiquement sur GitHub à des fins de démonstration ; en l'absence de licence explicite, aucun droit d'exploitation, de reproduction ou de réutilisation n'est accordé.`,
+            en: `All content on this site (text, visuals, brand identity and code) belongs to ${IDENTITY.name} unless stated otherwise. The source code is publicly viewable on GitHub for demonstration purposes; absent an explicit licence, no right to use, reproduce or reuse it is granted.`,
           },
         },
       ],
@@ -188,16 +188,16 @@ export const PRIVACY: LegalDoc = {
         {
           ul: [
             {
-              fr: "Répondre à votre demande et, si elle aboutit, préparer une éventuelle collaboration — base légale : mesures précontractuelles prises à votre demande.",
-              en: "To answer your request and, if it goes forward, prepare a possible collaboration — legal basis: pre-contractual steps taken at your request.",
+              fr: "Répondre à votre demande et, si elle aboutit, préparer une éventuelle collaboration. Base légale : mesures précontractuelles prises à votre demande.",
+              en: "To answer your request and, if it goes forward, prepare a possible collaboration. Legal basis: pre-contractual steps taken at your request.",
             },
             {
-              fr: "Protéger le formulaire des envois automatisés et des abus (l'adresse IP et le user-agent ne servent qu'à cela) — base légale : intérêt légitime.",
-              en: "To protect the form from automated submissions and abuse (the IP address and user-agent serve only this purpose) — legal basis: legitimate interest.",
+              fr: "Protéger le formulaire des envois automatisés et des abus (l'adresse IP et le user-agent ne servent qu'à cela). Base légale : intérêt légitime.",
+              en: "To protect the form from automated submissions and abuse (the IP address and user-agent serve only this purpose). Legal basis: legitimate interest.",
             },
             {
-              fr: "Garder trace des échanges en cours pour assurer un suivi cohérent — base légale : intérêt légitime.",
-              en: "To keep track of ongoing exchanges for consistent follow-up — legal basis: legitimate interest.",
+              fr: "Garder trace des échanges en cours pour assurer un suivi cohérent. Base légale : intérêt légitime.",
+              en: "To keep track of ongoing exchanges for consistent follow-up. Legal basis: legitimate interest.",
             },
           ],
         },
@@ -215,8 +215,8 @@ export const PRIVACY: LegalDoc = {
         {
           ul: [
             {
-              fr: "Adresse IP et user-agent : effacés au bout d'un an, leur finalité de sécurité étant alors éteinte. Le message, lui, est conservé — il est simplement anonymisé de ces données techniques.",
-              en: "IP address and user-agent: erased after one year, once their security purpose has lapsed. The message itself is kept — it is simply stripped of that technical data.",
+              fr: "Adresse IP et user-agent : effacés au bout d'un an, leur finalité de sécurité étant alors éteinte. Le message, lui, est conservé : il est simplement anonymisé de ces données techniques.",
+              en: "IP address and user-agent: erased after one year, once their security purpose has lapsed. The message itself is kept: it is simply stripped of that technical data.",
             },
             {
               fr: "Message et coordonnées : supprimés trois ans après la réception de votre message, durée de référence retenue par la CNIL en matière de prospection. Si vous me réécrivez, seul le nouveau message repart pour trois ans.",
@@ -252,8 +252,8 @@ export const PRIVACY: LegalDoc = {
       blocks: [
         {
           p: {
-            fr: "Ce site ne dépose aucun cookie de mesure d'audience ni de publicité — c'est pourquoi aucune bannière ne vous est imposée. Le dispositif anti-robot Cloudflare Turnstile peut déposer un cookie strictement nécessaire à son fonctionnement, exempté de consentement.",
-            en: "This site sets no analytics or advertising cookies — which is why you are not shown a banner. The Cloudflare Turnstile anti-bot check may set a cookie strictly necessary to its operation, which is exempt from consent.",
+            fr: "Ce site ne dépose aucun cookie de mesure d'audience ni de publicité, c'est pourquoi aucune bannière ne vous est imposée. Le dispositif anti-robot Cloudflare Turnstile peut déposer un cookie strictement nécessaire à son fonctionnement, exempté de consentement.",
+            en: "This site sets no analytics or advertising cookies, which is why you are not shown a banner. The Cloudflare Turnstile anti-bot check may set a cookie strictly necessary to its operation, which is exempt from consent.",
           },
         },
         {
@@ -269,14 +269,14 @@ export const PRIVACY: LegalDoc = {
       blocks: [
         {
           p: {
-            fr: "Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité sur vos données — y compris sur les notes de suivi vous concernant.",
-            en: "You have the right to access, rectify, erase, restrict, object to and port your data — including any follow-up notes concerning you.",
+            fr: "Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité sur vos données, y compris sur les notes de suivi vous concernant.",
+            en: "You have the right to access, rectify, erase, restrict, object to and port your data, including any follow-up notes concerning you.",
           },
         },
         {
           p: {
-            fr: `Pour les exercer, écrivez à ${IDENTITY.email} : la demande est traitée dans un délai maximum d'un mois. Si la réponse ne vous convient pas, vous pouvez saisir la CNIL — 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07, ou cnil.fr.`,
-            en: `To exercise them, write to ${IDENTITY.email}: requests are handled within one month at most. If the response does not satisfy you, you may lodge a complaint with the CNIL — 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07, France, or cnil.fr.`,
+            fr: `Pour les exercer, écrivez à ${IDENTITY.email} : la demande est traitée dans un délai maximum d'un mois. Si la réponse ne vous convient pas, vous pouvez saisir la CNIL : 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07, ou cnil.fr.`,
+            en: `To exercise them, write to ${IDENTITY.email}: requests are handled within one month at most. If the response does not satisfy you, you may lodge a complaint with the CNIL: 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07, France, or cnil.fr.`,
           },
         },
       ],

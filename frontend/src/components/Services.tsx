@@ -46,8 +46,8 @@ const SERVICES: Service[] = [
       en: "Deployment & go-live",
     },
     desc: {
-      fr: "Je vous oriente vers un hébergement reconnu et adapté, puis je vous accompagne — ou je m'occupe de tout — pour la mise en ligne.",
-      en: "I guide you toward a reputable hosting solution that fits your needs, then assist you — or handle everything — to take it live.",
+      fr: "Je vous oriente vers un hébergement reconnu et adapté, puis je vous accompagne pour la mise en ligne, ou je m'occupe de tout.",
+      en: "I guide you toward a reputable hosting solution that fits your needs, then assist you to take it live, or handle everything myself.",
     },
     highlights: {
       fr: [
@@ -69,8 +69,8 @@ const SERVICES: Service[] = [
     folder: { fr: "montage-pc/", en: "pc-assembly/" },
     name: { fr: "Montage PC", en: "PC Assembly" },
     desc: {
-      fr: "Assemblage de configurations sur mesure adaptées à vos besoins : gaming, bureautique ou station de travail.",
-      en: "Custom PC builds tailored to your needs: gaming, office or workstation.",
+      fr: "Assemblage de configurations sur mesure : gaming, bureautique ou station de travail.",
+      en: "Custom PC builds: gaming, office or workstation.",
     },
     highlights: {
       fr: [

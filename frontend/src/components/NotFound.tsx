@@ -6,15 +6,15 @@ import { useLang } from "../i18n/LangContext";
 // Textes localisés en dur ici, comme les lignes du Hero.
 const T = {
   fr: {
-    title: "404 — introuvable · Alexis Wallez",
+    title: "404, page introuvable · Alexis Wallez",
     error: "Aucun fichier ou dossier de ce type",
-    hint: "Le portfolio tient sur une seule page — tout est sur l'accueil.",
+    hint: "Le portfolio tient sur une seule page : tout est sur l'accueil.",
     home: "cd ~  (retour à l'accueil)",
   },
   en: {
-    title: "404 — not found · Alexis Wallez",
+    title: "404, page not found · Alexis Wallez",
     error: "No such file or directory",
-    hint: "This portfolio is a single page — everything lives on the home page.",
+    hint: "This portfolio is a single page: everything lives on the home page.",
     home: "cd ~  (back to home)",
   },
 };
