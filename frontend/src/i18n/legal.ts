@@ -27,13 +27,13 @@ export type LegalDoc = {
 export const IDENTITY = {
   name: "Alexis Wallez",
   address: "5 allée des Aravis, 77176 Savigny-le-Temple, France",
-  siret: "952 663 938 00019",
+  siret: "952 663 938 00035",
   ape: "6201Z",
   email: "wallezalexis@gmail.com",
   phone: "+33 6 49 28 06 73",
 };
 
-const UPDATED = "2026-08-03";
+const UPDATED = "2026-08-07";
 
 /* ------------------------------------------------------------------ */
 /* Mentions légales                                                     */
