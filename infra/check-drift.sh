@@ -54,14 +54,11 @@ stale=0
 while read -r name container path; do
   [ -n "$name" ] || continue
 
-  want=$(git_c log -1 --format=%H origin/main -- "$path" | tr -d '\r')
   got=$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' \
     "$container" 2>/dev/null | tr -d '\r' || echo absent)
   case "$got" in "" | "<no value>") got=unknown ;; esac
 
-  if [ "$got" = "$want" ]; then
-    signature="$signature $name=ok"
-  elif [ "$got" = absent ]; then
+  if [ "$got" = absent ]; then
     signature="$signature $name=absent"
     stale=1
     report="$report
@@ -73,15 +70,28 @@ while read -r name container path; do
     report="$report
   $name : image sans marqueur, redéployer pour l'initialiser"
   else
-    # nombre de commits en retard SUR CE CHEMIN. Le repli ne peut PAS s'écrire
-    # `... | tr … || echo '?'` : le || teste le dernier maillon du tube, et `tr`
-    # réussit même sur une entrée vide, donc il ne se déclencherait jamais.
+    # LE test. Surtout pas une égalité de SHA : le label porte la tête du dépôt
+    # au moment du build, pas le dernier commit ayant touché CE service. Un
+    # commit ne concernant qu'un autre service ferait donc diverger les deux
+    # valeurs alors que rien n'est en retard. On compte les commits touchant ce
+    # chemin entre l'image et main : zéro = à jour, quel que soit le SHA gravé.
+    #
+    # Le repli ne peut PAS s'écrire `... | tr … || echo '?'` : le || teste le
+    # dernier maillon du tube, et `tr` réussit même sur une entrée vide.
     n=$(git_c rev-list --count "$got..origin/main" -- "$path" 2>/dev/null | tr -d '\r')
-    [ -n "$n" ] || n='?' # SHA absent de l'historique (rebase, force-push)
-    signature="$signature $name=stale"
-    stale=1
-    report="$report
+    if [ -z "$n" ]; then # SHA absent de l'historique (rebase, force-push)
+      signature="$signature $name=inconnu"
+      stale=1
+      report="$report
+  $name : commit $got introuvable dans l'historique"
+    elif [ "$n" = 0 ]; then
+      signature="$signature $name=ok"
+    else
+      signature="$signature $name=stale"
+      stale=1
+      report="$report
   $name : $n commit(s) non déployé(s)"
+    fi
   fi
 done <<EOF
 web portfolio-web frontend
