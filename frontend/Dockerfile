@@ -18,3 +18,11 @@ EXPOSE 80
 # ::1, or Nginx n'écoute qu'en IPv4 (listen 80) → "connection refused" au healthcheck.
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD wget -q --spider http://127.0.0.1/ || exit 1
+
+# Commit d'où sort cette image (deploy.sh renseigne GIT_SHA). Relu par
+# infra/check-drift.sh pour comparer CE QUI TOURNE à ce qu'il y a dans main —
+# une intention notée dans un fichier mentirait dès qu'on build à la main.
+# En dernier volontairement : la couche est minuscule et le SHA change à chaque
+# commit, donc plus haut il invaliderait le cache de `npm ci` et du build.
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.revision=$GIT_SHA

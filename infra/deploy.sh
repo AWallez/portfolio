@@ -22,6 +22,14 @@
 
 set -eu
 
+# git dans un conteneur : le NAS n'en a pas, et son bridge Docker est cassé
+# (d'où --network host). Mêmes options partout, d'où cette fonction.
+git_c() {
+  docker run --rm --network host -w /repo \
+    --user "$(id -u):$(id -g)" -v "$REPO:/repo" \
+    alpine/git -c safe.directory=/repo "$@"
+}
+
 # Valide la configuration Caddy dans un conteneur jetable.
 #
 # Une erreur de Caddyfile ne se voit PAS tant que Caddy tourne : il garde sa
@@ -55,9 +63,14 @@ main() {
   SERVICES=${*:-web api admin}
 
   echo "→ dépôt : $REPO"
-  docker run --rm --network host -w /repo \
-    --user "$(id -u):$(id -g)" -v "$REPO:/repo" \
-    alpine/git -c safe.directory=/repo pull
+  git_c pull
+
+  # Grave le commit dans les images reconstruites (cf. les ARG GIT_SHA des
+  # Dockerfile). C'est ce que relit `check-drift.sh` pour savoir si ce qui
+  # tourne correspond encore à main — donc à faire APRÈS le pull.
+  GIT_SHA=$(git_c rev-parse HEAD | tr -d '\r')
+  export GIT_SHA
+  echo "→ commit : $GIT_SHA"
 
   cd "$REPO/infra"
   check_caddy "$REPO"

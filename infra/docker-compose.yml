@@ -57,6 +57,10 @@ services:
       # réseau hôte pendant le build : les RUN (npm ci) sont sinon droppés par
       # le pare-feu UGOS en « Accès refusé » (même piège que caddy-ratelimit)
       network: host
+      # commit gravé dans l'image, lu par infra/check-drift.sh (deploy.sh exporte
+      # GIT_SHA ; « unknown » si on build à la main sans passer par lui)
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     container_name: portfolio-api
     restart: unless-stopped
     environment:
@@ -90,6 +94,8 @@ services:
       # réseau hôte pendant le build : les RUN (npm ci) sont sinon droppés par
       # le pare-feu UGOS en « Accès refusé » (même piège que caddy-ratelimit)
       network: host
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     container_name: portfolio-admin
     restart: unless-stopped
     environment:
@@ -116,6 +122,8 @@ services:
     build:
       context: ../frontend
       network: host
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     container_name: portfolio-web
     restart: unless-stopped
     depends_on:

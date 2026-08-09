@@ -15,3 +15,7 @@ ENV NODE_ENV=production
 USER node
 EXPOSE 3001
 CMD ["npm", "start"]
+
+# Commit d'où sort cette image — cf. frontend/Dockerfile pour le pourquoi.
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.revision=$GIT_SHA

@@ -34,3 +34,5 @@ Thumbs.db
 # blocs Caddy des services personnels + override compose (image/réseaux)
 infra/conf.d/*.caddy
 infra/docker-compose.override.yml
+# état du dernier contrôle de check-drift.sh (propre à la machine)
+infra/.drift-state
