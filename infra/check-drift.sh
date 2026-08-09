@@ -66,10 +66,18 @@ while read -r name container path; do
     stale=1
     report="$report
   $name : conteneur absent"
+  elif [ "$got" = unknown ]; then
+    # image construite avant l'ajout du LABEL, ou build à la main sans deploy.sh
+    signature="$signature $name=sans-marqueur"
+    stale=1
+    report="$report
+  $name : image sans marqueur, redéployer pour l'initialiser"
   else
-    # nombre de commits en retard SUR CE CHEMIN ; « ? » si le SHA gravé est
-    # inconnu de l'historique (image d'avant l'ajout du label, ou rebase)
-    n=$(git_c rev-list --count "$got..origin/main" -- "$path" 2>/dev/null | tr -d '\r' || echo '?')
+    # nombre de commits en retard SUR CE CHEMIN. Le repli ne peut PAS s'écrire
+    # `... | tr … || echo '?'` : le || teste le dernier maillon du tube, et `tr`
+    # réussit même sur une entrée vide, donc il ne se déclencherait jamais.
+    n=$(git_c rev-list --count "$got..origin/main" -- "$path" 2>/dev/null | tr -d '\r')
+    [ -n "$n" ] || n='?' # SHA absent de l'historique (rebase, force-push)
     signature="$signature $name=stale"
     stale=1
     report="$report
@@ -93,7 +101,11 @@ if [ -z "$started" ]; then
   report="$report
   caddy : conteneur absent"
 else
-  last=$(git_c log -1 --format=%ct origin/main -- infra | tr -d '\r')
+  # Uniquement les fichiers que Caddy LIT réellement. Surveiller tout infra/
+  # le ferait passer en périmé dès qu'on touche deploy.sh ou ce script, alors
+  # que le conteneur n'en dépend pas — une fausse alerte à répétition, donc
+  # une alerte qu'on finit par ne plus lire.
+  last=$(git_c log -1 --format=%ct origin/main -- infra/Caddyfile infra/conf.d | tr -d '\r')
   # `date -d` échouerait sur un format inattendu : on ne veut pas casser le
   # contrôle des autres services pour autant.
   if started_ts=$(date -d "$started" +%s 2>/dev/null); then
