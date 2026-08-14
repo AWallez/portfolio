@@ -3,10 +3,12 @@
 // Séparé de translations.ts : celui-ci porte des libellés d'interface, ceci de
 // la prose juridique. Les mélanger rendrait les deux pénibles à relire.
 //
-// ⚠️ Deux points doivent rester synchronisés avec le reste du dépôt :
+// ⚠️ Trois points doivent rester synchronisés avec le reste du dépôt :
 //  - les durées de conservation annoncées ici = celles appliquées par
 //    backend/src/retention.ts ;
-//  - la liste des données collectées = les colonnes de backend/db/schema.sql.
+//  - la liste des données collectées = les colonnes de backend/db/schema.sql ;
+//  - les 25 mois de rétention des statistiques = la purge planifiée sur le NAS
+//    (/volume1/docker/umami/purge-umami.sh, cron quotidien), hors dépôt.
 
 type Bi = { fr: string; en: string };
 type Block = { p: Bi } | { ul: Bi[] };
@@ -33,7 +35,7 @@ export const IDENTITY = {
   phone: "+33 6 49 28 06 73",
 };
 
-const UPDATED = "2026-08-07";
+const UPDATED = "2026-08-14";
 
 /* ------------------------------------------------------------------ */
 /* Mentions légales                                                     */
@@ -154,8 +156,8 @@ export const PRIVACY: LegalDoc = {
       blocks: [
         {
           p: {
-            fr: "Le formulaire de contact est le seul point de collecte du site. Sont enregistrés :",
-            en: "The contact form is the site's only collection point. The following is recorded:",
+            fr: "Le formulaire de contact est le principal point de collecte du site. Sont enregistrés :",
+            en: "The contact form is the site's main collection point. The following is recorded:",
           },
         },
         {
@@ -176,8 +178,14 @@ export const PRIVACY: LegalDoc = {
         },
         {
           p: {
-            fr: "Aucune autre donnée n'est collectée : ce site n'utilise ni mesure d'audience, ni traceur publicitaire, ni réseau social embarqué.",
-            en: "No other data is collected: this site uses no analytics, no advertising trackers and no embedded social widgets.",
+            fr: "Une mesure d'audience auto-hébergée enregistre par ailleurs, à chaque page vue : la page consultée, le site ou le moteur de recherche d'où vous venez, votre pays, votre langue, ainsi que le type d'appareil, le navigateur et le système d'exploitation. Votre adresse IP sert uniquement, en mémoire vive, à calculer un identifiant de visite anonyme renouvelé chaque jour : elle n'est jamais enregistrée.",
+            en: "A self-hosted audience measurement additionally records, for each page view: the page visited, the site or search engine you came from, your country, your language, and the device type, browser and operating system. Your IP address is used only in memory, to compute an anonymous visit identifier that is renewed daily: it is never stored.",
+          },
+        },
+        {
+          p: {
+            fr: "Aucune autre donnée n'est collectée : ce site n'utilise ni traceur publicitaire, ni réseau social embarqué, et ne vous suit pas d'un site à l'autre.",
+            en: "No other data is collected: this site uses no advertising trackers, no embedded social widgets, and does not follow you across websites.",
           },
         },
       ],
@@ -198,6 +206,10 @@ export const PRIVACY: LegalDoc = {
             {
               fr: "Garder trace des échanges en cours pour assurer un suivi cohérent. Base légale : intérêt légitime.",
               en: "To keep track of ongoing exchanges for consistent follow-up. Legal basis: legitimate interest.",
+            },
+            {
+              fr: "Mesurer la fréquentation du site (pages consultées, provenance) afin de l'améliorer. La mesure est anonyme et limitée à ce seul site. Base légale : intérêt légitime.",
+              en: "To measure site traffic (pages viewed, referrers) in order to improve it. The measurement is anonymous and limited to this site alone. Legal basis: legitimate interest.",
             },
           ],
         },
@@ -222,6 +234,10 @@ export const PRIVACY: LegalDoc = {
               fr: "Message et coordonnées : supprimés trois ans après la réception de votre message, durée de référence retenue par la CNIL en matière de prospection. Si vous me réécrivez, seul le nouveau message repart pour trois ans.",
               en: "Message and contact details: deleted three years after your message is received, the reference period used by the French data protection authority (CNIL) for business prospecting. If you write again, only the new message starts a fresh three-year period.",
             },
+            {
+              fr: "Statistiques de fréquentation : effacées au bout de vingt-cinq mois, durée maximale recommandée par la CNIL pour la mesure d'audience. Elles ne contiennent aucune donnée permettant de vous identifier.",
+              en: "Traffic statistics: erased after twenty-five months, the maximum period recommended by the CNIL for audience measurement. They contain no data that could identify you.",
+            },
           ],
         },
       ],
@@ -240,8 +256,8 @@ export const PRIVACY: LegalDoc = {
               en: "Cloudflare, provider of the form's anti-bot check (Turnstile): your IP address is sent to it for the duration of the verification. This transfer outside the European Union is governed by the European Commission's standard contractual clauses.",
             },
             {
-              fr: "Aucun autre tiers. Les données sont stockées sur une infrastructure auto-hébergée en France, sur une base de données qui n'est pas exposée à Internet.",
-              en: "No other third party. Data is stored on self-hosted infrastructure in France, in a database that is not exposed to the internet.",
+              fr: "Aucun autre tiers. Les données sont stockées sur une infrastructure auto-hébergée en France, sur une base de données qui n'est pas exposée à Internet. La mesure d'audience tourne sur cette même infrastructure : aucune statistique n'est transmise à un service externe.",
+              en: "No other third party. Data is stored on self-hosted infrastructure in France, in a database that is not exposed to the internet. The audience measurement runs on that same infrastructure: no statistics are sent to any external service.",
             },
           ],
         },
@@ -252,8 +268,8 @@ export const PRIVACY: LegalDoc = {
       blocks: [
         {
           p: {
-            fr: "Ce site ne dépose aucun cookie de mesure d'audience ni de publicité, c'est pourquoi aucune bannière ne vous est imposée. Le dispositif anti-robot Cloudflare Turnstile peut déposer un cookie strictement nécessaire à son fonctionnement, exempté de consentement.",
-            en: "This site sets no analytics or advertising cookies, which is why you are not shown a banner. The Cloudflare Turnstile anti-bot check may set a cookie strictly necessary to its operation, which is exempt from consent.",
+            fr: "Ce site ne dépose aucun cookie de mesure d'audience ni de publicité, c'est pourquoi aucune bannière ne vous est imposée. La mesure d'audience fonctionne sans cookie et sans identifiant persistant, ce qui la place dans le cadre exempté de consentement défini par la CNIL. Le dispositif anti-robot Cloudflare Turnstile peut déposer un cookie strictement nécessaire à son fonctionnement, également exempté.",
+            en: "This site sets no analytics or advertising cookies, which is why you are not shown a banner. The audience measurement works without cookies and without any persistent identifier, which places it within the consent-exempt framework defined by the CNIL. The Cloudflare Turnstile anti-bot check may set a cookie strictly necessary to its operation, likewise exempt.",
           },
         },
         {
