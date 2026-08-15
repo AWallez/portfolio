@@ -13,6 +13,19 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
+# Vite GÉNÈRE index.html et assets/ (donc en 644/755), mais RECOPIE le contenu
+# de public/ tel quel, en conservant son mode d'origine. Sur le NAS, l'umask
+# UGOS donne 770 aux fichiers du dépôt, et le COPY docker le propage jusqu'ici
+# → les workers nginx (utilisateur `nginx`, ni propriétaire ni dans le groupe)
+# ne peuvent pas les lire : 403 sur le favicon, l'og-image, robots.txt,
+# sitemap.xml et les six fichiers de CV. Même piège que le --chown des
+# Dockerfile backend/ et admin/.
+# On normalise plutôt qu'on ne --chown : le résultat ne dépend alors ni des
+# permissions de la machine de build, ni de l'utilisateur qu'nginx emploie.
+# `chmod -R a+rX` ne suffirait pas : le X majuscule ajoute aussi le bit
+# d'exécution aux fichiers qui en ont DÉJÀ un, ce qui est le cas ici (770).
+RUN find /usr/share/nginx/html -type d -exec chmod 755 {} + \
+  && find /usr/share/nginx/html -type f -exec chmod 644 {} +
 EXPOSE 80
 # 127.0.0.1 (pas localhost) : dans le conteneur, localhost résout d'abord en IPv6
 # ::1, or Nginx n'écoute qu'en IPv4 (listen 80) → "connection refused" au healthcheck.
