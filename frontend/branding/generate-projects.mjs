@@ -452,7 +452,7 @@ function homelab(p, lang) {
       [606, 264, "Caddy", "reverse proxy / HTTPS"],
       [400, 326, "Vaultwarden", "mots de passe"],
       [606, 326, "AdGuard", "filtrage DNS"],
-      [400, 388, "Paperless", "GED · OCR"],
+      [400, 388, "Umami", "statistiques"],
       [606, 388, "Jellyfin", "streaming média"],
     ],
     [
@@ -462,17 +462,17 @@ function homelab(p, lang) {
       [606, 264, "Caddy", "reverse proxy / HTTPS"],
       [400, 326, "Vaultwarden", "password manager"],
       [606, 326, "AdGuard", "DNS filtering"],
-      [400, 388, "Paperless", "docs · OCR"],
+      [400, 388, "Umami", "analytics"],
       [606, 388, "Jellyfin", "media streaming"],
     ],
   );
   services.forEach(([x, y, name, sub]) => {
     s += svc(x, y, name, sub);
   });
-  s += T(400, 458, 11, p.muted, tr("+ Vaultwarden · AdGuard · Homepage · durcissement", "+ Vaultwarden · AdGuard · Homepage · hardening"), { op: 0.85 });
+  s += T(400, 458, 11, p.muted, tr("+ Uptime Kuma · Dockge · tableau de bord maison · durcissement", "+ Uptime Kuma · Dockge · home-made dashboard · hardening"), { op: 0.85 });
   s += `<rect x="400" y="470" width="402" height="56" rx="10" fill="${p.soft}"/>`;
   s += T(416, 492, 11, p.muted, "$ docker compose up -d", { mono: true });
-  s += `<circle cx="420" cy="510" r="4" fill="${a}"/>${T(432, 514, 11, a, tr("~15 services actifs", "~15 services running"), { mono: true })}`;
+  s += `<circle cx="420" cy="510" r="4" fill="${a}"/>${T(432, 514, 11, a, tr("tous les services actifs", "all services running"), { mono: true })}`;
 
   // clients
   const cl = (y, label, icon, secure = false) => {
@@ -599,10 +599,10 @@ function monitoring(p, lang) {
     s += T(dx + dw - 40, ry + 29, 11, p.muted, lat, { mono: true, anchor: "end" });
     ry += 56;
   });
-  // ---- Beszel : métriques système (dans l'espace libéré par la 6ᵉ sonde).
+  // ---- Métriques système maison (dans l'espace libéré par la 6ᵉ sonde).
   // y=460 : même écart de 8 px qu'entre les sondes (la 5ᵉ finit à 452) ----
   s += card(dx + 24, 460, dw - 48, 92, p, { r: 10, fill: p.soft, shadow: false });
-  s += T(dx + 40, 482, 11.5, p.ink, tr("Beszel · métriques système", "Beszel · system metrics"), { w: "bold" });
+  s += T(dx + 40, 482, 11.5, p.ink, tr("Métriques système · historique maison", "System metrics · home-made history"), { w: "bold" });
   const gauge = (gx, label, val, pct) => {
     let o = T(gx, 508, 11, p.muted, label, { mono: true });
     o += T(gx + 120, 508, 11, p.ink, val, { mono: true, anchor: "end", w: "bold" });
@@ -614,7 +614,7 @@ function monitoring(p, lang) {
   s += gauge(dx + 192, "RAM", "68 %", 0.68);
   s += gauge(dx + 344, tr("Disque", "Disk"), "58 %", 0.58);
   s += gauge(dx + 496, "Temp", "54 °C", 0.54);
-  s += T(dx + 24, dy + 490, 11, p.muted, tr("Socket Docker · ~15 sondes · watchdog externe (UptimeRobot)", "Docker socket · ~15 checks · external watchdog (UptimeRobot)"), { mono: true, op: 0.85 });
+  s += T(dx + 24, dy + 490, 11, p.muted, tr("Socket Docker · sondes conteneurs · watchdog externe (UptimeRobot)", "Docker socket · container checks · external watchdog (UptimeRobot)"), { mono: true, op: 0.85 });
 
   // ---- Dockge (gestion des stacks Compose) ----
   s += card(rx, dy, rw, 200, p, { r: 16 });
@@ -741,6 +741,162 @@ function resilience(p, lang) {
 }
 
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* 8. dashboard — le portail maison du homelab (dépôt public + démo)    */
+/* ------------------------------------------------------------------ */
+function dashboard(p, lang) {
+  const a = p.accent;
+  const tr = (fr, en) => (lang === "fr" ? fr : en);
+  const up = "#22c55e"; // statut OK (couleurs de statut universelles, hors thème)
+  const warn = "#f59e0b";
+  let s = "";
+
+  // Une fenêtre de navigateur : ce projet est une PAGE, pas un service de fond.
+  const wx = 64,
+    wy = 68,
+    ww = 1072,
+    wh = 544,
+    ix = wx + 24,
+    iw = ww - 48;
+  s += card(wx, wy, ww, wh, p, { r: 16 });
+  s += titlebar(wx, wy, ww, p, "awallez.github.io/homelab", { h: 40 });
+
+  // ---- barre du haut : valeurs ABSOLUES (un pourcentage seul ne dit rien :
+  // « 72 % » ne se compare à rien, « 5,4 / 7,5 Go » se lit d'un coup d'œil) ----
+  const mes = tr(
+    [
+      ["Processeur", "2,1 / 12 cœurs", 0.17],
+      ["Mémoire", "5,4 / 7,5 Go", 0.72],
+      ["Stockage", "4,3 / 8,0 To", 0.54],
+      ["Température", "54 °C", 0.54],
+    ],
+    [
+      ["Processor", "2.1 / 12 cores", 0.17],
+      ["Memory", "5.4 / 7.5 GB", 0.72],
+      ["Storage", "4.3 / 8.0 TB", 0.54],
+      ["Temperature", "54 °C", 0.54],
+    ],
+  );
+  const mw = (iw - 3 * 16) / 4;
+  mes.forEach(([lab, val, pct], i) => {
+    const x = ix + i * (mw + 16),
+      y = wy + 56;
+    s += T(x, y + 16, 15, p.ink, val, { w: "bold", mono: true });
+    s += `<rect x="${x}" y="${y + 26}" width="${mw}" height="5" rx="2.5" fill="${p.line}"/>`;
+    s += `<rect x="${x}" y="${y + 26}" width="${(mw * pct).toFixed(0)}" height="5" rx="2.5" fill="${a}"/>`;
+    s += T(x, y + 47, 11, p.muted, lab);
+  });
+  s += `<line x1="${ix}" y1="${wy + 122}" x2="${ix + iw}" y2="${wy + 122}" stroke="${p.line}"/>`;
+
+  /* Grille bento : cinq natures de données, cinq formes. Les afficher toutes
+     avec une rangée de nombres était le défaut de la version précédente. */
+  const gy = wy + 142,
+    gh = 186,
+    c2 = 504,
+    c1 = 244;
+
+  const tile = (x, y, w, h, title) =>
+    card(x, y, w, h, p, { r: 12, fill: p.soft, shadow: false }) +
+    T(x + 16, y + 24, 12, p.muted, title, { w: "bold" });
+
+  // anneau : une proportion
+  const ring = (cx, cy, r, pct, col, val, lab) => {
+    const c = 2 * Math.PI * r;
+    return (
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${p.line}" stroke-width="7"/>` +
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(c * pct).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>` +
+      T(cx, cy + 5, 13.5, p.ink, val, { anchor: "middle", w: "bold", mono: true }) +
+      T(cx, cy + r + 20, 10.5, p.muted, lab, { anchor: "middle" })
+    );
+  };
+
+  // courbe : une série continue
+  const graphe = (x, y, w, h, pts, col) => {
+    const mx = Math.max(...pts),
+      mn = Math.min(...pts);
+    const sx = w / (pts.length - 1),
+      sy = h / (mx - mn || 1);
+    const d = pts
+      .map(
+        (v, i) =>
+          `${i ? "L" : "M"}${(x + i * sx).toFixed(1)} ${(y + h - (v - mn) * sy).toFixed(1)}`,
+      )
+      .join(" ");
+    const ly = (y + h - (pts[pts.length - 1] - mn) * sy).toFixed(1);
+    return (
+      `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>` +
+      `<circle cx="${x + w}" cy="${ly}" r="3" fill="${col}"/>`
+    );
+  };
+
+  // (1) Système : trois anneaux + la courbe des 24 h
+  s += tile(ix, gy, c2, gh, tr("Système", "System"));
+  s += ring(ix + 78, gy + 88, 30, 0.17, a, "17 %", tr("processeur", "processor"));
+  s += ring(ix + 176, gy + 88, 30, 0.72, warn, "72 %", tr("mémoire", "memory"));
+  s += ring(ix + 274, gy + 88, 30, 0.54, a, "54°", tr("température", "temperature"));
+  s += T(ix + 336, gy + 52, 10.5, p.muted, "24 h", { mono: true });
+  s += graphe(ix + 336, gy + 62, 150, 76, [22, 19, 27, 24, 33, 29, 41, 36, 30, 26, 31, 28, 24, 17], a);
+  s += T(ix + 336, gy + 158, 10.5, p.muted, tr("charge 0,9 → 1,2 → 1,1", "load 0.9 → 1.2 → 1.1"), { mono: true, op: 0.9 });
+
+  /* (2) Disponibilité : battements Uptime Kuma en vert SOURD. Quarante-huit
+     barres en vert vif forment un aplat qui crie plus fort que le reste et
+     noie la seule barre rouge, qui est pourtant la seule information. */
+  const kx = ix + c2 + 16;
+  s += tile(kx, gy, c2, gh, tr("Disponibilité", "Availability"));
+  s += `<rect x="${kx + c2 - 132}" y="${gy + 12}" width="116" height="22" rx="11" fill="${up}" fill-opacity="0.14" stroke="${up}" stroke-opacity="0.4"/>`;
+  s += `<circle cx="${kx + c2 - 116}" cy="${gy + 23}" r="4" fill="${up}"/>`;
+  s += T(kx + c2 - 106, gy + 27, 11, up, tr("tout en ligne", "all up"), { mono: true, w: "bold" });
+  for (let i = 0; i < 48; i++) {
+    const bad = i === 31;
+    s += `<rect x="${(kx + 16 + i * 9.6).toFixed(1)}" y="${gy + 46}" width="6" height="44" rx="2" fill="${bad ? "#ef4444" : up}" fill-opacity="${bad ? 0.9 : 0.62}"/>`;
+  }
+  const svcs = tr(
+    [["portfolio", "99,98 %"], ["api · contact", "99,95 %"], ["postgres", "100 %"]],
+    [["portfolio", "99.98%"], ["api · contact", "99.95%"], ["postgres", "100%"]],
+  );
+  svcs.forEach(([n, v], i) => {
+    const y = gy + 112 + i * 24;
+    s += `<circle cx="${kx + 20}" cy="${y - 4}" r="3.5" fill="${up}"/>`;
+    s += T(kx + 32, y, 11.5, p.ink, n, { mono: true });
+    s += T(kx + c2 - 16, y, 11.5, p.muted, v, { mono: true, anchor: "end" });
+  });
+
+  // (3) Mémoire et swap : le swap en vedette, c'est la donnée qui décide
+  const by = gy + gh + 16;
+  s += tile(ix, by, c1, gh, tr("Mémoire et swap", "Memory and swap"));
+  s += T(ix + 16, by + 72, 34, p.ink, "1,2", { w: "bold", mono: true });
+  s += T(ix + 76, by + 72, 14, p.muted, tr("Go évacués", "GB swapped"), { mono: true });
+  s += graphe(ix + 16, by + 94, c1 - 32, 50, [0.4, 0.5, 0.7, 0.6, 0.9, 1.1, 1.0, 1.2, 1.4, 1.3, 1.2], warn);
+  s += T(ix + 16, by + 168, 10.5, p.muted, tr("compressé par le noyau", "compressed by the kernel"), { mono: true, op: 0.9 });
+
+  /* (4) Mémoire par pile, et non par service : la question qu'on pose à cette
+     fenêtre est « où part la mémoire », et aucun conteneur seul ne domine. */
+  const cx2 = ix + c1 + 16;
+  s += tile(cx2, by, c2, gh, tr("Mémoire par pile", "Memory per stack"));
+  const stacks = tr(
+    [["Stack *arr", 563, 1], ["Infrastructure", 533, 0.95], ["Umami", 128, 0.23], ["Portfolio", 122, 0.22]],
+    [["*arr stack", 563, 1], ["Infrastructure", 533, 0.95], ["Umami", 128, 0.23], ["Portfolio", 122, 0.22]],
+  );
+  stacks.forEach(([n, mo, rel], i) => {
+    const y = by + 52 + i * 30;
+    s += T(cx2 + 16, y + 4, 11.5, p.ink, n);
+    s += `<rect x="${cx2 + 150}" y="${y - 8}" width="${c2 - 226}" height="12" rx="6" fill="${p.line}" fill-opacity="0.6"/>`;
+    s += `<rect x="${cx2 + 150}" y="${y - 8}" width="${((c2 - 226) * rel).toFixed(0)}" height="12" rx="6" fill="${a}" fill-opacity="${(0.35 + 0.5 * rel).toFixed(2)}"/>`;
+    s += T(cx2 + c2 - 16, y + 4, 11, p.muted, `${mo} Mo`, { mono: true, anchor: "end" });
+  });
+  s += T(cx2 + 16, by + 172, 10.5, p.muted, tr("déduit du préfixe du conteneur", "derived from the container prefix"), { mono: true, op: 0.9 });
+
+  // (5) Tunnel VPN : un état, pas un nombre
+  const vx = cx2 + c2 + 16;
+  s += tile(vx, by, c1, gh, tr("Tunnel VPN", "VPN tunnel"));
+  s += `<circle cx="${vx + c1 / 2}" cy="${by + 96}" r="34" fill="${up}" fill-opacity="0.12" stroke="${up}" stroke-opacity="0.45" stroke-width="2"/>`;
+  s += `<path d="M${vx + c1 / 2 - 14} ${by + 95} l10 11 l19 -21" fill="none" stroke="${up}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += T(vx + c1 / 2, by + 152, 13, p.ink, tr("Tunnel actif", "Tunnel up"), { anchor: "middle", w: "bold" });
+  s += T(vx + c1 / 2, by + 172, 10.5, p.muted, tr("trafic sortant vérifié", "egress verified"), { anchor: "middle", mono: true, op: 0.9 });
+
+  return frame(p, s);
+}
+
 const BUILDERS = {
   "web-clients": clients,
   portfolio,
@@ -748,6 +904,7 @@ const BUILDERS = {
   homelab,
   monitoring,
   resilience,
+  dashboard,
   perso: lab,
 };
 

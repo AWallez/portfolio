@@ -1,5 +1,4 @@
 import {
-  Activity,
   BellRing,
   Binary,
   Bot,
@@ -48,7 +47,6 @@ export const GENERIC_ICONS: Record<string, LucideIcon> = {
   Réseau: Network,
   "10 GbE": Cable,
   "self-hosting": Server,
-  Beszel: Activity,
   UptimeRobot: Radar,
   Alerting: BellRing,
   restic: DatabaseBackup,

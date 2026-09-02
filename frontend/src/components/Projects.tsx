@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useState } from "react";
-import { Maximize2 } from "lucide-react";
+import { Code2, ExternalLink, Maximize2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
@@ -30,7 +30,11 @@ type Project = {
   desc: { fr: string; en: string };
   tags: string[];
   asset?: string; // préfixe de fichier dans assets/projects (ex. "web-clients")
+  // liens externes sous les badges : "code" -> dépôt public, "demo" -> site en ligne
+  links?: { kind: "code" | "demo"; href: string }[];
 };
+
+const LINK_ICON = { code: Code2, demo: ExternalLink } as const;
 
 const PROJECTS: Project[] = [
   {
@@ -54,20 +58,7 @@ const PROJECTS: Project[] = [
     },
     tags: ["React", "TypeScript", "Fastify", "PostgreSQL", "Docker"],
     asset: "portfolio",
-  },
-   {
-    name: "monitoring",
-    folder: { fr: "Supervision", en: "monitoring" },
-    title: {
-      fr: "Supervision & observabilité",
-      en: "Monitoring & observability",
-    },
-    desc: {
-      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur (via le socket Docker) tandis que Beszel trace les métriques système (CPU, RAM, disque, température). Un watchdog externe (UptimeRobot) vérifie le site depuis l'extérieur, et toute panne déclenche une alerte push instantanée sur mobile (ntfy, canaux dédiés). Dockge pilote les stacks et une page de statut centralise l'état des services.",
-      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container (via the Docker socket) while Beszel tracks system metrics (CPU, RAM, disk, temperature). An external watchdog (UptimeRobot) checks the site from the outside, and any failure fires an instant mobile push alert (ntfy, dedicated channels). Dockge manages the stacks and a status page centralizes service health.",
-    },
-    tags: ["Uptime Kuma", "Beszel", "ntfy", "UptimeRobot", "Alerting"],
-    asset: "monitoring",
+    links: [{ kind: "code", href: "https://github.com/AWallez/portfolio" }],
   },
   {
     name: "homelab",
@@ -77,19 +68,65 @@ const PROJECTS: Project[] = [
       en: "Self-hosted infrastructure (NAS)",
     },
     desc: {
-      fr: "Infrastructure auto-hébergée sur NAS Linux : une quinzaine de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), GED avec OCR (Paperless), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy, déployés et pilotés de façon reproductible.",
-      en: "Self-hosted infrastructure on a Linux NAS: around fifteen containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), document management with OCR (Paperless), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications, deployed and managed reproducibly.",
+      fr: "Infrastructure auto-hébergée sur NAS Linux : un parc de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy. Les mises à jour sont appliquées par un script nocturne sur une liste blanche, les bases de données et les accès critiques restant volontairement manuels.",
+      en: "Self-hosted infrastructure on a Linux NAS: a fleet of containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications. Updates are applied by a nightly script against an allowlist, with databases and critical access deliberately left manual.",
     },
     tags: ["Docker", "Linux", "Caddy", "Vaultwarden", "self-hosting"],
     asset: "homelab",
+  },
+  {
+    name: "monitoring",
+    folder: { fr: "Supervision", en: "monitoring" },
+    title: {
+      fr: "Supervision & observabilité",
+      en: "Monitoring & observability",
+    },
+    desc: {
+      fr: "Supervision temps réel de l'infrastructure auto-hébergée : Uptime Kuma surveille chaque conteneur via le socket Docker, et toute panne déclenche une alerte push sur mobile (ntfy, canaux dédiés). Un watchdog externe (UptimeRobot) double la surveillance depuis Internet, parce qu'une alerte « mon infra est morte » ne doit pas transiter par l'infra en question. Les métriques système, leur historique et les seuils d'alerte viennent de scripts maison plutôt que d'un outil du commerce : un outil sur mesure et léger, qui suit aussi la santé SMART des SSD.",
+      en: "Real-time monitoring of the self-hosted infrastructure: Uptime Kuma watches every container through the Docker socket, and any failure fires a mobile push alert (ntfy, dedicated channels). An external watchdog (UptimeRobot) doubles the check from the internet, because an alert saying my infrastructure is down should not travel through that same infrastructure. System metrics, their history and the alert thresholds come from my own scripts rather than an off-the-shelf tool: something lightweight and built to fit, which also tracks SMART health on the SSDs.",
+    },
+    tags: ["Uptime Kuma", "ntfy", "UptimeRobot", "Bash", "Alerting"],
+    asset: "monitoring",
+  },
+  {
+    name: "resilience",
+    folder: { fr: "sauvegardes", en: "backups" },
+    title: {
+      fr: "Résilience & sauvegardes",
+      en: "Resilience & backups",
+    },
+    desc: {
+      fr: "Snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL), poussés vers un poste externe et déclenchés automatiquement à l'allumage du PC. Rétention 7 j / 4 sem / 6 mois, restauration testée, redondance RAID1 et dead-man's-switch (alerte si une sauvegarde manque). Restauration testée, pas seulement configurée.",
+      en: "Encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps), pushed to an external machine and triggered automatically when the PC powers on. 7-day / 4-week / 6-month retention, tested restore, RAID1 redundancy and a dead-man's-switch (alert if a backup is missing). The restore is tested, not just configured.",
+    },
+    tags: ["restic", "Chiffrement", "RAID1", "Automatisation", "PRA"],
+    asset: "resilience",
+  },
+  {
+    name: "dashboard",
+    folder: { fr: "dashboard", en: "dashboard" },
+    title: {
+      fr: "Tableau de bord du homelab",
+      en: "Homelab dashboard",
+    },
+    desc: {
+      fr: "Portail maison du NAS, écrit pour remplacer l'outil du commerce que j'utilisais. Des collecteurs shell interrogent Docker et les services de la machine, publient du JSON, et une page statique servie par nginx le relit toutes les deux secondes.",
+      en: "Home-made NAS portal, written to replace the off-the-shelf tool I was using. Shell collectors poll Docker and the services on the machine, publish JSON, and a static page served by nginx reads it back every two seconds.",
+    },
+    tags: ["Bash", "JavaScript", "Docker", "GitHub Actions", "self-hosting"],
+    asset: "dashboard",
+    links: [
+      { kind: "code", href: "https://github.com/AWallez/homelab" },
+      { kind: "demo", href: "https://awallez.github.io/homelab/" },
+    ],
   },
   {
     name: "reseau",
     folder: { fr: "reseau", en: "network" },
     title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
     desc: {
-      fr: "Réseau domestique de niveau pro : segmentation VLAN, pare-feu, filtrage DNS (AdGuard Home : pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Le tout administré sous Linux, en ligne de commande.",
-      en: "Pro-grade home network: VLAN segmentation, firewall, DNS filtering (AdGuard Home: ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. All administered on Linux, from the command line.",
+      fr: "Réseau domestique cloisonné : VLAN, pare-feu, filtrage DNS (AdGuard Home : pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Le tout administré sous Linux, en ligne de commande.",
+      en: "Segmented home network: VLANs, firewall, DNS filtering (AdGuard Home: ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. All administered on Linux, from the command line.",
     },
     tags: ["Réseau", "VLAN", "AdGuard", "10 GbE", "iptables"],
     asset: "reseau",
@@ -107,20 +144,6 @@ const PROJECTS: Project[] = [
     },
     tags: ["Docker", "Kubernetes", "Terraform", "Ansible", "Bash"],
     asset: "perso",
-  },
-  {
-    name: "resilience",
-    folder: { fr: "sauvegardes", en: "backups" },
-    title: {
-      fr: "Résilience & sauvegardes",
-      en: "Resilience & backups",
-    },
-    desc: {
-      fr: "Snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL), poussés vers un poste externe et déclenchés automatiquement à l'allumage du PC. Rétention 7 j / 4 sem / 6 mois, restauration testée, redondance RAID1 et dead-man's-switch (alerte si une sauvegarde manque). Restauration testée, pas seulement configurée.",
-      en: "Encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps), pushed to an external machine and triggered automatically when the PC powers on. 7-day / 4-week / 6-month retention, tested restore, RAID1 redundancy and a dead-man's-switch (alert if a backup is missing). The restore is tested, not just configured.",
-    },
-    tags: ["restic", "Chiffrement", "RAID1", "Automatisation", "PRA"],
-    asset: "resilience",
   },
 ];
 
@@ -206,6 +229,29 @@ export default function Projects() {
                   </Tag>
                 ))}
               </div>
+
+              {p.links && (
+                <div className="flex flex-wrap items-center gap-4">
+                  {p.links.map(({ kind, href }) => {
+                    const Icon = LINK_ICON[kind];
+                    return (
+                      <a
+                        key={kind}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${t("projects", kind, lang)} : ${p.title[lang]}`}
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-muted
+                                   underline decoration-line underline-offset-4 transition
+                                   hover:text-accent hover:decoration-accent"
+                      >
+                        <Icon size={13} aria-hidden />
+                        {t("projects", kind, lang)}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </article>
           </Reveal>
         ))}

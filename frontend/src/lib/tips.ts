@@ -244,10 +244,6 @@ export const TIPS: Record<string, { fr: string; en: string }> = {
     fr: "Outil de supervision auto-hébergé : surveille services et conteneurs.",
     en: "Self-hosted monitoring tool: watches services and containers.",
   },
-  Beszel: {
-    fr: "Supervision légère des métriques système (CPU, RAM, disque, température).",
-    en: "Lightweight system-metrics monitoring (CPU, RAM, disk, temperature).",
-  },
   ntfy: {
     fr: "Service de notifications push auto-hébergé (publication par simple HTTP).",
     en: "Self-hosted push-notification service (publish over plain HTTP).",

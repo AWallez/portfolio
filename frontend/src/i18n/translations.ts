@@ -42,6 +42,8 @@ export const translations = {
     command: { fr: "ls -la ~/projets", en: "ls -la ~/projects" },
     zoom: { fr: "Agrandir l’image", en: "Enlarge image" },
     close: { fr: "Fermer", en: "Close" },
+    code: { fr: "Code", en: "Code" },
+    demo: { fr: "Démo", en: "Demo" },
   },
   services: {
     title: { fr: "Services", en: "Services" },
