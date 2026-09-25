@@ -75,6 +75,11 @@ main() {
   cd "$REPO/infra"
   check_caddy "$REPO"
 
+  # ⚠️ `--no-deps` partout : le script ne touche QU'AUX services qu'on lui
+  # donne. Sans lui, `up -d api` peut recréer au passage postgres ou ntfy si
+  # leur définition a bougé, sans la copie des données ni le retour arrière
+  # que compose-auto-update leur réserve. Chacun son périmètre.
+
   # schema.sql est embarqué dans l'image de l'api, et l'admin interroge les
   # colonnes qu'il définit → l'api passe en premier, puis la migration, puis le
   # reste. Migrer avant de reconstruire l'api rejouerait l'ancien schéma sans
@@ -87,9 +92,9 @@ main() {
       # jamais rafraîchie. node:22-alpine avait ainsi trois mois de correctifs
       # Alpine de retard au 25/09/2026. Reconstruire le code ne suffit pas.
       docker compose build --pull api
-      docker compose up -d api
+      docker compose up -d --no-deps api
       echo "→ migration du schéma"
-      docker compose run --rm api npm run migrate
+      docker compose run --rm --no-deps api npm run migrate
       ;;
   esac
 
@@ -97,7 +102,7 @@ main() {
     if [ "$s" != "api" ]; then
       echo "→ $s"
       docker compose build --pull "$s"
-      docker compose up -d "$s"
+      docker compose up -d --no-deps "$s"
     fi
   done
 
