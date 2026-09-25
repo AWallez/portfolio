@@ -82,7 +82,12 @@ main() {
   case " $SERVICES " in
     *" api "*)
       echo "→ api"
-      docker compose up -d --build api
+      # ⚠️ `build --pull` et non `up --build` : sans `--pull`, Docker réutilise
+      # l'image de base gardée en cache depuis le premier build, et elle n'est
+      # jamais rafraîchie. node:22-alpine avait ainsi trois mois de correctifs
+      # Alpine de retard au 25/09/2026. Reconstruire le code ne suffit pas.
+      docker compose build --pull api
+      docker compose up -d api
       echo "→ migration du schéma"
       docker compose run --rm api npm run migrate
       ;;
@@ -91,7 +96,8 @@ main() {
   for s in $SERVICES; do
     if [ "$s" != "api" ]; then
       echo "→ $s"
-      docker compose up -d --build "$s"
+      docker compose build --pull "$s"
+      docker compose up -d "$s"
     fi
   done
 
