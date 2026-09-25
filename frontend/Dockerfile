@@ -10,7 +10,13 @@ COPY . .
 RUN npm run build
 
 # ---- runtime : Nginx ne sert QUE dist/ (~1.2 Mo) — pas de node_modules/src ----
-FROM nginx:1.27-alpine AS runtime
+# `stable-alpine` et NON une branche numérotée. `1.27-alpine` n'avait plus été
+# republiée depuis le 16/04/2025 : branche abandonnée, donc plus aucun correctif,
+# ni de nginx ni d'Alpine, alors que le site tournait dessus 17 mois plus tard.
+# `stable-alpine` suit la branche stable maintenue et reçoit ses reconstructions
+# de sécurité. La configuration n'emploie que des directives de base, stables
+# d'une branche à l'autre.
+FROM nginx:stable-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 # Vite GÉNÈRE index.html et assets/ (donc en 644/755), mais RECOPIE le contenu
