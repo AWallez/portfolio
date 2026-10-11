@@ -34,9 +34,10 @@ Toute la stack du portfolio via **Docker Compose** : front, API, base de donnée
    ```bash
    docker compose up -d --build
    ```
-4. **Une seule fois** — créer le schéma Postgres (table `contacts`) :
+4. Schéma PostgreSQL et comptes applicatifs (`api_app`, `admin_app`, mots de
+   passe tirés du `.env`). Idempotent, `deploy.sh` le relance à chaque fois :
    ```bash
-   docker compose run --rm api npm run migrate
+   docker compose run --rm --no-deps migrate
    ```
 5. Vérifier que tout est sain :
    ```bash
@@ -66,19 +67,18 @@ donc elle fonctionne même quand Caddy est déjà à terre.
 À la main, ce serait `git pull` puis `docker compose up -d --build <service>`
 **depuis `infra/`** — sinon `docker-compose.override.yml` n'est pas chargé.
 
-⚠️ **Si le pull touche `backend/db/schema.sql`, l'ordre compte** — `schema.sql`
-est embarqué dans l'image de l'`api`, et l'`admin` interroge les colonnes qu'il
-définit. Le script s'en charge, mais à la main :
+⚠️ **La migration passe avant toute reconstruction.** Le service `migrate`
+(conteneur postgres jetable, compte propriétaire) lit `backend/db/` dans le
+dépôt fraîchement tiré : schéma, puis comptes `api_app` et `admin_app` avec
+leurs droits (`roles.sql`). L'api et l'admin, qui n'ont que ces comptes
+limités, trouvent ainsi leurs colonnes et leurs droits en place au démarrage.
+Le script s'en charge, mais à la main :
 
 ```bash
-docker compose up -d --build api              # 1. nouvelle image = nouveau schema.sql
-docker compose run --rm api npm run migrate   # 2. applique le schéma
-docker compose up -d --build admin            # 3. l'admin peut lire les colonnes
+docker compose run --rm --no-deps migrate     # 1. schéma + comptes + droits
+docker compose up -d --build --no-deps api    # 2. puis les services
+docker compose up -d --build --no-deps admin
 ```
-
-Migrer avant de rebuilder l'`api` rejouerait l'**ancien** schéma sans rien
-signaler ; rebuilder l'`admin` avant de migrer le ferait tomber en 500 sur une
-colonne inexistante.
 
 ## Sécurité (en place)
 

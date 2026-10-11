@@ -12,7 +12,16 @@ export function getPool(dbName: string): pg.Pool {
   let pool = pools.get(dbName);
   if (!pool) {
     // max:3 — outil mono-utilisateur, inutile d'ouvrir plus de connexions
-    pool = new Pool({ connectionString: entry.url, max: 3 });
+    pool = new Pool({
+      connectionString: entry.url,
+      max: 3,
+      connectionTimeoutMillis: 5_000,
+    });
+    // sans écouteur, une connexion inactive coupée par PostgreSQL (redémarrage
+    // du conteneur) fait tomber tout le process ; le pool la remplace seul
+    pool.on("error", (err) => {
+      console.error(`PostgreSQL (${dbName}) : connexion inactive perdue :`, err.message);
+    });
     pools.set(dbName, pool);
   }
   return pool;

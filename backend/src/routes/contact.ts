@@ -59,36 +59,46 @@ export async function contactRoutes(app: FastifyInstance) {
       }
 
       const cleanPhone = phone?.trim() || null;
+      const notification = {
+        firstname,
+        lastname,
+        email,
+        type,
+        phone: cleanPhone,
+        message,
+      };
 
-      await pool.query(
-        `INSERT INTO contacts (firstname, lastname, email, type, phone, message, ip, user_agent)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          firstname,
-          lastname,
-          email,
-          type,
-          cleanPhone,
-          message,
-          req.ip,
-          req.headers["user-agent"] ?? null,
-        ],
-      );
-
-      // la notif ne doit pas faire échouer la requête si ntfy est indisponible
       try {
-        await notifyContact({
-          firstname,
-          lastname,
-          email,
-          type,
-          phone: cleanPhone,
-          message,
-        });
+        await pool.query(
+          `INSERT INTO contacts (firstname, lastname, email, type, phone, message, ip, user_agent)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            firstname,
+            lastname,
+            email,
+            type,
+            cleanPhone,
+            message,
+            req.ip,
+            req.headers["user-agent"] ?? null,
+          ],
+        );
       } catch (err) {
-        req.log.error({ err }, "notification ntfy échouée");
+        // Base en panne (redémarrage de postgres, par exemple) : le message
+        // n'est pas perdu tant que la notification part, puisqu'elle le
+        // contient en entier. Elle le signale comme non enregistré. Si elle
+        // échoue aussi, le visiteur reçoit une erreur et peut écrire par email.
+        req.log.error({ err }, "enregistrement du message échoué");
+        await notifyContact({ ...notification, unsaved: true });
+        return reply.code(201).send({ ok: true });
       }
 
+      // Message enregistré : on répond tout de suite. La notification part en
+      // arrière-plan ; un ntfy lent ne doit ni faire attendre le visiteur ni
+      // provoquer un 504 qui l'inciterait à renvoyer un doublon.
+      notifyContact(notification).catch((err: unknown) =>
+        req.log.error({ err }, "notification ntfy échouée"),
+      );
       return reply.code(201).send({ ok: true });
     },
   );

@@ -80,30 +80,22 @@ main() {
   # leur définition a bougé, sans la copie des données ni le retour arrière
   # que compose-auto-update leur réserve. Chacun son périmètre.
 
-  # schema.sql est embarqué dans l'image de l'api, et l'admin interroge les
-  # colonnes qu'il définit → l'api passe en premier, puis la migration, puis le
-  # reste. Migrer avant de reconstruire l'api rejouerait l'ancien schéma sans
-  # rien signaler ; reconstruire l'admin avant de migrer le ferait tomber en 500.
-  case " $SERVICES " in
-    *" api "*)
-      echo "→ api"
-      # ⚠️ `build --pull` et non `up --build` : sans `--pull`, Docker réutilise
-      # l'image de base gardée en cache depuis le premier build, et elle n'est
-      # jamais rafraîchie. node:22-alpine avait ainsi trois mois de correctifs
-      # Alpine de retard au 25/09/2026. Reconstruire le code ne suffit pas.
-      docker compose build --pull api
-      docker compose up -d --no-deps api
-      echo "→ migration du schéma"
-      docker compose run --rm --no-deps api npm run migrate
-      ;;
-  esac
+  # Migration AVANT toute reconstruction, à chaque déploiement (idempotente) :
+  # elle lit backend/db/ dans le dépôt qu'on vient de tirer, dans un conteneur
+  # postgres jetable (service `migrate`), et crée au besoin les comptes dont la
+  # nouvelle api ou le nouvel admin vont se servir. Une migration qui échoue
+  # arrête tout : rien n'a encore été reconstruit.
+  echo "→ migration du schéma et des comptes"
+  docker compose run --rm --no-deps migrate
 
   for s in $SERVICES; do
-    if [ "$s" != "api" ]; then
-      echo "→ $s"
-      docker compose build --pull "$s"
-      docker compose up -d --no-deps "$s"
-    fi
+    echo "→ $s"
+    # ⚠️ `build --pull` et non `up --build` : sans `--pull`, Docker réutilise
+    # l'image de base gardée en cache depuis le premier build, et elle n'est
+    # jamais rafraîchie. node:22-alpine avait ainsi trois mois de correctifs
+    # Alpine de retard au 25/09/2026. Reconstruire le code ne suffit pas.
+    docker compose build --pull "$s"
+    docker compose up -d --no-deps "$s"
   done
 
   echo

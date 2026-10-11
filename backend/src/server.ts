@@ -1,5 +1,5 @@
 import "dotenv/config";
-import Fastify from "fastify";
+import Fastify, { type FastifyError } from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import process from "node:process";
@@ -16,17 +16,47 @@ import { schedulePurge } from "./retention";
 // Fastify remonte la chaîne XFF depuis la droite et s'arrête sur la première
 // IP NON privée = la vraie IP publique vue par Caddy — insensible au spoofing.
 const app = Fastify({
-  logger: true,
+  logger: {
+    // Aucune adresse IP dans les journaux. La politique de confidentialité ne
+    // la fait conserver qu'avec un message envoyé (contacts.ip, effacée au bout
+    // d'un an) ; Fastify la journalisait pourtant à chaque requête, y compris
+    // pour /api/health, appelé à chaque visite du site.
+    serializers: {
+      req: (req) => ({ method: req.method, url: req.url }),
+    },
+  },
   trustProxy: ["loopback", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
 });
 
 await app.register(cors, { origin: config.corsOrigin, methods: ["POST"] });
 await app.register(rateLimit, { global: false }); // activé route par route
 
-app.get("/health", async () => ({ status: "ok" }));
+// Réponses d'erreur génériques : jamais le message interne (texte SQL, chemin
+// de fichier…), qui partait tel quel dans le corps des 500. Les 4xx gardent
+// leur statut ; le détail ne va que dans le journal.
+app.setErrorHandler((err: FastifyError, req, reply) => {
+  const status =
+    err.statusCode && err.statusCode >= 400 && err.statusCode < 500
+      ? err.statusCode
+      : 500;
+  if (status === 500) req.log.error({ err }, "erreur interne");
+  const error =
+    status === 429
+      ? "rate_limited"
+      : err.validation
+        ? "invalid"
+        : status === 500
+          ? "internal"
+          : "bad_request";
+  return reply.code(status).send({ ok: false, error });
+});
+
+// Sondes de santé : `warn` = pas une ligne de journal par appel (le
+// healthcheck Docker et le badge du pied de page les appellent sans cesse).
+app.get("/health", { logLevel: "warn" }, async () => ({ status: "ok" }));
 // même healthcheck exposé sous /api/ : c'est le seul préfixe que Nginx proxifie
 // vers l'API → utilisé par le badge « infra live » du footer.
-app.get("/api/health", async () => ({ status: "ok" }));
+app.get("/api/health", { logLevel: "warn" }, async () => ({ status: "ok" }));
 await app.register(contactRoutes);
 
 // durées de conservation RGPD appliquées par l'API elle-même : pas de cron à

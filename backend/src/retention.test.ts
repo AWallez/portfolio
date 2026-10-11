@@ -1,67 +1,76 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 // Même approche que contact.test.ts : PostgreSQL simulé, on teste la logique.
 const query = vi.fn();
 vi.mock("./db", () => ({ pool: { query: (...a: unknown[]) => query(...a) } }));
 
-const { purgeContacts, schedulePurge, ANONYMIZE_AFTER, DELETE_AFTER } =
-  await import("./retention");
+const { purgeContacts, schedulePurge } = await import("./retention");
 
 const log = { info: vi.fn(), error: vi.fn() };
 
 beforeEach(() => {
-  query.mockReset().mockResolvedValue({ rowCount: 0 });
+  query.mockReset().mockResolvedValue({ rows: [{ anonymized: 0, deleted: 0 }] });
   log.info.mockReset();
   log.error.mockReset();
 });
 
-describe("purgeContacts", () => {
-  it("anonymise ip/user_agent au-delà du délai, sans supprimer la ligne", async () => {
-    await purgeContacts();
-    const [sql, params] = query.mock.calls[0];
-    expect(sql).toMatch(/UPDATE contacts/);
-    expect(sql).toMatch(/ip = NULL, user_agent = NULL/);
-    expect(sql).not.toMatch(/DELETE/);
-    expect(params).toEqual([ANONYMIZE_AFTER]);
+// Les requêtes de purge sont dans la fonction SQL purge_contacts() : on vérifie
+// son texte, tel qu'il sera appliqué par la migration.
+const schema = readFileSync(
+  fileURLToPath(new URL("../db/schema.sql", import.meta.url)),
+  "utf8",
+);
+const fn = schema.slice(
+  schema.indexOf("CREATE OR REPLACE FUNCTION purge_contacts"),
+  schema.indexOf("END $$;"),
+);
+const [anonymizeSql, deleteSql] = fn
+  .split(";")
+  .filter((s) => /UPDATE contacts|DELETE FROM contacts/.test(s));
+
+describe("purge_contacts() (schema.sql)", () => {
+  it("anonymise ip/user_agent au bout d'un an, sans supprimer la ligne", () => {
+    expect(anonymizeSql).toMatch(/UPDATE contacts SET ip = NULL, user_agent = NULL/);
+    expect(anonymizeSql).toMatch(/interval '1 year'/);
+    expect(anonymizeSql).not.toMatch(/DELETE/);
   });
 
-  it("ne repasse pas sur les lignes déjà anonymisées", async () => {
-    await purgeContacts();
-    expect(query.mock.calls[0][0]).toMatch(
-      /ip IS NOT NULL OR user_agent IS NOT NULL/,
-    );
+  it("ne repasse pas sur les lignes déjà anonymisées", () => {
+    expect(anonymizeSql).toMatch(/ip IS NOT NULL OR user_agent IS NOT NULL/);
   });
 
-  it("supprime les contacts au-delà du délai de prospection", async () => {
-    await purgeContacts();
-    const [sql, params] = query.mock.calls[1];
-    expect(sql).toMatch(/DELETE FROM contacts/);
-    expect(params).toEqual([DELETE_AFTER]);
+  it("supprime les contacts au bout de 3 ans", () => {
+    expect(deleteSql).toMatch(/DELETE FROM contacts/);
+    expect(deleteSql).toMatch(/interval '3 years'/);
   });
 
-  it("fait courir le délai de suppression depuis la réception, pas depuis le CRM", async () => {
+  it("fait courir le délai de suppression depuis la réception, pas depuis le CRM", () => {
     // la CNIL compte depuis le dernier contact émanant du prospect : repartir
     // sur `updated_at` laisserait une note retouchée prolonger la conservation
-    await purgeContacts();
-    expect(query.mock.calls[1][0]).toMatch(/created_at < now\(\)/);
-    expect(query.mock.calls[1][0]).not.toMatch(/updated_at/);
+    expect(deleteSql).toMatch(/created_at < now\(\)/);
+    expect(deleteSql).not.toMatch(/updated_at/);
   });
 
-  it("remonte le nombre de lignes traitées", async () => {
-    query
-      .mockResolvedValueOnce({ rowCount: 3 })
-      .mockResolvedValueOnce({ rowCount: 2 });
-    await expect(purgeContacts()).resolves.toEqual({
-      anonymized: 3,
-      deleted: 2,
-    });
+  it("tourne avec les droits du propriétaire et un search_path fixé", () => {
+    // sans search_path figé, une fonction SECURITY DEFINER peut être détournée
+    expect(fn).toMatch(/SECURITY DEFINER SET search_path = public, pg_temp/);
+  });
+});
+
+describe("purgeContacts", () => {
+  it("appelle la fonction SQL et remonte le nombre de lignes traitées", async () => {
+    query.mockResolvedValueOnce({ rows: [{ anonymized: 3, deleted: 2 }] });
+    await expect(purgeContacts()).resolves.toEqual({ anonymized: 3, deleted: 2 });
+    expect(query.mock.calls[0][0]).toMatch(/FROM purge_contacts\(\)/);
   });
 });
 
 describe("schedulePurge", () => {
   it("purge dès le démarrage", async () => {
     const stop = schedulePurge(log);
-    await vi.waitFor(() => expect(query).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(query).toHaveBeenCalledTimes(1));
     stop();
   });
 

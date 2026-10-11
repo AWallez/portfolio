@@ -1,0 +1,5 @@
+# Scripts exécutés sous Linux (conteneurs, NAS) : LF obligatoire, même depuis
+# un poste Windows (core.autocrlf). Un retour chariot en fin de ligne casse sh
+# et les méta-commandes de psql (\if, \getenv).
+*.sh  text eol=lf
+*.sql text eol=lf

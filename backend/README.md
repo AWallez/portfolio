@@ -15,9 +15,14 @@ API Fastify (TypeScript) qui reçoit le formulaire de contact du portfolio :
 cd backend
 npm install
 cp .env.example .env       # puis remplir : mot de passe Postgres + topic ntfy secret
-npm run migrate            # crée la table 'contacts'
 npm run dev                # API sur http://localhost:3001
 ```
+
+Le schéma (`db/schema.sql`) et les comptes PostgreSQL (`db/roles.sql`) sont
+appliqués par le service `migrate` de la pile Docker
+(`docker compose run --rm --no-deps migrate`, depuis `infra/`), sous le compte
+propriétaire. L'API, elle, se connecte avec le compte limité `api_app` :
+insertion des messages et purge RGPD, rien d'autre.
 
 ## Variables d'environnement (`.env`)
 
@@ -29,7 +34,7 @@ npm run dev                # API sur http://localhost:3001
 | `NTFY_URL`    | `http://192.168.1.XX:8080`                                   |
 | `NTFY_TOPIC`  | un nom secret, identique à celui suivi dans l'app ntfy        |
 | `NTFY_TOKEN`  | token de publication ntfy (auth activée) — vide en dev local  |
-| `TURNSTILE_SECRET` | secret Cloudflare Turnstile ; **vide = vérif désactivée** (pratique en dev) |
+| `TURNSTILE_SECRET` | secret Cloudflare Turnstile ; vide = vérif désactivée, **refusé en production** sauf `TURNSTILE_OPTIONAL=1` |
 
 ## Endpoints
 

@@ -23,6 +23,9 @@ export async function verifyTurnstile(
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
+        // Cloudflare lent = refus au bout de 5 s plutôt qu'un visiteur qui
+        // attend jusqu'au délai du proxy (504) sans savoir où en est son message
+        signal: AbortSignal.timeout(5_000),
       },
     );
     const data = (await res.json()) as {

@@ -13,11 +13,13 @@
 //
 // Ces durées sont annoncées dans la politique de confidentialité du site
 // (frontend/src/i18n/legal.ts) : les deux doivent rester cohérentes.
+//
+// Les requêtes vivent dans la fonction SQL `purge_contacts()` (backend/db/
+// schema.sql), qui tourne avec les droits du propriétaire de la base : l'API
+// n'a que le droit d'insérer et de l'appeler, ni de lire les messages ni d'en
+// supprimer d'autres. Les durées y sont donc figées, et vérifiées par les tests.
 
 import { pool } from "./db";
-
-export const ANONYMIZE_AFTER = "1 year";
-export const DELETE_AFTER = "3 years";
 
 export type PurgeResult = { anonymized: number; deleted: number };
 
@@ -26,26 +28,11 @@ export type PurgeResult = { anonymized: number; deleted: number };
  * traitées ne ressortent pas (d'où le filtre sur ip/user_agent non nuls).
  */
 export async function purgeContacts(): Promise<PurgeResult> {
-  const anonymized = await pool.query(
-    `UPDATE contacts
-        SET ip = NULL, user_agent = NULL
-      WHERE created_at < now() - $1::interval
-        AND (ip IS NOT NULL OR user_agent IS NOT NULL)`,
-    [ANONYMIZE_AFTER],
+  const res = await pool.query<PurgeResult>(
+    "SELECT anonymized, deleted FROM purge_contacts()",
   );
-
-  // Le délai court depuis `created_at`, jamais depuis `updated_at` : la CNIL
-  // compte à partir du dernier contact ÉMANANT DU PROSPECT, pas d'une action de
-  // notre côté. Relancer le compteur en modifiant une note du CRM reviendrait à
-  // conserver indéfiniment quelqu'un qui ne nous a plus jamais écrit.
-  // Une nouvelle prise de contact crée une nouvelle ligne, avec son propre
-  // délai : le compte est donc juste, message par message.
-  const deleted = await pool.query(
-    `DELETE FROM contacts WHERE created_at < now() - $1::interval`,
-    [DELETE_AFTER],
-  );
-
-  return { anonymized: anonymized.rowCount ?? 0, deleted: deleted.rowCount ?? 0 };
+  const row = res.rows[0];
+  return { anonymized: row?.anonymized ?? 0, deleted: row?.deleted ?? 0 };
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;

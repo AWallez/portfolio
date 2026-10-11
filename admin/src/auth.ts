@@ -3,26 +3,45 @@ import type {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { config } from "./config";
 
 const COOKIE_NAME = "admin_session";
 
-// Session sans état : le cookie signé contient sa date d'expiration.
-// La signature (@fastify/cookie + SESSION_SECRET) empêche toute falsification ;
-// un redémarrage du serveur n'invalide donc pas la session (pas de store).
-function sessionValue(): string {
-  const expiry = Date.now() + config.sessionTtlHours * 3600 * 1000;
-  return String(expiry);
+// Sessions côté serveur : le cookie (signé) ne porte qu'un identifiant
+// aléatoire, la date d'expiration reste ici. Avant, le cookie contenait sa date
+// d'expiration : impossible de le révoquer, la déconnexion n'effaçait que la
+// copie du navigateur, et un cookie copié restait valable 12 h.
+// En mémoire, volontairement : outil mono-utilisateur, et un redémarrage de
+// l'admin (mise à jour) ne coûte qu'une reconnexion.
+const sessions = new Map<string, number>(); // id → expiration (ms)
+
+function newSession(): string {
+  const now = Date.now();
+  for (const [id, expiry] of sessions) if (expiry <= now) sessions.delete(id);
+  const id = randomBytes(32).toString("base64url");
+  sessions.set(id, now + config.sessionTtlHours * 3600 * 1000);
+  return id;
+}
+
+function sessionId(req: FastifyRequest): string | null {
+  const raw = req.cookies[COOKIE_NAME];
+  if (!raw) return null;
+  const unsigned = req.unsignCookie(raw);
+  return unsigned.valid && unsigned.value ? unsigned.value : null;
 }
 
 export function isAuthenticated(req: FastifyRequest): boolean {
-  const raw = req.cookies[COOKIE_NAME];
-  if (!raw) return false;
-  const unsigned = req.unsignCookie(raw);
-  if (!unsigned.valid || !unsigned.value) return false;
-  const expiry = Number(unsigned.value);
-  return Number.isFinite(expiry) && Date.now() < expiry;
+  const id = sessionId(req);
+  if (!id) return false;
+  const expiry = sessions.get(id);
+  if (expiry === undefined) return false;
+  if (Date.now() >= expiry) {
+    sessions.delete(id);
+    return false;
+  }
+  return true;
 }
 
 // Hook de garde à poser sur tout ce qui doit être protégé.
@@ -55,10 +74,12 @@ export async function authRoutes(app: FastifyInstance) {
       if (!ok) return reply.code(401).send({ ok: false, error: "bad_password" });
 
       return reply
-        .setCookie(COOKIE_NAME, sessionValue(), {
+        .setCookie(COOKIE_NAME, newSession(), {
           path: "/",
           httpOnly: true,
-          sameSite: "lax",
+          // strict : jamais envoyé depuis un autre site, même par un lien
+          // (l'admin s'ouvre au clavier ou en favori, rien n'y mène de dehors)
+          sameSite: "strict",
           signed: true,
           // secure:false assumé : servi en HTTP sur le LAN (et via VPN),
           // jamais exposé à Internet.
@@ -69,7 +90,10 @@ export async function authRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post("/api/logout", async (_req, reply) => {
+  app.post("/api/logout", async (req, reply) => {
+    // la session meurt côté serveur : une copie du cookie ne sert plus à rien
+    const id = sessionId(req);
+    if (id) sessions.delete(id);
     return reply.clearCookie(COOKIE_NAME, { path: "/" }).send({ ok: true });
   });
 

@@ -136,6 +136,36 @@ describe("POST /api/contact", () => {
     expect(query).toHaveBeenCalledTimes(1); // le message est bien enregistré
   });
 
+  it("répond sans attendre la notification", async () => {
+    // ntfy qui ne répond jamais : la réponse part quand même (sinon 504 côté
+    // proxy, et le visiteur renvoie un doublon)
+    notifyContact.mockReturnValue(new Promise(() => {}));
+    const app = await buildApp();
+    const res = await post(app, VALID);
+
+    expect(res.statusCode).toBe(201);
+  });
+
+  it("base en panne : le message part dans la notification, signalé non enregistré", async () => {
+    query.mockRejectedValue(new Error("connexion refusée"));
+    const app = await buildApp();
+    const res = await post(app, VALID);
+
+    expect(res.statusCode).toBe(201);
+    expect(notifyContact).toHaveBeenCalledWith(
+      expect.objectContaining({ message: VALID.message, unsaved: true }),
+    );
+  });
+
+  it("base ET notification en panne : erreur, le visiteur saura écrire par email", async () => {
+    query.mockRejectedValue(new Error("connexion refusée"));
+    notifyContact.mockRejectedValue(new Error("ntfy down"));
+    const app = await buildApp();
+    const res = await post(app, VALID);
+
+    expect(res.statusCode).toBe(500);
+  });
+
   it("limite à 5 requêtes par minute et par IP", async () => {
     const app = await buildApp();
     for (let i = 0; i < 5; i++) {

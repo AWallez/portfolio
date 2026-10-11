@@ -74,8 +74,7 @@ npm run dev
 cd backend
 npm install
 cp .env.example .env    # remplir : Postgres + topic ntfy
-npm run migrate         # crée la table 'contacts'
-npm run dev
+npm run dev             # schéma : backend/db/ (service `migrate` de la pile Docker)
 ```
 
 Détails dans [`frontend/README.md`](frontend/README.md) et [`backend/README.md`](backend/README.md).

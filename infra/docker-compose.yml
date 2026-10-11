@@ -2,7 +2,7 @@
 # Démarrage :
 #   1. cp .env.example .env  (puis remplir .env)
 #   2. docker compose up -d --build
-#   3. (1re fois) docker compose run --rm api npm run migrate
+#   3. docker compose run --rm --no-deps migrate   (schéma + comptes ; deploy.sh le fait)
 # Le service `web` (Nginx) sert le SPA et proxy /api → `api` (même origine).
 # Brancher le reverse proxy + HTTPS d'UGOS sur ${WEB_PORT}.
 services:
@@ -23,6 +23,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # --- Migration : schéma, comptes applicatifs et leurs droits (backend/db/). ---
+  # Conteneur jetable, sous le compte PROPRIÉTAIRE de la base. Hors du démarrage
+  # normal (profil) : lancé par deploy.sh avec `docker compose run --rm --no-deps
+  # migrate`. Hors de postgres, seul ce service connaît ce compte : l'API et l'admin
+  # n'ont que leurs comptes limités (api_app, admin_app).
+  migrate:
+    image: postgres:17-alpine
+    profiles: ["migrate"]
+    entrypoint: ["sh", "/db/migrate.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      # mots de passe posés sur les comptes (vides = inchangés, cf. roles.sql)
+      API_DB_PASSWORD: ${API_DB_PASSWORD:-}
+      ADMIN_DB_PASSWORD: ${ADMIN_DB_PASSWORD:-}
+    volumes:
+      - ../backend/db:/db:ro
 
   ntfy:
     image: binwiederhier/ntfy:latest
@@ -67,7 +87,9 @@ services:
       PORT: 3001
       HOST: 0.0.0.0
       # Postgres via le réseau interne (nom de service), pas le port 55432 du LAN
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # compte limité (INSERT + purge RGPD, cf. backend/db/roles.sql), plus le
+      # superutilisateur : une faille de l'API ne donne plus toute la base
+      DATABASE_URL: postgres://${API_DB_USER:-api_app}:${API_DB_PASSWORD:-}@postgres:5432/${POSTGRES_DB}
       NTFY_URL: http://ntfy:80
       NTFY_TOPIC: ${NTFY_TOPIC}
       NTFY_TOKEN: ${NTFY_TOKEN:-} # token de publication ntfy (auth activée)

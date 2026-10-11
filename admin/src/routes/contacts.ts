@@ -58,7 +58,9 @@ export async function contactRoutes(app: FastifyInstance) {
           properties: {
             status: { type: "string", enum: [...STATUSES] },
             q: { type: "string", maxLength: 200 },
-            page: { type: "integer", minimum: 1, default: 1 },
+            // borné : une page démesurée faisait calculer à PostgreSQL un
+            // OFFSET gigantesque pour rien
+            page: { type: "integer", minimum: 1, maximum: 10000, default: 1 },
             limit: { type: "integer", minimum: 1, maximum: 100, default: 25 },
           },
         },
@@ -180,6 +182,12 @@ export async function contactRoutes(app: FastifyInstance) {
         const value = NULLABLE.has(key) && raw === "" ? null : raw;
         params.push(value);
         sets.push(`${key} = $${params.length}`);
+      }
+      // Fastify ÉLAGUE les propriétés inconnues (removeAdditional) : un corps
+      // comme {"x":1} arrive vide malgré minProperties, et produisait un
+      // « UPDATE contacts SET , updated_at » en erreur 500.
+      if (sets.length === 0) {
+        return reply.code(400).send({ ok: false, error: "empty_update" });
       }
       params.push(req.params.id);
 

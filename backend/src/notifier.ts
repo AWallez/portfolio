@@ -7,6 +7,9 @@ export type ContactNotification = {
   type: string;
   phone?: string | null;
   message: string;
+  /** message NON enregistré en base (PostgreSQL en panne) : la notification
+   *  est alors la seule trace, à recopier dans le CRM */
+  unsaved?: boolean;
 };
 
 // Envoie une notification push via ntfy (format JSON → gère les accents/UTF-8).
@@ -30,11 +33,12 @@ export async function notifyContact(c: ContactNotification): Promise<void> {
     headers,
     body: JSON.stringify({
       topic: config.ntfy.topic,
-      title: `${c.firstname} ${c.lastname}`,
+      title: `${c.unsaved ? "⚠️ Non enregistré · " : ""}${c.firstname} ${c.lastname}`,
       message: `${when} · ${c.type}\n${c.email}${c.phone ? " · " + c.phone : ""}\n\n${c.message}`,
       priority: 4,
       tags: ["envelope"],
     }),
+    signal: AbortSignal.timeout(5_000),
   });
 
   if (!res.ok) {
