@@ -135,7 +135,7 @@ function Prompt({ path }: { path: string }) {
     <>
       <span className="text-accent">alexis@wallez</span>
       <span className="text-muted">:</span>
-      <span className="text-sky-500 dark:text-sky-400">{path}</span>
+      <span className="text-sky-700 dark:text-sky-400">{path}</span>
       <span className="text-muted">$ </span>
     </>
   );
@@ -188,7 +188,7 @@ function TerminalLine({
           {line.link && (
             <a
               href={line.link.href}
-              className="text-accent font-medium underline-offset-4 hover:underline"
+              className="text-accent font-medium underline underline-offset-4"
             >
               {line.link.label}
             </a>

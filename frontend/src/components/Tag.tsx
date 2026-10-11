@@ -38,6 +38,14 @@ const SIZES = {
 
 type IconSpec = string | LucideIcon;
 
+function focusVisible(el: Element) {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return false; // sélecteur inconnu (vieux navigateur) : survol et tap restent
+  }
+}
+
 export default function Tag({
   children,
   tip,
@@ -86,7 +94,10 @@ export default function Tag({
   useLayoutEffect(() => {
     if (!mounted) return;
     place();
-    const close = () => setOpen(false);
+    // au clavier, Tab fait défiler la page jusqu'au badge : la bulle suit
+    // alors le badge au lieu de se fermer aussitôt ouverte
+    const close = () =>
+      ref.current && focusVisible(ref.current) ? place() : setOpen(false);
     const onDown = (e: PointerEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
@@ -154,6 +165,10 @@ export default function Tag({
         onMouseEnter={() => canHover() && setOpen(true)}
         onMouseLeave={() => canHover() && setOpen(false)}
         onClick={() => !canHover() && setOpen((o) => !o)}
+        // clavier : la bulle s'ouvre au focus (Tab) et se ferme avec Échap.
+        // `:focus-visible` écarte le focus donné par un clic ou un tap.
+        onFocus={(e) => focusVisible(e.currentTarget) && setOpen(true)}
+        onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
         onBlur={() => setOpen(false)}
         className={cls + " cursor-help"}
       >

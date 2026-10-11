@@ -282,11 +282,15 @@
   padding: 0.5rem 0.75rem;
   transition: border-color 0.15s;
 }
+/* focus : même contour de 2 px que les autres champs (cf. `field` de Contact) */
 .PhoneInput--focus {
   border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .PhoneInput.phone-invalid {
   border-color: #ef4444; /* red-500 */
+  outline-color: #ef4444;
 }
 .PhoneInputInput {
   background: transparent;
@@ -296,8 +300,8 @@
   font: inherit;
 }
 .PhoneInputInput::placeholder {
-  /* placeholder discret (aligné sur placeholder:text-muted/50 des autres champs) */
-  color: color-mix(in srgb, var(--muted) 50%, transparent);
+  /* aligné sur placeholder:text-muted des autres champs (à 50 % : 2,2:1) */
+  color: var(--muted);
 }
 .PhoneInputCountrySelectArrow {
   color: var(--muted);
@@ -475,7 +479,6 @@ html {
    déjà été tapée car data-hint devient alors ""). */
 .term-input:empty::before {
   content: attr(data-hint);
-  color: var(--muted);
-  opacity: 0.6;
+  color: var(--muted); /* sans opacité : à 60 %, 2,6:1 en thème clair */
   pointer-events: none;
 }

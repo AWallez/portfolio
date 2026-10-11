@@ -83,26 +83,30 @@ export default function App() {
           'clip' ne crée pas de conteneur de scroll. */}
       <main id="main" className="overflow-x-clip">
         <div className="min-h-[calc(100dvh-4rem)] flex flex-col justify-center gap-8">
+          {/* Seul le Hero est recréé au changement de langue : sa frappe animée
+              rejoue dans la nouvelle langue. Les autres sections suivent la
+              langue sans être recréées (une clé par langue vidait le
+              formulaire et figeait la surbrillance du menu). */}
           <Hero key={lang} />
           <Reveal variant="zoom">
-            <About key={`about-${lang}`} />
+            <About />
           </Reveal>
         </div>
-        <Skills key={`skills-${lang}`} />
-        <Career key={`career-${lang}`} />
+        <Skills />
+        <Career />
         <Suspense fallback={<div className="min-h-screen" />}>
-          <Projects key={`projects-${lang}`} />
+          <Projects />
         </Suspense>
-        <Services key={`services-${lang}`} />
+        <Services />
         <div className="min-h-[calc(100dvh-4rem)] flex flex-col">
           <div className="grow flex flex-col justify-center">
             <Suspense fallback={<div className="min-h-125" />}>
               <Reveal variant="up">
-                <Contact key={`contact-${lang}`} />
+                <Contact />
               </Reveal>
             </Suspense>
           </div>
-          <Footer key={`footer-${lang}`} />
+          <Footer />
         </div>
       </main>
       <BackToTop />

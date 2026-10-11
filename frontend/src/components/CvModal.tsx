@@ -4,6 +4,7 @@ import { X, Download, Loader2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { useZoomPan } from "../hooks/useZoomPan";
+import { useModal } from "../hooks/useModal";
 import ZoomControls from "./ZoomControls";
 
 // Fichiers du CV selon la langue : PDF téléchargeable + SVG affiché (clair/sombre).
@@ -82,53 +83,8 @@ export default function CvModal({ onClose }: Props) {
     };
   }, [computeSize]);
 
-  // --- modale : focus-trap (WCAG 2.4.3), Échap, scroll-lock de l'arrière-plan ---
-  useEffect(() => {
-    const prevFocus = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (e.key === "Tab") {
-        const root = dialogRef.current;
-        if (!root) return;
-        const focusables = root.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        if (focusables.length === 0) {
-          e.preventDefault();
-          return;
-        }
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", onKey);
-
-    const docEl = document.documentElement;
-    const scrollbarW = window.innerWidth - docEl.clientWidth;
-    const prevOverflow = docEl.style.overflow;
-    const prevPad = docEl.style.paddingRight;
-    docEl.style.overflow = "hidden";
-    if (scrollbarW > 0) docEl.style.paddingRight = `${scrollbarW}px`;
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      docEl.style.overflow = prevOverflow;
-      docEl.style.paddingRight = prevPad;
-      prevFocus?.focus?.();
-    };
-  }, [onClose]);
+  // focus initial sur « fermer », Échap, piège du focus, scroll bloqué
+  useModal(dialogRef, closeRef, onClose);
 
   return createPortal(
     <div

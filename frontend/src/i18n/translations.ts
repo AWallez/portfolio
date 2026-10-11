@@ -77,9 +77,27 @@ export const translations = {
       fr: "Message envoyé, merci ! Je reviens vers vous au plus vite.",
       en: "Message sent, thank you! I'll get back to you as soon as possible.",
     },
-    error: {
-      fr: "Oups, l’envoi a échoué. Réessayez ou écrivez-moi directement par email.",
-      en: "Oops, sending failed. Please try again or email me directly.",
+    // échecs d'envoi, un par cause (Contact.tsx) ; ceux qui finissent par « : »
+    // sont suivis de l'adresse email en lien
+    errCaptcha: {
+      fr: "La vérification anti-robot n’a pas abouti. Patientez quelques secondes, puis réessayez.",
+      en: "The anti-bot check didn’t go through. Wait a few seconds, then try again.",
+    },
+    errCaptchaBlocked: {
+      fr: "La vérification anti-robot n’a pas pu se charger, sans doute à cause d’un bloqueur de contenu. Vous pouvez m’écrire directement :",
+      en: "The anti-bot check couldn’t load, probably because of a content blocker. You can email me directly:",
+    },
+    errRate: {
+      fr: "Trop d’envois en peu de temps. Réessayez dans une minute.",
+      en: "Too many attempts in a short time. Please try again in a minute.",
+    },
+    errServer: {
+      fr: "Le serveur n’a pas pu enregistrer votre message. Réessayez plus tard, ou écrivez-moi directement :",
+      en: "The server couldn’t save your message. Try again later, or email me directly:",
+    },
+    errNetwork: {
+      fr: "Le serveur ne répond pas. Vérifiez votre connexion et réessayez, ou écrivez-moi directement :",
+      en: "The server isn’t responding. Check your connection and try again, or email me directly:",
     },
     retry: { fr: "Réessayer", en: "Try again" },
     errRequired: { fr: "Ce champ est requis.", en: "This field is required." },

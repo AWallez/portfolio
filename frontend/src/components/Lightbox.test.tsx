@@ -57,11 +57,23 @@ describe("<Lightbox />", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("piège le focus : Tab reste sur le bouton fermer", () => {
+  // À l'ouverture, « zoom arrière » et « réinitialiser » sont grisés : le
+  // premier bouton focusable est « zoom avant », le dernier « fermer ».
+  it("piège le focus : Tab depuis le dernier bouton revient au premier", async () => {
+    const user = userEvent.setup();
     setup();
-    const close = screen.getByRole("button", { name: /fermer|close/i });
-    fireEvent.keyDown(document, { key: "Tab" });
-    expect(close).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("button", { name: /zoom avant|zoom in/i })).toHaveFocus();
+  });
+
+  it("piège le focus : Maj+Tab depuis le premier bouton actif va au dernier", async () => {
+    const user = userEvent.setup();
+    // un bouton HORS de la modale : sans piège, Maj+Tab y atterrirait
+    render(<button type="button">dehors</button>);
+    setup();
+    screen.getByRole("button", { name: /zoom avant|zoom in/i }).focus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole("button", { name: /fermer|close/i })).toHaveFocus();
   });
 
   it("verrouille puis restaure le scroll de l'arrière-plan", () => {

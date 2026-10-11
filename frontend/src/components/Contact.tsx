@@ -15,10 +15,19 @@ import { getExampleNumber } from "libphonenumber-js";
 import examples from "libphonenumber-js/examples.mobile.json";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
+import { useTheme } from "../hooks/useTheme";
 import { LEGAL_PATHS } from "../lib/routes";
 import Select from "./Select";
 
 type Status = "idle" | "sending" | "sent" | "error";
+// Cause d'un échec d'envoi, chacune avec son message : le visiteur sait s'il
+// doit attendre, réessayer ou écrire directement.
+type SendError =
+  | "errCaptcha" // vérification anti-robot refusée par le serveur
+  | "errCaptchaBlocked" // script Cloudflare bloqué (bloqueur) : jamais de jeton
+  | "errRate" // 429 : trop d'envois en une minute
+  | "errServer" // 5xx, ou réponse inattendue
+  | "errNetwork"; // le serveur n'a pas répondu du tout
 type Fields = {
   firstname: string;
   lastname: string;
@@ -27,7 +36,14 @@ type Fields = {
   phone: string; // optionnel (non requis dans validate)
   message: string;
 };
-type Errors = Partial<Record<keyof Fields, string>>;
+// On garde la CLÉ de traduction, pas le texte : une erreur affichée suit
+// ainsi le changement de langue.
+type FieldError = "errRequired" | "errEmail" | "errType" | "errPhone";
+type Errors = Partial<Record<keyof Fields, FieldError>>;
+
+const CONTACT_EMAIL = "wallezalexis@gmail.com";
+// causes où réessayer ne suffira pas : le message se termine par l'adresse
+const WITH_EMAIL: SendError[] = ["errCaptchaBlocked", "errServer", "errNetwork"];
 
 const EMPTY: Fields = {
   firstname: "",
@@ -56,14 +72,12 @@ declare global {
 }
 
 // Charge le script Turnstile une seule fois (à la demande, quand Contact est monté).
+// Rejette si le script est bloqué (bloqueur de publicité, réseau filtré) : sans
+// ça, le visiteur réessayait en boucle sans jamais obtenir de jeton.
+let turnstileLoading: Promise<void> | null = null;
 function loadTurnstile(): Promise<void> {
   if (window.turnstile) return Promise.resolve();
-  const existing = document.querySelector<HTMLScriptElement>(
-    "script[data-turnstile]",
-  );
-  if (existing)
-    return new Promise((r) => existing.addEventListener("load", () => r()));
-  return new Promise((resolve) => {
+  turnstileLoading ??= new Promise<void>((resolve, reject) => {
     const s = document.createElement("script");
     s.src =
       "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
@@ -71,13 +85,20 @@ function loadTurnstile(): Promise<void> {
     s.defer = true;
     s.dataset.turnstile = "true";
     s.addEventListener("load", () => resolve());
+    s.addEventListener("error", () => {
+      s.remove();
+      turnstileLoading = null; // une prochaine visite de la section retentera
+      reject(new Error("turnstile bloqué"));
+    });
     document.head.appendChild(s);
   });
+  return turnstileLoading;
 }
 
 export default function Contact() {
   const { lang } = useLang();
   const [status, setStatus] = useState<Status>("idle");
+  const [sendError, setSendError] = useState<SendError>("errServer");
   const [values, setValues] = useState<Fields>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
   // honeypot : champ invisible que seuls les bots remplissent
@@ -87,6 +108,9 @@ export default function Contact() {
   const phonePlaceholder = getExampleNumber(country, examples)?.formatNational();
   // anti-bot Turnstile : token récupéré quand le widget se valide (managed → auto)
   const [captchaToken, setCaptchaToken] = useState("");
+  // script Cloudflare introuvable : l'envoi part quand même (le serveur décide),
+  // mais un refus est alors expliqué par le blocage, avec l'adresse en secours
+  const [captchaBlocked, setCaptchaBlocked] = useState(false);
   // Le widget affiche-t-il réellement quelque chose ? Turnstile injecte TOUJOURS un
   // iframe (invisible en `interaction-only`), donc `:empty` ne suffit pas. On mesure
   // la hauteur réelle du widget plutôt que de se fier aux callbacks
@@ -100,18 +124,8 @@ export default function Contact() {
   // approche du viewport → page initiale plus légère et console propre au démarrage
   const [armed, setArmed] = useState(false);
 
-  // thème courant, réactif au toggle du header (observe la classe `dark` sur <html>)
-  const [dark, setDark] = useState(() =>
-    document.documentElement.classList.contains("dark"),
-  );
-  useEffect(() => {
-    const el = document.documentElement;
-    const obs = new MutationObserver(() =>
-      setDark(el.classList.contains("dark")),
-    );
-    obs.observe(el, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
+  // thème courant (le widget Turnstile est rendu clair ou sombre comme le site)
+  const dark = useTheme().theme === "dark";
 
   // arme le chargement Turnstile quand la section approche (300 px avant) — une fois
   useEffect(() => {
@@ -152,6 +166,7 @@ export default function Contact() {
     let cancelled = false;
     loadTurnstile().then(() => {
       if (cancelled || !widgetRef.current || !window.turnstile) return;
+      setCaptchaBlocked(false);
       widgetIdRef.current = window.turnstile.render(widgetRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
         theme: dark ? "dark" : "light", // calé sur le thème clair/sombre du site
@@ -164,6 +179,8 @@ export default function Contact() {
         "expired-callback": () => setCaptchaToken(""),
         "error-callback": () => setCaptchaToken(""),
       });
+    }, () => {
+      if (!cancelled) setCaptchaBlocked(true);
     });
     return () => {
       cancelled = true;
@@ -174,25 +191,27 @@ export default function Contact() {
     };
   }, [armed, lang, dark]);
 
-  // styles réutilisés pour les champs
+  // styles réutilisés pour les champs. Focus : contour de 2 px (la bordure de
+  // 1 px qui changeait de couleur ne se voyait presque pas, alors que la
+  // validation y envoie le focus). Placeholder en `text-muted` plein : à 50 %,
+  // il tombait à 2,2:1 de contraste en thème clair.
   const field =
     "w-full rounded-lg border bg-surface/70 px-3 py-2 text-ink " +
-    "placeholder:text-muted/50 focus:outline-none transition";
+    "placeholder:text-muted outline-none focus:outline-2 focus:outline-offset-1 transition";
   // label avec petite icône lucide (raccord avec les badges du site)
   const label = "font-mono text-xs text-muted mb-1 flex items-center gap-1.5";
   const labelIcon = "text-accent shrink-0";
 
   function validate(v: Fields): Errors {
     const e: Errors = {};
-    if (!v.firstname.trim()) e.firstname = t("contact", "errRequired", lang);
-    if (!v.lastname.trim()) e.lastname = t("contact", "errRequired", lang);
-    if (!v.email.trim()) e.email = t("contact", "errRequired", lang);
-    else if (!EMAIL_RE.test(v.email)) e.email = t("contact", "errEmail", lang);
-    if (!v.type) e.type = t("contact", "errType", lang);
+    if (!v.firstname.trim()) e.firstname = "errRequired";
+    if (!v.lastname.trim()) e.lastname = "errRequired";
+    if (!v.email.trim()) e.email = "errRequired";
+    else if (!EMAIL_RE.test(v.email)) e.email = "errEmail";
+    if (!v.type) e.type = "errType";
     // téléphone optionnel : on ne valide que s'il est renseigné
-    if (v.phone && !isValidPhoneNumber(v.phone))
-      e.phone = t("contact", "errPhone", lang);
-    if (!v.message.trim()) e.message = t("contact", "errRequired", lang);
+    if (v.phone && !isValidPhoneNumber(v.phone)) e.phone = "errPhone";
+    if (!v.message.trim()) e.message = "errRequired";
     return e;
   }
 
@@ -226,29 +245,44 @@ export default function Contact() {
       return;
     }
     setStatus("sending");
+    let res: Response;
     try {
-      const res = await fetch(`${API_URL}/api/contact`, {
+      res = await fetch(`${API_URL}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...values, cfTurnstileToken: captchaToken }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setStatus("sent");
     } catch {
-      setStatus("error");
-      // réarme le widget anti-bot pour permettre une nouvelle tentative
-      if (widgetIdRef.current && window.turnstile)
-        window.turnstile.reset(widgetIdRef.current);
-      setCaptchaToken("");
+      return fail("errNetwork");
     }
+    if (res.ok) return setStatus("sent");
+    if (res.status === 429) return fail("errRate");
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    if (res.status === 400 && body?.error === "captcha")
+      return fail(captchaBlocked ? "errCaptchaBlocked" : "errCaptcha");
+    fail("errServer");
+  }
+
+  function fail(cause: SendError) {
+    setSendError(cause);
+    setStatus("error");
+    // réarme le widget anti-bot pour permettre une nouvelle tentative
+    if (widgetIdRef.current && window.turnstile)
+      window.turnstile.reset(widgetIdRef.current);
+    setCaptchaToken("");
   }
 
   const fieldClass = (name: keyof Fields, extra = "") =>
     field +
     (errors[name]
-      ? " border-red-500/70 focus:border-red-500"
-      : " border-line focus:border-accent") +
+      ? " border-red-500/70 focus:border-red-500 focus:outline-red-500"
+      : " border-line focus:border-accent focus:outline-accent") +
     (extra ? ` ${extra}` : "");
+  // message d'erreur d'un champ : rouge foncé en thème clair (red-500 en 12 px
+  // ne faisait que 3,4:1)
+  const errText = "mt-1 text-xs text-red-700 dark:text-red-400";
 
   return (
     <section
@@ -333,6 +367,7 @@ export default function Contact() {
                   name="firstname"
                   type="text"
                   autoComplete="given-name"
+                  maxLength={100}
                   placeholder={t("contact", "phFirst", lang)}
                   value={values.firstname}
                   onChange={(e) => setField("firstname", e.target.value)}
@@ -344,8 +379,8 @@ export default function Contact() {
                   className={fieldClass("firstname")}
                 />
                 {errors.firstname && (
-                  <p id="err-firstname" className="mt-1 text-xs text-red-500">
-                    {errors.firstname}
+                  <p id="err-firstname" className={errText}>
+                    {t("contact", errors.firstname, lang)}
                   </p>
                 )}
               </div>
@@ -362,6 +397,7 @@ export default function Contact() {
                   name="lastname"
                   type="text"
                   autoComplete="family-name"
+                  maxLength={100}
                   placeholder={t("contact", "phLast", lang)}
                   value={values.lastname}
                   onChange={(e) => setField("lastname", e.target.value)}
@@ -373,8 +409,8 @@ export default function Contact() {
                   className={fieldClass("lastname")}
                 />
                 {errors.lastname && (
-                  <p id="err-lastname" className="mt-1 text-xs text-red-500">
-                    {errors.lastname}
+                  <p id="err-lastname" className={errText}>
+                    {t("contact", errors.lastname, lang)}
                   </p>
                 )}
               </div>
@@ -393,6 +429,7 @@ export default function Contact() {
                   name="email"
                   type="email"
                   autoComplete="email"
+                  maxLength={200}
                   spellCheck={false}
                   placeholder={t("contact", "phEmail", lang)}
                   value={values.email}
@@ -403,8 +440,8 @@ export default function Contact() {
                   className={fieldClass("email")}
                 />
                 {errors.email && (
-                  <p id="err-email" className="mt-1 text-xs text-red-500">
-                    {errors.email}
+                  <p id="err-email" className={errText}>
+                    {t("contact", errors.email, lang)}
                   </p>
                 )}
               </div>
@@ -432,8 +469,8 @@ export default function Contact() {
                   className={errors.phone ? "phone-invalid" : ""}
                 />
                 {errors.phone && (
-                  <p id="err-phone" className="mt-1 text-xs text-red-500">
-                    {errors.phone}
+                  <p id="err-phone" className={errText}>
+                    {t("contact", errors.phone, lang)}
                   </p>
                 )}
               </div>
@@ -463,8 +500,8 @@ export default function Contact() {
                 className={fieldClass("type", "min-h-10.5")}
               />
               {errors.type && (
-                <p id="err-type" className="mt-1 text-xs text-red-500">
-                  {errors.type}
+                <p id="err-type" className={errText}>
+                  {t("contact", errors.type, lang)}
                 </p>
               )}
             </div>
@@ -480,6 +517,7 @@ export default function Contact() {
                 id="message"
                 name="message"
                 placeholder={t("contact", "phMessage", lang)}
+                maxLength={5000}
                 value={values.message}
                 onChange={(e) => setField("message", e.target.value)}
                 aria-required="true"
@@ -488,19 +526,31 @@ export default function Contact() {
                 className={fieldClass("message") + " resize-y min-h-50"}
               />
               {errors.message && (
-                <p id="err-message" className="mt-1 text-xs text-red-500">
-                  {errors.message}
+                <p id="err-message" className={errText}>
+                  {t("contact", errors.message, lang)}
                 </p>
               )}
             </div>
 
-            {/* Erreur d'envoi (réseau / serveur) */}
+            {/* Erreur d'envoi : un message par cause ; l'adresse en secours
+                quand réessayer ne suffira pas */}
             {status === "error" && (
               <p
                 role="alert"
-                className="rounded-lg border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-500"
+                className="rounded-lg border border-red-500/40 bg-red-500/5 px-3 py-2 text-sm text-red-700 dark:text-red-400"
               >
-                {t("contact", "error", lang)}
+                {t("contact", sendError, lang)}
+                {WITH_EMAIL.includes(sendError) && (
+                  <>
+                    {" "}
+                    <a
+                      href={`mailto:${CONTACT_EMAIL}`}
+                      className="font-medium underline underline-offset-2"
+                    >
+                      {CONTACT_EMAIL}
+                    </a>
+                  </>
+                )}
               </p>
             )}
 
@@ -560,9 +610,11 @@ export default function Contact() {
                 pas. D'où l'essentiel en clair ici, et le détail derrière le lien. */}
             <p className="text-xs text-muted leading-relaxed">
               {t("contact", "rgpdNotice", lang)}{" "}
+              {/* souligné en permanence : la couleur seule ne suffit pas à
+                  distinguer un lien (WCAG 1.4.1) */}
               <a
                 href={LEGAL_PATHS.privacy}
-                className="text-accent underline-offset-2 hover:underline"
+                className="text-accent underline underline-offset-2"
               >
                 {t("contact", "rgpdLink", lang)}
               </a>

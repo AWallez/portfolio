@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { subscribeTheme } from "../hooks/useTheme";
 
 export default function Background() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -154,13 +155,9 @@ export default function Background() {
 
     // bascule de thème → on relit la couleur et le clair/sombre (la bascule est
     // instantanée, la nouvelle valeur est donc disponible immédiatement)
-    const themeObs = new MutationObserver(() => {
+    const unsubscribeTheme = subscribeTheme(() => {
       isLight = !document.documentElement.classList.contains("dark");
       color = readAccent();
-    });
-    themeObs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
     });
 
     resize();
@@ -171,7 +168,7 @@ export default function Background() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
-      themeObs.disconnect();
+      unsubscribeTheme();
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseleave", onLeave);

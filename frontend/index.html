@@ -4,8 +4,14 @@
     <!-- Anti-flash : applique le thème avant le rendu (évite le clignotement) -->
     <script>
       (function () {
+        // localStorage peut lever une exception (stockage bloqué) : on suit
+        // alors le thème du système
+        let saved = null;
+        try {
+          saved = localStorage.getItem("theme");
+        } catch (e) {}
         const t =
-          localStorage.theme ??
+          saved ??
           (matchMedia("(prefers-color-scheme: dark)").matches
             ? "dark"
             : "light");

@@ -48,7 +48,7 @@ export default function NotFound() {
           <p className="wrap-break-word">
             <span className="text-accent">alexis@wallez</span>
             <span className="text-muted">:</span>
-            <span className="text-sky-500 dark:text-sky-400">~</span>
+            <span className="text-sky-700 dark:text-sky-400">~</span>
             <span className="text-muted">$ </span>
             <span className="text-ink">cd {path}</span>
           </p>
@@ -60,7 +60,7 @@ export default function NotFound() {
           <p className="mt-5 wrap-break-word">
             <span className="text-accent">alexis@wallez</span>
             <span className="text-muted">:</span>
-            <span className="text-sky-500 dark:text-sky-400">~</span>
+            <span className="text-sky-700 dark:text-sky-400">~</span>
             <span className="text-muted">$ </span>
             <a
               href="/"

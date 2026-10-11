@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import ProjectVisual from "./ProjectVisual";
 import { useZoomPan } from "../hooks/useZoomPan";
+import { useModal } from "../hooks/useModal";
 import ZoomControls from "./ZoomControls";
 
 type Props = {
@@ -40,57 +41,8 @@ export default function Lightbox({ light, dark, title, onClose }: Props) {
     isReset,
   } = useZoomPan();
 
-  useEffect(() => {
-    const prevFocus = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-      // piège le focus dans le modal (WCAG 2.4.3) : Tab/Shift+Tab bouclent
-      // sur les éléments focusables du dialogue (ici, le seul bouton fermer).
-      if (e.key === "Tab") {
-        const root = dialogRef.current;
-        if (!root) return;
-        const focusables = root.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        if (focusables.length === 0) {
-          e.preventDefault();
-          return;
-        }
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", onKey);
-
-    // bloque le scroll de l'arrière-plan en verrouillant documentElement
-    // (l'élément qui défile). On compense la largeur de la scrollbar pour
-    // éviter un saut horizontal au moment du verrouillage.
-    const docEl = document.documentElement;
-    const scrollbarW = window.innerWidth - docEl.clientWidth;
-    const prevOverflow = docEl.style.overflow;
-    const prevPad = docEl.style.paddingRight;
-    docEl.style.overflow = "hidden";
-    if (scrollbarW > 0) docEl.style.paddingRight = `${scrollbarW}px`;
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      docEl.style.overflow = prevOverflow;
-      docEl.style.paddingRight = prevPad;
-      prevFocus?.focus?.();
-    };
-  }, [onClose]);
+  // focus initial sur « fermer », Échap, piège du focus, scroll bloqué
+  useModal(dialogRef, closeRef, onClose);
 
   return createPortal(
     <div
