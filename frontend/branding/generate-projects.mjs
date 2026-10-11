@@ -339,61 +339,96 @@ function portfolio(p, lang) {
 /* ================================================================== */
 /* 3. reseau                                                           */
 /* ================================================================== */
+// ⚠️ LE RÉSEAU TEL QU'IL EST (11/10/2026). L'ancien visuel montrait 4 VLAN
+// derrière un switch administrable : le LAN est en réalité unique et à plat, et
+// le switch n'est pas administrable. Une affirmation fausse en entretien fait
+// douter de toutes les vraies ; on dessine donc l'existant, pannes comprises.
+// Aucune adresse IP réelle (même règle que l'historique Git).
 function reseau(p, lang) {
   const a = p.accent;
   const tr = (fr, en) => (lang === "fr" ? fr : en);
-  let s = "";
-
-  s += `<g stroke="${p.muted}" stroke-opacity="0.5" stroke-width="2" fill="none">
-    <path d="M620 130 L620 168"/>
-    <path d="M620 244 L620 296"/>
-    <path d="M620 360 L225 436"/>
-    <path d="M620 360 L475 436"/>
-    <path d="M620 360 L725 436"/>
-    <path d="M620 360 L975 436"/>
-  </g>`;
-  s += `<path d="M620 360 L225 436" stroke="${a}" stroke-width="4" fill="none" opacity="0.9"/>`;
-  s += `<rect x="356" y="384" width="74" height="22" rx="11" fill="${p.base}"/><rect x="356" y="384" width="74" height="22" rx="11" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(393, 399, 11, a, "10 GbE", { w: "bold", anchor: "middle", mono: true })}`;
-  s += `<path d="M720 205 L980 130" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>`;
-  s += `<rect x="828" y="150" width="120" height="22" rx="11" fill="${p.base}"/><rect x="828" y="150" width="120" height="22" rx="11" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(888, 165, 11, a, "WireGuard", { w: "bold", anchor: "middle", mono: true })}`;
-  s += `<path d="M325 545 C 350 580, 450 580, 475 545" stroke="${a}" stroke-width="2" stroke-dasharray="6 5" fill="none" opacity="0.7"/>`;
-  s += `<rect x="358" y="566" width="84" height="20" rx="10" fill="${p.base}"/><rect x="358" y="566" width="84" height="20" rx="10" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(400, 580, 10, a, "iSCSI", { w: "bold", anchor: "middle", mono: true })}`;
-
-  // Internet
-  s += card(540, 74, 160, 56, p, { r: 12 });
-  s += `<g stroke="${a}" stroke-width="2" fill="none"><circle cx="570" cy="102" r="13"/><ellipse cx="570" cy="102" rx="5.5" ry="13"/><line x1="557" y1="102" x2="583" y2="102"/></g>`;
-  s += T(594, 107, 14, p.ink, "Internet", { w: "bold" });
-
-  // Router / firewall
-  s += card(500, 168, 240, 76, p, { r: 12 });
-  s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="522" y="190" width="30" height="22" rx="3"/><path d="M528 190 v-8 M540 190 v-12"/></g>`;
-  s += T(566, 200, 14, p.ink, tr("Routeur / Pare-feu", "Router / Firewall"), { w: "bold" });
-  s += T(566, 220, 11, p.muted, "AdGuard · iptables · NAT", { mono: true });
-
-  // Remote access
-  s += card(980, 100, 172, 60, p, { stroke: a, sw: 2 });
-  s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="1002" y="122" width="16" height="14" rx="2"/><path d="M1005 122 v-4 a5 5 0 0 1 10 0 v4"/></g>`;
-  s += T(1028, 126, 12.5, p.ink, tr("Accès distant", "Remote access"), { w: "bold" });
-  s += T(1028, 143, 10, p.muted, tr("VPN chiffré", "Encrypted VPN"), { mono: true });
-
-  // Switch
-  s += card(500, 296, 240, 64, p, { r: 12, fill: p.chrome, stroke: p.chrome });
-  s += `<g fill="${p.chromeInk}" fill-opacity="0.3">${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${520 + i * 26}" y="332" width="20" height="12" rx="2"/>`).join("")}</g>`;
-  s += T(620, 322, 14, p.chromeInk, tr("Switch managé · 10 GbE", "Managed switch · 10 GbE"), { w: "bold", anchor: "middle" });
-
-  // VLAN boxes
-  const vlan = (x, badge, title, l1, l2) => {
-    let o = card(x, 436, 200, 120, p, { r: 12 });
-    o += `<rect x="${x + 16}" y="452" width="74" height="22" rx="11" fill="${a}"/>${T(x + 53, 467, 11, p.accentInk, badge, { w: "bold", anchor: "middle", mono: true })}`;
-    o += T(x + 16, 498, 14, p.ink, title, { w: "bold" });
-    o += T(x + 16, 518, 11, p.muted, l1);
-    o += T(x + 16, 538, 11, p.muted, l2);
+  const pill = (cx, cy, w, label) =>
+    `<rect x="${cx - w / 2}" y="${cy - 11}" width="${w}" height="22" rx="11" fill="${p.base}"/><rect x="${cx - w / 2}" y="${cy - 11}" width="${w}" height="22" rx="11" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-opacity="0.32"/>${T(cx, cy + 4, 11, a, label, { w: "bold", anchor: "middle", mono: true })}`;
+  // Une carte à en-tête sombre et ses lignes « nom + précision ».
+  const machine = (x, w, title, rows) => {
+    let o = card(x, 340, w, 220, p, { r: 14 });
+    o += `<path d="M${x} 354 a14 14 0 0 1 14 -14 h${w - 28} a14 14 0 0 1 14 14 v20 h-${w} z" fill="${p.chrome}"/>`;
+    o += T(x + 20, 362, 13.5, p.chromeInk, title, { w: "bold" });
+    rows.forEach(([nm, sub], i) => {
+      const y = 386 + i * 42;
+      o += card(x + 18, y, w - 36, 36, p, { r: 8, fill: p.soft, shadow: false });
+      o += `<circle cx="${x + 36}" cy="${y + 18}" r="4" fill="${a}"/>`;
+      o += T(x + 50, y + 16, 11.5, p.ink, nm, { mono: true, w: "bold" });
+      o += T(x + 50, y + 30, 9.5, p.muted, sub);
+    });
     return o;
   };
-  s += vlan(125, "VLAN 10", tr("Serveurs", "Servers"), "NAS · Docker · Caddy", tr("Jellyfin · jeux · supervision", "Jellyfin · games · monitoring"));
-  s += vlan(375, "VLAN 20", tr("Postes de travail", "Workstations"), "PC / dev", tr("machines de travail", "work machines"));
-  s += vlan(625, "VLAN 30", tr("IoT / Domotique", "IoT / Smart home"), tr("objets connectés", "connected devices"), tr("isolé du LAN", "isolated from LAN"));
-  s += vlan(875, "VLAN 40", tr("Invités / Wi-Fi", "Guests / Wi-Fi"), tr("accès limité", "limited access"), tr("aucun accès interne", "no internal access"));
+  let s = "";
+
+  // Liaisons
+  s += `<g stroke="${p.muted}" stroke-opacity="0.5" stroke-width="2" fill="none">
+    <path d="M240 90 L300 90"/>
+    <path d="M450 130 L450 200"/>
+    <path d="M560 130 C 700 170, 960 220, 970 340"/>
+  </g>`;
+  s += `<g stroke="${a}" stroke-width="4" fill="none" opacity="0.9"><path d="M430 264 L230 340"/><path d="M600 264 L600 340"/></g>`;
+  s += pill(330, 302, 74, "10 GbE") + pill(600, 302, 74, "10 GbE");
+  s += `<path d="M860 95 L600 95" stroke="${a}" stroke-width="2.5" stroke-dasharray="7 6" fill="none"/>`;
+  s += pill(730, 95, 110, "WireGuard");
+  s += `<path d="M330 560 C 360 615, 560 615, 590 560" stroke="${a}" stroke-width="2" stroke-dasharray="6 5" fill="none" opacity="0.7"/>`;
+  s += pill(460, 601, 70, "iSCSI");
+
+  // Internet
+  s += card(60, 62, 180, 56, p, { r: 12 });
+  s += `<g stroke="${a}" stroke-width="2" fill="none"><circle cx="92" cy="90" r="13"/><ellipse cx="92" cy="90" rx="5.5" ry="13"/><line x1="79" y1="90" x2="105" y2="90"/></g>`;
+  s += T(116, 95, 14, p.ink, "Internet", { w: "bold" });
+
+  // Box de l'opérateur
+  s += card(300, 50, 300, 80, p, { r: 12 });
+  s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="322" y="78" width="30" height="22" rx="3"/><path d="M328 78 v-8 M340 78 v-12"/></g>`;
+  s += T(366, 80, 14, p.ink, tr("Box fibre", "Fibre box"), { w: "bold" });
+  s += T(366, 100, 11, p.muted, "NAT 443 / 80 → Caddy", { mono: true });
+  s += T(366, 117, 10, p.muted, tr("IP fixe · DNS imposé", "static IP · fixed DNS"), { mono: true, op: 0.85 });
+
+  // Accès à distance
+  s += card(860, 50, 280, 104, p, { stroke: a, sw: 2 });
+  s += `<g stroke="${a}" stroke-width="2" fill="none"><rect x="880" y="70" width="16" height="14" rx="2"/><path d="M883 70 v-4 a5 5 0 0 1 10 0 v4"/></g>`;
+  s += T(906, 82, 13.5, p.ink, tr("Accès à distance", "Remote access"), { w: "bold" });
+  s += T(880, 106, 11, p.muted, "WireGuard · MTU 1350", { mono: true });
+  s += T(880, 124, 11, p.muted, "AllowedIPs /32", { mono: true });
+  s += T(880, 142, 10, a, tr("→ réveil du PC, puis RDP ou Moonlight", "→ wake the PC, then RDP or Moonlight"), { mono: true });
+
+  // Switch, non administrable : 2 ports 10 GbE (accent) et les autres
+  s += card(340, 200, 380, 64, p, { r: 12, fill: p.chrome, stroke: p.chrome });
+  s += T(530, 224, 14, p.chromeInk, tr("Switch 10 GbE · non administrable", "10 GbE switch · unmanaged"), { w: "bold", anchor: "middle" });
+  s += [0, 1, 2, 3, 4, 5].map((i) => `<rect x="${410 + i * 30}" y="236" width="20" height="12" rx="2" fill="${i < 2 ? a : p.chromeInk}" fill-opacity="${i < 2 ? 0.9 : 0.3}"/>`).join("");
+  s += T(600, 246, 10, p.chromeInk, "2 × 10 GbE", { mono: true, op: 0.8 });
+
+  // NAS et PC, reliés au switch en 10 GbE
+  s += machine(60, 340, tr("NAS · services réseau", "NAS · network services"), [
+    ["Caddy", tr("seul service exposé · HTTPS", "only exposed service · HTTPS")],
+    ["AdGuard Home", tr("DNS filtrant · réglé par appareil", "filtering DNS · set per device")],
+    ["WireGuard", tr("VPN d'accès à distance", "remote access VPN")],
+    [tr("Pare-feu", "Firewall"), tr("liste blanche · règles Docker", "allowlist · Docker rules")],
+  ]);
+  s += machine(440, 300, tr("PC · poste de travail", "PC · workstation"), [
+    ["iSCSI", tr("disque de jeux hébergé sur le NAS", "games disk hosted on the NAS")],
+    ["Wake-on-LAN", tr("allumé à distance depuis le portail", "powered on remotely from the portal")],
+    ["RDP · Moonlight", tr("bureau et jeux à distance, par le VPN", "desktop and games, over the VPN")],
+  ]);
+
+  // Le Wi-Fi de la box : même réseau, dit tel quel
+  s += card(800, 340, 340, 110, p, { r: 12 });
+  s += `<g stroke="${a}" stroke-width="2" fill="none" stroke-linecap="round"><path d="M820 372 a22 22 0 0 1 30 0"/><path d="M826 379 a13 13 0 0 1 18 0"/></g><circle cx="835" cy="386" r="2.5" fill="${a}"/>`;
+  s += T(862, 378, 14, p.ink, tr("Wi-Fi de la box", "Box Wi-Fi"), { w: "bold" });
+  s += T(820, 410, 11, p.muted, tr("téléphones · TV · invités", "phones · TV · guests"));
+  s += T(820, 430, 11, p.muted, tr("même réseau, à plat", "same flat network"), { mono: true });
+
+  // Les deux pannes résolues en chemin
+  s += card(800, 476, 340, 90, p, { r: 12, stroke: a, sw: 2 });
+  s += T(822, 502, 13, p.ink, tr("2 pannes résolues", "2 outages fixed"), { w: "bold" });
+  s += T(822, 526, 11, p.muted, tr("trou noir de MTU → 1350", "MTU black hole → 1350"), { mono: true });
+  s += T(822, 546, 11, p.muted, tr("collision de /24 → AllowedIPs /32", "/24 clash → AllowedIPs /32"), { mono: true });
 
   return frame(p, s);
 }
@@ -656,7 +691,7 @@ function monitoring(p, lang) {
 }
 
 /* ================================================================== */
-/* 7. resilience — sauvegardes & PRA                                   */
+/* 7. resilience — sauvegardes                                         */
 /* ================================================================== */
 function resilience(p, lang) {
   const a = p.accent;
@@ -664,7 +699,10 @@ function resilience(p, lang) {
   const up = "#22c55e";
   let s = "";
 
-  // flux horizontal : NAS -> restic -> PC hors-site
+  // flux horizontal : NAS -> restic -> PC de la maison
+  // ⚠️ PAS DE « PRA », PAS DE « HORS SITE », PAS DE « RAID1 » (11/10/2026) : la
+  // seconde copie va sur un PC de la maison, qui doit être allumé, et le groupe
+  // RAID1 du NAS n'a qu'un seul SSD, donc aucun miroir. On dit la limite.
   s += `<g stroke="${p.muted}" stroke-opacity="0.6" stroke-width="2.5" fill="none">
     <path d="M370 275 L468 275" marker-end="url(#arrow)"/>
     <path d="M730 275 L828 275" marker-end="url(#arrow)"/>
@@ -685,12 +723,12 @@ function resilience(p, lang) {
   s += T(92, 182, 14, p.chromeInk, tr("NAS · à sauvegarder", "NAS · source"), { w: "bold" });
   const src = tr(
     [
-      ["/volume1/docker", "services & configs"],
+      ["/volume1/docker", "services &amp; configs"],
       ["volumes nommés", "ntfy · caddy · wireguard"],
       ["pg_dump", "base PostgreSQL"],
     ],
     [
-      ["/volume1/docker", "services & configs"],
+      ["/volume1/docker", "services &amp; configs"],
       ["named volumes", "ntfy · caddy · wireguard"],
       ["pg_dump", "PostgreSQL database"],
     ],
@@ -703,7 +741,7 @@ function resilience(p, lang) {
     s += T(126, sy + 34, 9.5, p.muted, sub);
     sy += 52;
   });
-  s += T(90, 388, 10.5, p.muted, tr("+ RAID1 · redondance miroir locale", "+ RAID1 · local mirror redundancy"), { mono: true, op: 0.9 });
+  s += T(90, 388, 10.5, p.muted, tr("limite : pas encore de copie hors site", "limit: no off-site copy yet"), { mono: true, op: 0.9 });
 
   // ---- restic (moteur de sauvegarde) ----
   s += card(470, 208, 260, 140, p, { r: 14, fill: p.chrome, stroke: p.chrome });
@@ -712,10 +750,10 @@ function resilience(p, lang) {
   s += T(600, 315, 10.5, p.chromeInk, tr("chiffré · dédupliqué", "encrypted · deduplicated"), { anchor: "middle", op: 0.75 });
   s += T(600, 333, 10, a, tr("7 j · 4 sem · 6 mois", "7 d · 4 wk · 6 mo"), { anchor: "middle", mono: true });
 
-  // ---- PC (copie hors-site) ----
+  // ---- PC (seconde copie, dans la maison) ----
   s += card(830, 150, 300, 252, p, { r: 14 });
   s += `<path d="M830 164 a14 14 0 0 1 14 -14 h272 a14 14 0 0 1 14 14 v30 h-300 z" fill="${p.chrome}"/>`;
-  s += T(852, 182, 14, p.chromeInk, tr("PC · copie hors-site", "PC · off-site copy"), { w: "bold" });
+  s += T(852, 182, 14, p.chromeInk, tr("PC · seconde copie", "PC · second copy"), { w: "bold" });
   const snaps = [
     ["2026-07-12 08:14", "1.49 GiB"],
     ["2026-07-11 22:03", "1.48 GiB"],

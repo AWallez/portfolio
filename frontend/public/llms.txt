@@ -7,7 +7,7 @@
 - [À propos](https://alexiswallez.fr/#about) : parcours, approche et présentation.
 - [Compétences](https://alexiswallez.fr/#skills) : systèmes & conteneurs, réseau & sécurité, cloud / CI-CD / IaC, front-end, back-end & API, bases de données.
 - [Parcours](https://alexiswallez.fr/#career) : expériences professionnelles et formations.
-- [Projets & Homelab](https://alexiswallez.fr/#projects) : applications web clients, ce portfolio auto-hébergé, réseau domestique avancé (VLAN, pare-feu, 10 GbE), infrastructure NAS conteneurisée, lab DevOps (Kubernetes, Terraform, Ansible).
+- [Projets & Homelab](https://alexiswallez.fr/#projects) : applications web clients, ce portfolio auto-hébergé, réseau domestique et accès à distance (switch 10 GbE, filtrage DNS, WireGuard), infrastructure NAS conteneurisée, lab DevOps (Kubernetes, Terraform, Ansible).
 - [Services](https://alexiswallez.fr/#services) : développement web, déploiement, montage PC, conseil.
 - [Contact](https://alexiswallez.fr/#contact) : formulaire de prise de contact.
 

@@ -48,6 +48,7 @@ const MAP = {
   // ---- badges de la section Projets ----
   AdGuard: "siAdguard",
   Caddy: "siCaddy",
+  "Let's Encrypt": "siLetsencrypt",
   Vaultwarden: "siVaultwarden",
   "Uptime Kuma": "siUptimekuma",
   ntfy: "siNtfy",

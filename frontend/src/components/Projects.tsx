@@ -30,6 +30,8 @@ type Project = {
   desc: { fr: string; en: string };
   tags: string[];
   asset?: string; // préfixe de fichier dans assets/projects (ex. "web-clients")
+  // visuel d'illustration (maquette), signalé comme tel sur la carte
+  mock?: boolean;
   // liens externes sous les badges : "code" -> dépôt public, "demo" -> site en ligne
   links?: { kind: "code" | "demo"; href: string }[];
 };
@@ -47,6 +49,7 @@ const PROJECTS: Project[] = [
     },
     tags: ["React", "Node.js", "PostgreSQL", "Responsive", "Docker"],
     asset: "web-clients",
+    mock: true,
   },
   {
     name: "portfolio",
@@ -68,11 +71,29 @@ const PROJECTS: Project[] = [
       en: "Self-hosted infrastructure (NAS)",
     },
     desc: {
-      fr: "Infrastructure auto-hébergée sur NAS Linux : un parc de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy. Les mises à jour sont appliquées par un script nocturne sur une liste blanche, les bases de données et les accès critiques restant volontairement manuels.",
-      en: "Self-hosted infrastructure on a Linux NAS: a fleet of containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications. Updates are applied by a nightly script against an allowlist, with databases and critical access deliberately left manual.",
+      fr: "Infrastructure auto-hébergée sur NAS Linux : un parc de services conteneurisés (Docker / docker-compose) exposés en HTTPS sur leurs propres sous-domaines derrière un reverse proxy Caddy unique (certificats Let's Encrypt automatiques, en-têtes de sécurité, rate-limiting anti-brute-force). En production : gestionnaire de mots de passe (Vaultwarden), filtrage DNS (AdGuard), streaming média (Jellyfin), VPN WireGuard, PostgreSQL et notifications ntfy. Les mises à jour passent par compose-auto-update, un outil que j'ai écrit : il vérifie chaque service après la mise à jour et revient à l'ancienne version en cas d'échec. Les bases de données et les accès critiques restent volontairement manuels.",
+      en: "Self-hosted infrastructure on a Linux NAS: a fleet of containerized services (Docker / docker-compose) served over HTTPS on their own subdomains behind a single Caddy reverse proxy (automatic Let's Encrypt certificates, security headers, anti-brute-force rate limiting). In production: a password manager (Vaultwarden), DNS filtering (AdGuard), media streaming (Jellyfin), a WireGuard VPN, PostgreSQL and ntfy notifications. Updates go through compose-auto-update, a tool I wrote: it checks each service after updating and rolls back to the previous version if it fails. Databases and critical access are deliberately left manual.",
     },
-    tags: ["Docker", "Linux", "Caddy", "Vaultwarden", "self-hosting"],
+    tags: ["Docker", "Linux", "Caddy", "Let's Encrypt", "Vaultwarden", "AdGuard", "WireGuard", "self-hosting"],
     asset: "homelab",
+  },
+  {
+    name: "dashboard",
+    folder: { fr: "dashboard", en: "dashboard" },
+    title: {
+      fr: "Tableau de bord du homelab",
+      en: "Homelab dashboard",
+    },
+    desc: {
+      fr: "Portail maison du NAS. Des collecteurs shell et Python, lancés par cron, interrogent Docker, le noyau, SMART et les API des services, puis publient chacun leur fichier JSON. Une page statique servie par nginx les relit, sans framework ni base de données. Les valeurs vivantes arrivent en 4 secondes, contre 80 au départ. La page garde 7 jours d'historique et pilote les mises à jour des conteneurs. Elle m'alerte sur mon téléphone quand le processeur, la mémoire, le disque ou une température reste au-dessus de son seuil pendant au moins dix minutes (une tendance, pas un pic), ou quand un collecteur s'arrête. Un veilleur répare seul la panne la plus fréquente : 24 secondes au lieu de 90 minutes à la main.",
+      en: "Home-made NAS portal. Shell and Python collectors, run by cron, query Docker, the kernel, SMART and the services' APIs, then each publish their own JSON file. A static page served by nginx reads them back, with no framework and no database. Live values arrive within 4 seconds, down from 80 at the start. The page keeps 7 days of history and drives the container updates. It alerts my phone when the CPU, memory, disk or a temperature stays above its threshold for at least ten minutes (a trend, not a spike), or when a collector stops. A watchdog fixes the most frequent outage on its own: 24 seconds instead of 90 minutes by hand.",
+    },
+    tags: ["Bash", "Shell", "Python", "JavaScript", "Docker", "GitHub Actions", "self-hosting"],
+    asset: "dashboard",
+    links: [
+      { kind: "code", href: "https://github.com/AWallez/homelab" },
+      { kind: "demo", href: "https://awallez.github.io/homelab/" },
+    ],
   },
   {
     name: "monitoring",
@@ -89,6 +110,17 @@ const PROJECTS: Project[] = [
     asset: "monitoring",
   },
   {
+    name: "reseau",
+    folder: { fr: "reseau", en: "network" },
+    title: { fr: "Réseau domestique et accès à distance", en: "Home network & remote access" },
+    desc: {
+      fr: "Le réseau tel qu'il est : un LAN unique derrière la box fibre, un switch 10 GbE entre le NAS et le PC (stockage iSCSI pour les jeux), un filtrage DNS AdGuard Home réglé appareil par appareil et un seul service exposé, Caddy. L'accès à distance passe par WireGuard : il réveille le PC, puis RDP ou Moonlight prennent le relais. Deux pannes résolues en chemin : un trou noir de MTU, ramené à 1350, et une collision de sous-réseau, réglée par des AllowedIPs en /32.",
+      en: "The network as it really is: a single LAN behind the fibre box, a 10 GbE switch between the NAS and the PC (iSCSI storage for games), AdGuard Home DNS filtering set device by device, and a single exposed service, Caddy. Remote access goes through WireGuard: it wakes the PC, then RDP or Moonlight take over. Two outages fixed along the way: an MTU black hole, brought down to 1350, and a subnet clash, solved with /32 AllowedIPs.",
+    },
+    tags: ["WireGuard", "AdGuard", "10 GbE", "iSCSI", "iptables"],
+    asset: "reseau",
+  },
+  {
     name: "resilience",
     folder: { fr: "sauvegardes", en: "backups" },
     title: {
@@ -96,40 +128,11 @@ const PROJECTS: Project[] = [
       en: "Resilience & backups",
     },
     desc: {
-      fr: "Snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL), poussés vers un poste externe et déclenchés automatiquement à l'allumage du PC. Rétention 7 j / 4 sem / 6 mois, restauration testée, redondance RAID1 et dead-man's-switch (alerte si une sauvegarde manque). Restauration testée, pas seulement configurée.",
-      en: "Encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps), pushed to an external machine and triggered automatically when the PC powers on. 7-day / 4-week / 6-month retention, tested restore, RAID1 redundancy and a dead-man's-switch (alert if a backup is missing). The restore is tested, not just configured.",
+      fr: "Snapshots restic chiffrés et dédupliqués du NAS (services, volumes, dumps PostgreSQL), poussés vers le PC de la maison et déclenchés automatiquement à son allumage. Rétention 7 j / 4 sem / 6 mois et dead-man's-switch (alerte si une sauvegarde manque). Limite assumée : la seconde copie reste dans la maison, il manque encore une copie hors site. Restauration testée, pas seulement configurée.",
+      en: "Encrypted, deduplicated restic snapshots of the NAS (services, volumes, PostgreSQL dumps), pushed to the PC at home and triggered automatically when it powers on. 7-day / 4-week / 6-month retention and a dead-man's-switch (alert if a backup is missing). Known limit: the second copy stays in the house, and an off-site copy is still missing. The restore is tested, not just configured.",
     },
-    tags: ["restic", "Chiffrement", "RAID1", "Automatisation", "PRA"],
+    tags: ["restic", "Chiffrement", "Automatisation", "PostgreSQL"],
     asset: "resilience",
-  },
-  {
-    name: "dashboard",
-    folder: { fr: "dashboard", en: "dashboard" },
-    title: {
-      fr: "Tableau de bord du homelab",
-      en: "Homelab dashboard",
-    },
-    desc: {
-      fr: "Portail maison du NAS, écrit pour remplacer l'outil du commerce que j'utilisais. Des collecteurs shell interrogent Docker et les services de la machine, publient du JSON, et une page statique servie par nginx le relit toutes les deux secondes.",
-      en: "Home-made NAS portal, written to replace the off-the-shelf tool I was using. Shell collectors poll Docker and the services on the machine, publish JSON, and a static page served by nginx reads it back every two seconds.",
-    },
-    tags: ["Bash", "JavaScript", "Docker", "GitHub Actions", "self-hosting"],
-    asset: "dashboard",
-    links: [
-      { kind: "code", href: "https://github.com/AWallez/homelab" },
-      { kind: "demo", href: "https://awallez.github.io/homelab/" },
-    ],
-  },
-  {
-    name: "reseau",
-    folder: { fr: "reseau", en: "network" },
-    title: { fr: "Réseau domestique avancé", en: "Advanced home network" },
-    desc: {
-      fr: "Réseau domestique cloisonné : VLAN, pare-feu, filtrage DNS (AdGuard Home : pub, traqueurs, listes de sécurité), VPN et SSH durcis, liaison 10 GbE et stockage iSCSI. Le tout administré sous Linux, en ligne de commande.",
-      en: "Segmented home network: VLANs, firewall, DNS filtering (AdGuard Home: ads, trackers, security lists), hardened VPN and SSH, 10 GbE link and iSCSI storage. All administered on Linux, from the command line.",
-    },
-    tags: ["Réseau", "VLAN", "AdGuard", "10 GbE", "iptables"],
-    asset: "reseau",
   },
   {
     name: "lab",
@@ -207,9 +210,15 @@ export default function Projects() {
                   </button>
                 </div>
               )}
-              {/* nom de dossier en mono, clin d'œil terminal */}
-              <p className="font-mono text-xs text-muted mb-2">
-                ~/{p.folder[lang]}/
+              {/* nom de dossier en mono, clin d'œil terminal ; un visuel
+                  d'illustration le dit sur la même ligne, sans couvrir l'image */}
+              <p className="font-mono text-xs text-muted mb-2 flex items-center justify-between gap-2">
+                <span>~/{p.folder[lang]}/</span>
+                {p.mock && (
+                  <span className="rounded-md border border-line px-1.5 py-0.5 text-[11px]">
+                    {t("projects", "mock", lang)}
+                  </span>
+                )}
               </p>
 
               <h3 className="text-ink font-semibold mb-2">{p.title[lang]}</h3>
@@ -217,21 +226,10 @@ export default function Projects() {
                 {p.desc[lang]}
               </p>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                {p.tags.map((tag) => (
-                  <Tag
-                    key={tag}
-                    size="sm"
-                    tip={TIPS[tag]?.[lang]}
-                    icon={SKILL_ICONS[tag] ?? GENERIC_ICONS[tag]}
-                  >
-                    {tag}
-                  </Tag>
-                ))}
-              </div>
-
+              {/* Les liens AVANT les badges : les badges finissent ainsi au même
+                  niveau sur toutes les cartes d'une rangée, liens ou pas. */}
               {p.links && (
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4 mb-3">
                   {p.links.map(({ kind, href }) => {
                     const Icon = LINK_ICON[kind];
                     return (
@@ -252,6 +250,19 @@ export default function Projects() {
                   })}
                 </div>
               )}
+
+              <div className="flex flex-wrap gap-2">
+                {p.tags.map((tag) => (
+                  <Tag
+                    key={tag}
+                    size="sm"
+                    tip={TIPS[tag]?.[lang]}
+                    icon={SKILL_ICONS[tag] ?? GENERIC_ICONS[tag]}
+                  >
+                    {tag}
+                  </Tag>
+                ))}
+              </div>
             </article>
           </Reveal>
         ))}
@@ -262,7 +273,7 @@ export default function Projects() {
           <Lightbox
             light={svg(zoomed.asset, "light", lang)}
             dark={svg(zoomed.asset, "dark", lang)}
-            title={zoomed.title[lang]}
+            title={zoomed.mock ? `${zoomed.title[lang]} · ${t("projects", "mock", lang)}` : zoomed.title[lang]}
             onClose={closeZoom}
           />
         </Suspense>

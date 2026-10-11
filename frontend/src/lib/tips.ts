@@ -46,6 +46,10 @@ export const TIPS: Record<string, { fr: string; en: string }> = {
     fr: "Shell et langage de script Unix pour automatiser des tâches.",
     en: "Unix shell and scripting language to automate tasks.",
   },
+  Shell: {
+    fr: "Interpréteur de commandes Unix (sh) : les scripts POSIX tournent partout, même sans Bash.",
+    en: "Unix command interpreter (sh): POSIX scripts run anywhere, even without Bash.",
+  },
   systemd: {
     fr: "Gestionnaire de services et de tâches planifiées de Linux.",
     en: "Linux's service manager and task scheduler.",
@@ -231,6 +235,10 @@ export const TIPS: Record<string, { fr: string; en: string }> = {
   Caddy: {
     fr: "Serveur web / reverse proxy avec HTTPS automatique (Let's Encrypt).",
     en: "Web server / reverse proxy with automatic HTTPS (Let's Encrypt).",
+  },
+  "Let's Encrypt": {
+    fr: "Autorité de certification gratuite : certificats HTTPS délivrés et renouvelés automatiquement via le protocole ACME.",
+    en: "Free certificate authority: HTTPS certificates issued and renewed automatically over the ACME protocol.",
   },
   Vaultwarden: {
     fr: "Gestionnaire de mots de passe auto-hébergé, compatible Bitwarden.",

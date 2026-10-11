@@ -19,6 +19,7 @@ import {
   Radar,
   Search,
   Server,
+  SquareTerminal,
   Webhook,
   Workflow,
   type LucideIcon,
@@ -47,6 +48,7 @@ export const GENERIC_ICONS: Record<string, LucideIcon> = {
   Réseau: Network,
   "10 GbE": Cable,
   "self-hosting": Server,
+  Shell: SquareTerminal, // pas de logo de marque pour sh (POSIX)
   UptimeRobot: Radar,
   Alerting: BellRing,
   restic: DatabaseBackup,

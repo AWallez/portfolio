@@ -48,7 +48,7 @@ const GROUPS: {
   {
     key: "network",
     Icon: Network,
-    items: ["WireGuard", "VLAN", "DNS", "IPv4/IPv6", "iptables", "SSH", "iSCSI", "Nginx / Caddy"],
+    items: ["WireGuard", "DNS", "IPv4/IPv6", "iptables", "SSH", "iSCSI", "Nginx / Caddy"],
   },
   {
     key: "frontend",

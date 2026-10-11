@@ -44,6 +44,7 @@ export const translations = {
     close: { fr: "Fermer", en: "Close" },
     code: { fr: "Code", en: "Code" },
     demo: { fr: "Démo", en: "Demo" },
+    mock: { fr: "Maquette d’illustration", en: "Illustrative mock-up" },
   },
   services: {
     title: { fr: "Services", en: "Services" },

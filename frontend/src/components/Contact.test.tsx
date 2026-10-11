@@ -33,7 +33,7 @@ describe("<Contact />", () => {
     renderContact();
 
     await user.type(screen.getByLabelText(/prénom|first name/i), "Jean");
-    await user.type(screen.getByLabelText(/nom|last name/i), "Dupont");
+    await user.type(screen.getByLabelText(/^(nom|last name)/i), "Dupont");
     await user.type(screen.getByLabelText(/email/i), "pas-un-email");
     await user.click(screen.getByRole("button", { name: /envoyer|send/i }));
 

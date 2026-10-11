@@ -12,11 +12,13 @@ type LangCtx = { lang: Lang; toggle: () => void };
 
 const Ctx = createContext<LangCtx | null>(null);
 
-// langue initiale : localStorage si déjà choisi, sinon celle du navigateur
+// langue initiale : localStorage si déjà choisi, sinon le français. Pas de
+// détection du navigateur : Googlebot se présente en anglais et indexait la
+// version EN d'un site visant la France.
 function detectInitial(): Lang {
   const saved = localStorage.getItem("lang");
   if (saved === "fr" || saved === "en") return saved;
-  return navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
+  return "fr";
 }
 
 export function LangProvider({ children }: { children: ReactNode }) {
