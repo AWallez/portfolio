@@ -54,7 +54,7 @@ ntfy.alexiswallez.fr {
 # l'admin était servi en HTTP sur un simple port.
 crm.alexiswallez.fr {
 	@public not remote_ip 192.168.1.0/24 10.8.0.0/24
-	respond @public "403 · Accès réservé au réseau local et au VPN." 403
+	respond @public "403 — Accès réservé au LAN/VPN." 403
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		-Server
