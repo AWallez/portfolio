@@ -7,7 +7,10 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { config } from "./config";
 
-const COOKIE_NAME = "admin_session";
+// Préfixe `__Host-` : le navigateur n'accepte ce cookie que Secure, sans
+// Domain et sur `/`. Il reste donc lié au seul nom crm.alexiswallez.fr et ne
+// part plus vers les autres services du NAS (les cookies ignorent les ports).
+const COOKIE_NAME = "__Host-admin_session";
 
 // Sessions côté serveur : le cookie (signé) ne porte qu'un identifiant
 // aléatoire, la date d'expiration reste ici. Avant, le cookie contenait sa date
@@ -81,9 +84,9 @@ export async function authRoutes(app: FastifyInstance) {
           // (l'admin s'ouvre au clavier ou en favori, rien n'y mène de dehors)
           sameSite: "strict",
           signed: true,
-          // secure:false assumé : servi en HTTP sur le LAN (et via VPN),
-          // jamais exposé à Internet.
-          secure: false,
+          // servi en HTTPS par Caddy (crm.alexiswallez.fr). En local,
+          // http://localhost compte comme contexte sûr pour les navigateurs.
+          secure: true,
           maxAge: config.sessionTtlHours * 3600,
         })
         .send({ ok: true });
@@ -94,7 +97,9 @@ export async function authRoutes(app: FastifyInstance) {
     // la session meurt côté serveur : une copie du cookie ne sert plus à rien
     const id = sessionId(req);
     if (id) sessions.delete(id);
-    return reply.clearCookie(COOKIE_NAME, { path: "/" }).send({ ok: true });
+    return reply
+      .clearCookie(COOKIE_NAME, { path: "/", secure: true })
+      .send({ ok: true });
   });
 
   // Permet au front de savoir si une session est active (au chargement).

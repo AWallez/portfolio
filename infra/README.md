@@ -50,10 +50,27 @@ Toute la stack du portfolio via **Docker Compose** : front, API, base de donnée
 ./deploy.sh admin       # un service · web api admin si aucun argument
 ```
 
-[`deploy.sh`](deploy.sh) fait le `git pull` (via conteneur, `--network host`),
-**valide le Caddyfile**, puis reconstruit les services demandés. Il se repère
-tout seul : appelable depuis n'importe quel dossier, contrairement aux commandes
-manuelles qui supposent d'être dans `infra/`.
+[`deploy.sh`](deploy.sh), dans l'ordre :
+
+1. attend la fin d'une éventuelle passe de compose-auto-update (verrou partagé) ;
+2. fait le `git pull` (via conteneur, `--network host`) ;
+3. **valide le Caddyfile**, et revient au commit précédent s'il est invalide ;
+4. migre le schéma et les comptes PostgreSQL (service `migrate`) ;
+5. pour chaque service : garde l'image en service sous `:previous`, reconstruit,
+   démarre et **attend qu'il soit sain** (`--wait`) ; sinon remet l'image
+   précédente et s'arrête ;
+6. redémarre Caddy si le Caddyfile a changé (monté en fichier seul, il ne voit
+   le nouveau qu'au redémarrage).
+
+Il se repère tout seul : appelable depuis n'importe quel dossier, contrairement
+aux commandes manuelles qui supposent d'être dans `infra/`.
+
+⚠️ Quand une mise à jour modifie `deploy.sh` lui-même, le lancement suivant
+exécute encore l'**ancienne** version (lue avant le `pull`). Faire alors le pull
+seul d'abord, puis lancer `deploy.sh`.
+
+Le back-office (`admin`) ne publie aucun port : Caddy le sert sur
+`https://crm.alexiswallez.fr`, au réseau local et au VPN seulement.
 
 ⚠️ **Pourquoi valider le Caddyfile à chaque fois** : une erreur de configuration
 ne se voit **pas** tant que Caddy tourne — il garde sa config en mémoire et ne

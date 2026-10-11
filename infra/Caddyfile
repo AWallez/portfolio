@@ -47,6 +47,21 @@ ntfy.alexiswallez.fr {
 	reverse_proxy ntfy:80
 }
 
+# Back-office (CRM, conteneur `admin`) : réseau local et VPN seulement.
+# En HTTPS et sur son propre nom : le mot de passe et le cookie de session ne
+# passent plus en clair sur le Wi-Fi, et ce cookie (`__Host-`, lié à ce seul
+# nom) ne part plus vers les autres services du NAS, comme il le faisait quand
+# l'admin était servi en HTTP sur un simple port.
+crm.alexiswallez.fr {
+	@public not remote_ip 192.168.1.0/24 10.8.0.0/24
+	respond @public "403 · Accès réservé au réseau local et au VPN." 403
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy admin:3002
+}
+
 # Blocs locaux à la machine de déploiement (services personnels hors
 # portfolio) : fichiers *.caddy dans conf.d/, non versionnés (gitignorés)
 # → ils survivent aux `git reset --hard` des déploiements.

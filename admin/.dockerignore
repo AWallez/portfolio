@@ -1,0 +1,11 @@
+# .env contient des secrets → JAMAIS dans l'image (les vars viennent de compose)
+node_modules
+web/node_modules
+dist
+web/dist
+.git
+.env
+.env.*
+*.log
+Dockerfile
+.dockerignore

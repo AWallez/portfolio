@@ -12,14 +12,19 @@ import { explorerRoutes } from "./routes/explorer";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// Outil interne servi en LAN/VPN uniquement (port non exposé à Internet).
-// trustProxy inutile : pas de reverse proxy devant, l'IP client est directe.
-const app = Fastify({ logger: true });
+// Outil interne servi par Caddy (crm.alexiswallez.fr), réseau local et VPN
+// seulement. trustProxy sur les proxys internes, comme l'API : sans lui, toutes
+// les requêtes viendraient de l'IP de Caddy et partageraient un seul compteur
+// anti-brute-force sur /api/login.
+const app = Fastify({
+  logger: true,
+  trustProxy: ["loopback", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+});
 
 await app.register(cookie, { secret: config.sessionSecret });
 await app.register(rateLimit, { global: false }); // activé route par route
 
-// En-têtes de sécurité : le port 8100 n'en envoyait aucun. Pas de cadre (anti
+// En-têtes de sécurité : l'admin n'en envoyait aucun. Pas de cadre (anti
 // clickjacking), pas de devinette de type, pas de Referer vers l'extérieur, et
 // aucune réponse de l'API gardée en cache (elles contiennent les contacts).
 app.addHook("onSend", async (req, reply, payload) => {
@@ -71,6 +76,18 @@ app.setNotFoundHandler((req, reply) => {
   }
   return reply.sendFile("index.html");
 });
+
+// Arrêt propre : `docker stop` envoie SIGTERM. Node lancé directement (PID 1)
+// n'a pas de comportement par défaut pour ce signal : Docker attendait 10 s puis
+// tuait le processus, requêtes en cours comprises.
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.once(signal, () => {
+    app.close().then(
+      () => process.exit(0),
+      () => process.exit(1),
+    );
+  });
+}
 
 try {
   await app.listen({ port: config.port, host: config.host });

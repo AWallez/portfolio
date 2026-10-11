@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "build": "esbuild src/server.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@types/node": "^26.1.1",
     "@types/pg": "^8.20.0",
+    "esbuild": "^0.28.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"

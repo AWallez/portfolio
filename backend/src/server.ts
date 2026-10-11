@@ -6,6 +6,7 @@ import process from "node:process";
 import { config } from "./config";
 import { contactRoutes } from "./routes/contact";
 import { schedulePurge } from "./retention";
+import { pool } from "./db";
 
 // trustProxy : derrière Caddy → Nginx, sans ça req.ip vaudrait l'IP interne du
 // proxy pour TOUS les visiteurs (rate-limit global partagé au lieu de par IP,
@@ -62,7 +63,22 @@ await app.register(contactRoutes);
 // durées de conservation RGPD appliquées par l'API elle-même : pas de cron à
 // maintenir sur le NAS, et la purge suit le conteneur partout où il tourne.
 const stopPurge = schedulePurge(app.log);
-app.addHook("onClose", async () => stopPurge());
+app.addHook("onClose", async () => {
+  stopPurge();
+  await pool.end();
+});
+
+// Arrêt propre : `docker stop` envoie SIGTERM. Node lancé directement (PID 1)
+// n'a pas de comportement par défaut pour ce signal : Docker attendait 10 s puis
+// tuait le processus, requêtes en cours comprises.
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.once(signal, () => {
+    app.close().then(
+      () => process.exit(0),
+      () => process.exit(1),
+    );
+  });
+}
 
 try {
   await app.listen({ port: config.port, host: config.host });

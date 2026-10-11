@@ -5,6 +5,21 @@
 #   3. docker compose run --rm --no-deps migrate   (schéma + comptes ; deploy.sh le fait)
 # Le service `web` (Nginx) sert le SPA et proxy /api → `api` (même origine).
 # Brancher le reverse proxy + HTTPS d'UGOS sur ${WEB_PORT}.
+
+# Journaux Docker plafonnés (3 fichiers de 10 Mo par conteneur). Sans ça, le
+# pilote json-file par défaut écrit sans limite sur le disque du NAS.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Limites de mémoire : la RAM est la ressource rare du NAS (7,5 Gio pour une
+# trentaine de conteneurs). Un service qui s'emballe est relancé par Docker au
+# lieu d'affamer les autres. Mesures du 11/10/2026 au repos : api 73 Mio et
+# admin 75 (avec tsx), postgres 15, ntfy 40, caddy 35, web 10 ; d'où des
+# plafonds larges, à resserrer après quelques semaines de mesures.
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -23,6 +38,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    mem_limit: 256m
+    logging: *logging
 
   # --- Migration : schéma, comptes applicatifs et leurs droits (backend/db/). ---
   # Conteneur jetable, sous le compte PROPRIÉTAIRE de la base. Hors du démarrage
@@ -43,6 +60,7 @@ services:
       ADMIN_DB_PASSWORD: ${ADMIN_DB_PASSWORD:-}
     volumes:
       - ../backend/db:/db:ro
+    logging: *logging
 
   ntfy:
     image: binwiederhier/ntfy:latest
@@ -60,6 +78,11 @@ services:
       # et on connecte l'appli du tél avec ce compte (read). Base persistée dans le volume.
       NTFY_AUTH_FILE: /var/cache/ntfy/user.db
       NTFY_AUTH_DEFAULT_ACCESS: deny-all
+      # Derrière Caddy (ntfy.alexiswallez.fr) : sans ça, ntfy voit l'IP de Caddy
+      # pour TOUS les clients publics, qui partagent alors un seul compteur
+      # anti-abus. Une trentaine de mauvais mots de passe venus de n'importe où
+      # suffisaient à couper les notifications du téléphone hors de la maison.
+      NTFY_BEHIND_PROXY: "true"
     ports:
       - "8080:80"
     volumes:
@@ -69,6 +92,8 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    mem_limit: 128m
+    logging: *logging
 
   # --- API Fastify (containerisée). Aucun port hôte : joignable seulement via `web`. ---
   api:
@@ -107,9 +132,13 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    mem_limit: 192m
+    logging: *logging
 
-  # --- Outil admin/CRM interne. Port 8100 = LAN/VPN uniquement (jamais NATé,
-  # pas de bloc Caddy) : suivi des messages du formulaire + explorateur BDD. ---
+  # --- Outil admin/CRM interne : suivi des messages du formulaire + explorateur
+  # BDD. Aucun port publié : servi par Caddy sur crm.alexiswallez.fr, en HTTPS,
+  # au réseau local et au VPN seulement (cf. Caddyfile). Avant : HTTP sur le
+  # port 8100, mot de passe et cookie en clair sur le Wi-Fi. ---
   admin:
     build:
       context: ../admin
@@ -123,13 +152,11 @@ services:
     environment:
       PORT: 3002
       HOST: 0.0.0.0
-      # user PostgreSQL dédié aux droits limités (SELECT partout, écriture
-      # uniquement sur contacts) — créé une fois via psql, cf. .env.example
+      # compte PostgreSQL limité aux contacts (backend/db/roles.sql), créé et
+      # tenu à jour par le service `migrate`
       DATABASE_URL_ADMIN: postgres://${ADMIN_DB_USER}:${ADMIN_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
       SESSION_SECRET: ${ADMIN_SESSION_SECRET}
-    ports:
-      - "8100:3002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -138,6 +165,8 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    mem_limit: 192m
+    logging: *logging
 
   # --- Frontend : Nginx sert dist/ et proxy /api → api (même origine, zéro CORS). ---
   web:
@@ -151,6 +180,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    mem_limit: 64m
+    logging: *logging
     # Aucun port publié : seul `caddy` (8081/8443) est l'entrée publique → il
     # joint `web` via le réseau Docker interne. (Plus d'accès LAN direct en 8088.)
 
@@ -159,9 +190,14 @@ services:
     image: caddy:2-alpine
     container_name: portfolio-caddy
     restart: unless-stopped
+    # `service_started` et non `service_healthy` : Caddy porte TOUS les sites
+    # publics du NAS (Jellyfin, Vaultwarden, stats…). Un `web` en panne ne doit
+    # pas l'empêcher de redémarrer, et d'emporter les autres avec lui.
     depends_on:
       web:
-        condition: service_healthy
+        condition: service_started
+    mem_limit: 256m
+    logging: *logging
     ports:
       # 80/443 du NAS sont pris par le nginx système d'UGOS, et 8080 par ntfy →
       # on écoute sur 8081/8443 ; la box redirige le 80/443 public vers eux (NAT).
@@ -171,6 +207,10 @@ services:
     # NB : sur la machine de déploiement, un docker-compose.override.yml LOCAL
     # (non versionné, chargé automatiquement) peut enrichir ce service :
     # image Caddy avec plugins + réseaux d'autres stacks pour les blocs conf.d/.
+    # ⚠️ Caddyfile monté en FICHIER seul : git le remplace par un nouveau fichier
+    # à chaque pull, et le conteneur garde l'ancien jusqu'à son redémarrage (un
+    # `caddy reload` relirait l'ancien contenu). deploy.sh valide donc le
+    # nouveau Caddyfile, puis redémarre caddy quand il a changé.
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./conf.d:/etc/caddy/conf.d:ro # blocs locaux importés (gitignorés)
