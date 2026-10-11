@@ -61,9 +61,14 @@ check_caddy() {
   return 1
 }
 
-# Empreinte du Caddyfile, pour savoir si le pull l'a modifié.
-caddy_empreinte() {
-  md5sum "$REPO/infra/Caddyfile" | cut -d' ' -f1
+# Le Caddyfile du dépôt diffère-t-il de celui que Caddy utilise ? On compare au
+# fichier VU PAR LE CONTENEUR, et non à l'état d'avant le pull : un pull fait à
+# part (cas d'un deploy.sh modifié) ne laissait voir aucun changement, et Caddy
+# gardait l'ancienne configuration. Caddy arrêté : rien à redémarrer.
+caddy_a_change() {
+  [ -n "$(docker compose ps -q --status running caddy)" ] || return 1
+  en_service=$(docker compose exec -T caddy cat /etc/caddy/Caddyfile | md5sum)
+  [ "$en_service" != "$(md5sum < "$REPO/infra/Caddyfile")" ]
 }
 
 # Construit puis démarre un service, en gardant de quoi revenir en arrière.
@@ -125,7 +130,6 @@ main() {
 
   echo "→ dépôt : $REPO"
   AVANT=$(git_c rev-parse HEAD | tr -d '\r')
-  CADDY_AVANT=$(caddy_empreinte)
   git_c pull
 
   # Grave le commit dans les images reconstruites (cf. les ARG GIT_SHA des
@@ -167,9 +171,10 @@ main() {
 
   # Caddy ne relit jamais son fichier tout seul, et le Caddyfile est monté en
   # fichier seul (cf. docker-compose.yml) : seul un redémarrage lui fait voir
-  # le nouveau. Il a été validé plus haut ; on ne redémarre que s'il a changé,
-  # car Caddy porte tous les sites publics du NAS (coupure d'une seconde).
-  if [ "$(caddy_empreinte)" != "$CADDY_AVANT" ]; then
+  # le nouveau. Il a été validé plus haut ; on ne redémarre que s'il diffère de
+  # celui en service, car Caddy porte tous les sites publics du NAS (coupure
+  # d'une seconde).
+  if caddy_a_change; then
     echo "→ Caddyfile modifié : redémarrage de caddy"
     docker compose restart caddy
   fi

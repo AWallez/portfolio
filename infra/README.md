@@ -59,8 +59,8 @@ Toute la stack du portfolio via **Docker Compose** : front, API, base de donnée
 5. pour chaque service : garde l'image en service sous `:previous`, reconstruit,
    démarre et **attend qu'il soit sain** (`--wait`) ; sinon remet l'image
    précédente et s'arrête ;
-6. redémarre Caddy si le Caddyfile a changé (monté en fichier seul, il ne voit
-   le nouveau qu'au redémarrage).
+6. redémarre Caddy si le Caddyfile du dépôt diffère de celui qu'il utilise
+   (monté en fichier seul, il ne voit le nouveau qu'au redémarrage).
 
 Il se repère tout seul : appelable depuis n'importe quel dossier, contrairement
 aux commandes manuelles qui supposent d'être dans `infra/`.
