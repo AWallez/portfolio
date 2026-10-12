@@ -7,6 +7,15 @@ const FOCUSABLE =
   "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), " +
   'textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
+// Affiché ? Un élément masqué (display: none sur lui ou un parent, comme les
+// boutons de zoom sur téléphone) ne peut pas prendre le focus : compté, il
+// servirait de borne au piège et Tab n'irait plus nulle part.
+function affiche(el: HTMLElement, racine: HTMLElement) {
+  for (let n: HTMLElement | null = el; n && n !== racine; n = n.parentElement)
+    if (getComputedStyle(n).display === "none") return false;
+  return true;
+}
+
 /**
  * Comportement commun des modales (Lightbox, CvModal) : focus initial, Échap,
  * piège du focus (WCAG 2.4.3), arrière-plan figé, et focus rendu à l'élément
@@ -29,7 +38,9 @@ export function useModal(
       if (e.key !== "Tab") return;
       const root = dialogRef.current;
       if (!root) return;
-      const focusables = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const focusables = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (n) => affiche(n, root),
+      );
       if (focusables.length === 0) {
         e.preventDefault();
         return;

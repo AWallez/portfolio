@@ -177,6 +177,7 @@ export default function CvModal({ onClose }: Props) {
                     setLoaded(true);
                   }}
                   className="absolute inset-0 h-full w-full object-contain dark:hidden"
+                  data-zoom-content
                   style={transformStyle}
                 />
                 <img
@@ -185,6 +186,7 @@ export default function CvModal({ onClose }: Props) {
                   aria-hidden
                   draggable={false}
                   className="absolute inset-0 hidden h-full w-full object-contain dark:block"
+                  data-zoom-content
                   style={transformStyle}
                 />
               </>

@@ -42,6 +42,11 @@ export const translations = {
     command: { fr: "ls -la ~/projets", en: "ls -la ~/projects" },
     zoom: { fr: "Agrandir l’image", en: "Enlarge image" },
     close: { fr: "Fermer", en: "Close" },
+    // aperçu agrandi, téléphone en portrait (Lightbox) : seule façon d'agrandir
+    rotateHint: {
+      fr: "Tournez le téléphone pour agrandir",
+      en: "Turn your phone to see it larger",
+    },
     code: { fr: "Code", en: "Code" },
     demo: { fr: "Démo", en: "Demo" },
     mock: { fr: "Maquette d’illustration", en: "Illustrative mock-up" },

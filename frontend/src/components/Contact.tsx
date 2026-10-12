@@ -193,11 +193,11 @@ export default function Contact() {
 
   // styles réutilisés pour les champs. Focus : contour de 2 px (la bordure de
   // 1 px qui changeait de couleur ne se voyait presque pas, alors que la
-  // validation y envoie le focus). Placeholder en `text-muted` plein : à 50 %,
-  // il tombait à 2,2:1 de contraste en thème clair.
+  // validation y envoie le focus). Exemple (placeholder) à 65 % et en italique :
+  // on voit que le champ est vide, sans descendre sous 3:1 (à 50 %, 2,2:1).
   const field =
     "w-full rounded-lg border bg-surface/70 px-3 py-2 text-ink " +
-    "placeholder:text-muted outline-none focus:outline-2 focus:outline-offset-1 transition";
+    "placeholder:text-muted/65 placeholder:italic outline-none focus:outline-2 focus:outline-offset-1 transition";
   // label avec petite icône lucide (raccord avec les badges du site)
   const label = "font-mono text-xs text-muted mb-1 flex items-center gap-1.5";
   const labelIcon = "text-accent shrink-0";

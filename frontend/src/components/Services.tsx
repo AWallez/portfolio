@@ -134,7 +134,7 @@ export default function Services() {
         {SERVICES.map((s, i) => (
           <Reveal
             key={s.folder.en}
-            delay={i * 100}
+            delay={(i % 2) * 80} // décalage par colonne, pas par rang
             variant={i % 2 === 0 ? "left" : "right"}
             className="w-full sm:w-[calc(50%-0.625rem)] flex"
           >

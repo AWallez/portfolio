@@ -121,7 +121,7 @@ export default function Career() {
             {TIMELINE.map((item, i) => (
               // <li> enfant direct du <ol> ; l'animation Reveal est À L'INTÉRIEUR
               <li key={i} className="pb-8 last:pb-0">
-                <Reveal delay={i * 120} variant="right" className="flex items-center">
+                <Reveal delay={Math.min(i, 2) * 80} variant="right" className="flex items-center">
                   {/* côté gauche : date + badge */}
                   <div className="flex flex-col items-center w-25 sm:w-30 shrink-0 pt-1">
                     {" "}

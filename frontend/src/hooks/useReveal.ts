@@ -19,7 +19,9 @@ export function useReveal<T extends HTMLElement>() {
         // reversible : ré-anime à la remontée du scroll (pas de disconnect)
         setVisible(entry.isIntersecting);
       },
-      { threshold: 0, rootMargin: "-150px 0px -150px 0px" },
+      // 50 px dans l'écran par le bas suffisent ; en haut, il reste affiché
+      // tant qu'un bout dépasse
+      { threshold: 0, rootMargin: "0px 0px -50px 0px" },
     );
 
     io.observe(el);

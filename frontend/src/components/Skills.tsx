@@ -116,7 +116,7 @@ export default function Skills() {
         {GROUPS.map((group, i) => (
           <Reveal
             key={group.key}
-            delay={i * 100}
+            delay={(i % 2) * 80} // décalage par colonne, pas par rang
             variant="zoom"
             className="w-full sm:w-[calc(50%-0.75rem)] flex"
           >

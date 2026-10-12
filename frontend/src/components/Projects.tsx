@@ -5,6 +5,7 @@ import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 import ProjectVisual from "./ProjectVisual";
+import { useEtroit } from "../hooks/useEtroit";
 import Tag from "./Tag";
 import { TIPS } from "../lib/tips";
 import { SKILL_ICONS } from "../lib/skill-icons";
@@ -18,9 +19,19 @@ const SVGS = import.meta.glob("../assets/projects/**/*.svg", {
   import: "default",
   eager: true,
 }) as Record<string, string>;
-// variante {thème}-{langue}, ou {thème} seul (perso : terminal pur, sans langue)
-const svg = (asset: string, theme: "light" | "dark", lang: "fr" | "en") =>
-  SVGS[`../assets/projects/${asset}/${theme}-${lang}.svg`] ??
+// variante {thème}-{langue}, ou {thème} seul (perso : terminal pur, sans langue).
+// Sur écran étroit (téléphone en portrait), la version verticale :
+// {thème}-v-{langue}, ou {thème}-v pour perso.
+const svg = (
+  asset: string,
+  theme: "light" | "dark",
+  lang: "fr" | "en",
+  vertical = false,
+) =>
+  (vertical &&
+    (SVGS[`../assets/projects/${asset}/${theme}-v-${lang}.svg`] ||
+      SVGS[`../assets/projects/${asset}/${theme}-v.svg`])) ||
+  SVGS[`../assets/projects/${asset}/${theme}-${lang}.svg`] ||
   SVGS[`../assets/projects/${asset}/${theme}.svg`];
 
 type Project = {
@@ -152,6 +163,7 @@ const PROJECTS: Project[] = [
 
 export default function Projects() {
   const { lang } = useLang();
+  const etroit = useEtroit();
   const [zoomed, setZoomed] = useState<Project | null>(null);
   const closeZoom = useCallback(() => setZoomed(null), []);
 
@@ -173,7 +185,7 @@ export default function Projects() {
         {PROJECTS.map((p, i) => (
           <Reveal
             key={p.name}
-            delay={i * 100}
+            delay={(i % 2) * 80} // décalage par colonne, pas par rang
             variant="zoom-out"
             className="w-full sm:w-[calc(50%-0.625rem)] flex"
           >
@@ -193,8 +205,8 @@ export default function Projects() {
                     className="group/img relative block w-full cursor-zoom-in p-0"
                   >
                     <ProjectVisual
-                      light={svg(p.asset, "light", lang)}
-                      dark={svg(p.asset, "dark", lang)}
+                      light={svg(p.asset, "light", lang, etroit)}
+                      dark={svg(p.asset, "dark", lang, etroit)}
                     />
                     {/* badge d'agrandissement : toujours visible, accentué au survol */}
                     <span
@@ -251,7 +263,8 @@ export default function Projects() {
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-2">
+              {/* badges étirés : chaque rangée occupe toute la largeur de la carte */}
+              <div className="flex flex-wrap gap-2 *:grow *:justify-center">
                 {p.tags.map((tag) => (
                   <Tag
                     key={tag}
@@ -271,8 +284,8 @@ export default function Projects() {
       {zoomed?.asset && (
         <Suspense fallback={null}>
           <Lightbox
-            light={svg(zoomed.asset, "light", lang)}
-            dark={svg(zoomed.asset, "dark", lang)}
+            light={svg(zoomed.asset, "light", lang, etroit)}
+            dark={svg(zoomed.asset, "dark", lang, etroit)}
             title={zoomed.mock ? `${zoomed.title[lang]} · ${t("projects", "mock", lang)}` : zoomed.title[lang]}
             onClose={closeZoom}
           />

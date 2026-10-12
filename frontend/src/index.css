@@ -300,8 +300,9 @@
   font: inherit;
 }
 .PhoneInputInput::placeholder {
-  /* aligné sur placeholder:text-muted des autres champs (à 50 % : 2,2:1) */
-  color: var(--muted);
+  /* aligné sur placeholder:text-muted/65 placeholder:italic des autres champs */
+  color: color-mix(in oklab, var(--muted) 65%, transparent);
+  font-style: italic;
 }
 .PhoneInputCountrySelectArrow {
   color: var(--muted);
