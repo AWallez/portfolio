@@ -18,8 +18,8 @@ const SHOWN = "opacity-100 translate-y-0 translate-x-0 scale-100";
 // sur place, sans rejouer l'entrée à l'envers.
 const FADING = "opacity-0 translate-y-0 translate-x-0 scale-100";
 
-const SLIDE_MS = 1200; // entrée : glissement / zoom (transform) avec léger "snap"
-const FADE_MS = 480; // fondu de l'opacité (entrée et sortie)
+const SLIDE_MS = 1500; // entrée : glissement / zoom (transform) avec léger "snap"
+const FADE_MS = 600; // fondu de l'opacité (entrée et sortie)
 
 export default function Reveal({
   children,
