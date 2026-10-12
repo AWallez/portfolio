@@ -3,3 +3,8 @@
 # et les méta-commandes de psql (\if, \getenv).
 *.sh  text eol=lf
 *.sql text eol=lf
+
+# La CSP (infra/Caddyfile) autorise le script anti-flash d'index.html par son
+# empreinte sha256 : un retour chariot de plus la changerait, et le script
+# serait bloqué. Mêmes octets partout, quel que soit le poste.
+frontend/index.html text eol=lf

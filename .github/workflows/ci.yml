@@ -6,17 +6,26 @@ on:
   pull_request:
     branches: [main]
 
+# Droits minimaux : le CI lit le dépôt, rien d'autre (le jeton par défaut
+# pouvait écrire dans le dépôt, les issues, les paquets…).
+permissions:
+  contents: read
+
+# Actions épinglées par empreinte de commit, et non par étiquette : une
+# étiquette (`v7`) peut être déplacée vers un autre code, une empreinte non.
+# Dependabot (.github/dependabot.yml) les tient à jour.
+
 jobs:
   frontend:
-    name: Frontend — lint, typecheck & build
+    name: Frontend — lint, build & tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -28,9 +37,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck
-        run: npx tsc -b --noEmit
-
+      # `build` = `tsc -b && vite build` : la vérification des types en fait
+      # partie (elle tournait aussi seule juste avant, deux fois pour rien)
       - name: Build
         run: npm run build
 
@@ -48,9 +56,9 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -75,9 +83,9 @@ jobs:
       run:
         working-directory: admin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -105,3 +113,36 @@ jobs:
       - name: Audit (web)
         working-directory: admin/web
         run: npm audit --audit-level=high
+
+  # Ce qui ne se découvrait jusqu'ici que sur le NAS, au déploiement : un
+  # Dockerfile cassé, un compose invalide, une erreur de shell, un Caddyfile
+  # qui ferait tomber tous les sites au prochain redémarrage de Caddy.
+  infra:
+    name: Infra — compose, scripts, Caddyfile & images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: docker compose config
+        working-directory: infra
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+      - name: shellcheck
+        run: shellcheck -s sh infra/*.sh backend/db/migrate.sh
+
+      # même image que la production, sans les plugins de l'image locale du NAS
+      # (le Caddyfile versionné n'en utilise aucun) ; conf.d/ est vide ici
+      - name: caddy validate
+        run: |
+          docker run --rm \
+            -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$PWD/infra/conf.d:/etc/caddy/conf.d:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+      - name: Build des images
+        run: |
+          docker build -t ci-web frontend
+          docker build -t ci-api backend
+          docker build -t ci-admin admin

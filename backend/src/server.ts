@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import process from "node:process";
 import { config } from "./config";
 import { contactRoutes } from "./routes/contact";
+import { cspReportRoutes } from "./routes/csp-report";
 import { schedulePurge } from "./retention";
 import { pool } from "./db";
 
@@ -59,6 +60,7 @@ app.get("/health", { logLevel: "warn" }, async () => ({ status: "ok" }));
 // vers l'API → utilisé par le badge « infra live » du footer.
 app.get("/api/health", { logLevel: "warn" }, async () => ({ status: "ok" }));
 await app.register(contactRoutes);
+await app.register(cspReportRoutes);
 
 // durées de conservation RGPD appliquées par l'API elle-même : pas de cron à
 // maintenir sur le NAS, et la purge suit le conteneur partout où il tourne.

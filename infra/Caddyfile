@@ -16,14 +16,29 @@ alexiswallez.fr {
 	# appliqués uniformément à chaque réponse. (Avant, X-Frame/X-Content-Type/
 	# Referrer venaient de Nginx, mais un add_header dans un location — cache
 	# des assets, no-store d'index.html — ANNULE ceux hérités du bloc server :
-	# certaines réponses partaient sans en-têtes.) CSP volontairement omise
-	# (script anti-flash inline dans le <head>).
+	# certaines réponses partaient sans en-têtes.)
+	#
+	# CSP, en mode RAPPORT SEUL pour l'instant : rien n'est bloqué, le
+	# navigateur signale à /api/csp-report ce qu'il aurait bloqué (journal de
+	# l'API, « violation CSP »). À passer en Content-Security-Policy une fois le
+	# journal resté vide. Ce qu'elle autorise, et pourquoi :
+	#  - script : le site, le script anti-flash d'index.html PAR SON EMPREINTE
+	#    (à recalculer s'il change : frontend/src/test/csp.test.ts le vérifie),
+	#    Umami (stats.) et Turnstile (challenges.cloudflare.com) ;
+	#  - style : le site, plus l'attribut style du bloc <noscript> (empreinte,
+	#    'unsafe-hashes' ne vaut que pour elle) ;
+	#  - police en data: (une police de JetBrains Mono intégrée au CSS par Vite) ;
+	#  - connexions vers stats. (mesure d'audience), cadre de Turnstile.
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		# fenêtre isolée des pages qu'elle ouvre ou qui l'ouvrent (Spectre, tabnabbing)
+		Cross-Origin-Opener-Policy "same-origin"
+		Reporting-Endpoints `csp="https://alexiswallez.fr/api/csp-report"`
+		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'sha256-ZjJeofEk2aSF6ybCcPTDYqHiomk43BUW+JdweNrN2r4=' https://stats.alexiswallez.fr https://challenges.cloudflare.com; style-src 'self' 'unsafe-hashes' 'sha256-S5B3VjwJFSnwO0iI5kac+oM0TYaZedw8L5z41rXCm2Y='; img-src 'self'; font-src 'self' data:; connect-src 'self' https://stats.alexiswallez.fr; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; report-uri /api/csp-report; report-to csp"
 		-Server
 	}
 	# Nginx (web) compresse déjà en gzip. On fait simplement TRAVERSER sa réponse :

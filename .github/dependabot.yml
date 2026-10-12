@@ -1,0 +1,23 @@
+# Mises à jour proposées par Dependabot, une fois par mois et regroupées : une
+# demande de fusion par dossier, pas une par paquet. Le but est d'être prévenu
+# AVANT que l'étape `npm audit` du CI ne casse, comme le 11/10/2026.
+# Les images de base Docker n'y sont pas : compose-auto-update reconstruit déjà
+# les images quand leur base reçoit un correctif.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/frontend", "/backend", "/admin", "/admin/web"]
+    schedule:
+      interval: monthly
+    groups:
+      dependances:
+        patterns: ["*"]
+    open-pull-requests-limit: 4
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
