@@ -28,14 +28,14 @@ function useInfraStatus(ref: RefObject<HTMLElement | null>): Infra {
           if (!ctl.signal.aborted) setStatus("offline");
         });
     if (!("IntersectionObserver" in window)) {
-      probe();
+      void probe();
       return () => ctl.abort();
     }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           io.disconnect();
-          probe();
+          void probe();
         }
       },
       { rootMargin: "200px" },

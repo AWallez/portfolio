@@ -73,7 +73,7 @@ export function useTypewriter(lines: Line[]) {
       }
     }
 
-    run();
+    void run();
     return () => {
       cancelled = true;
       timers.forEach(clearTimeout);

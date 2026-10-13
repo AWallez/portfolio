@@ -135,7 +135,7 @@ export default function Contact() {
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit}
+            onSubmit={(e) => void handleSubmit(e)}
             noValidate
             className="card-bevel no-glow w-full max-w-150 mx-auto rounded-xl border border-line bg-base/60 backdrop-blur-[3px] p-6 space-y-4"
           >

@@ -24,7 +24,7 @@ if (!window.ResizeObserver) {
     observe() {}
     unobserve() {}
     disconnect() {}
-  } as unknown as typeof ResizeObserver;
+  };
 }
 
 if (!window.IntersectionObserver) {

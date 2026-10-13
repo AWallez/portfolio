@@ -61,7 +61,7 @@ describe("sendContact", () => {
     expect(await sendContact(VALIDE, "jeton", false)).toBe("sent");
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toMatch(/\/api\/contact$/);
-    expect(JSON.parse(String(init.body))).toEqual({
+    expect(JSON.parse(init.body as string)).toEqual({
       ...VALIDE,
       cfTurnstileToken: "jeton",
     });

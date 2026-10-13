@@ -20,7 +20,7 @@ const SVGS = import.meta.glob("../assets/projects/**/*.svg", {
   query: "?raw",
   import: "default",
   eager: true,
-}) as Record<string, string>;
+});
 // variante {thème}-{langue}, ou {thème} seul (perso : terminal pur, sans langue).
 // Sur écran étroit (téléphone en portrait), la version verticale :
 // {thème}-v-{langue}, ou {thème}-v pour perso.
