@@ -51,12 +51,12 @@ src/
 - **Accessibilité (WCAG AA)** — structure sémantique, `sr-only`, focus visibles ; smoke test **axe** dans la suite Vitest.
 - **SEO** — meta OG/Twitter, données structurées JSON-LD (Person), `sitemap.xml`, `llms.txt`, fallback `<noscript>` (voir [`index.html`](index.html) et [`public/`](public)).
 - **Perf** — `Contact` et `Lightbox` chargés en lazy, polices en `font-display: swap`, visuels projets en SVG inline. Compression gzip côté serveur (Nginx).
-- **Animations** — apparition au scroll (`Reveal`), machine à écrire, particules canvas, transition de thème (View Transitions). Respecte `prefers-reduced-motion`.
+- **Animations** — apparition au scroll (`Reveal`), machine à écrire, particules canvas. Respecte `prefers-reduced-motion`.
 - **CV intégré** — modale plein écran affichant le CV en SVG vectoriel (bi-langue × bi-thème) + téléchargement PDF (`public/cv-*`).
 
 ## Visuels des projets
 
-Les captures des projets sont des **SVG inline générés** (ils héritent des webfonts du site), bilingues et bi-thème. Régénérer :
+Les captures des projets sont des **SVG inline générés** (ils héritent des webfonts du site), bilingues et bi-thème, en version paysage et en version verticale (affichée sous 640 px de large). Régénérer :
 
 ```bash
 node branding/generate-projects.mjs   # cwd = frontend/
