@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { useTypewriter } from "../hooks/useTypewriter";
 import { useLang } from "../i18n/LangContext";
 import { useTheme } from "../hooks/useTheme";
-import { useMeasuredHeight } from "../hooks/useMeasuredHeight";
 import { useTilt } from "../hooks/useTilt";
 import { INTRO, TERM } from "../i18n/hero";
 import { runCommand, type Effect } from "./hero/commands";
@@ -15,7 +14,6 @@ export default function Hero() {
   const { toggle: toggleTheme } = useTheme();
   const lines = INTRO[lang];
   const { rendered } = useTypewriter(lines);
-  const { ref, height } = useMeasuredHeight<HTMLDivElement>();
   const { cardRef, glareRef } = useTilt<HTMLDivElement, HTMLDivElement>();
 
   /* ---- terminal interactif : actif une fois l'intro terminée ---- */
@@ -148,19 +146,17 @@ export default function Hero() {
           </span>
         </div>
 
-        {/* Corps : min-height = hauteur finale mesurée par le fantôme (l'intro ne
-            saute donc pas pendant la frappe), puis le terminal GRANDIT librement
-            quand on tape des commandes — pas de scrollbar. +44 = padding + marge */}
-        <div
-          className="relative p-5 font-mono text-sm leading-relaxed"
-          style={{ minHeight: height ? height + 44 : undefined }}
-        >
-          {/* ① fantôme invisible = état final mesuré (invite interactive
-              comprise, sinon elle déborderait de la hauteur figée) */}
+        {/* Corps : le fantôme (état final de l'intro) et le contenu vivant
+            occupent la MÊME case de grille. Le terminal a donc d'emblée sa
+            hauteur finale (l'intro ne saute pas pendant la frappe), puis il
+            GRANDIT librement quand on tape des commandes — pas de scrollbar.
+            Pur CSS, sans mesure en JavaScript : le premier écran pré-rendu au
+            build a la bonne hauteur avant même le chargement du script. */}
+        <div className="relative grid grid-cols-1 p-5 font-mono text-sm leading-relaxed">
+          {/* ① fantôme invisible = état final (invite interactive comprise) */}
           <div
-            ref={ref}
             aria-hidden
-            className="invisible absolute inset-x-5 top-5 pointer-events-none"
+            className="invisible pointer-events-none [grid-area:1/1]"
           >
             {lines.map((line, i) => (
               <TerminalLine key={i} line={line} lang={lang} ghost />
@@ -171,58 +167,60 @@ export default function Hero() {
             </p>
           </div>
 
-          {/* ② version animée visible (masquée après `clear`, comme un vrai shell) */}
-          {!cleared &&
-            rendered.map((line, i) => {
-              const isLast = i === rendered.length - 1;
-              return (
-                <TerminalLine
-                  key={i}
-                  line={line}
-                  lang={lang}
-                  showCursor={isLast && !line.showOutput}
-                />
-              );
-            })}
+          <div className="[grid-area:1/1]">
+            {/* ② version animée visible (masquée après `clear`, comme un vrai shell) */}
+            {!cleared &&
+              rendered.map((line, i) => {
+                const isLast = i === rendered.length - 1;
+                return (
+                  <TerminalLine
+                    key={i}
+                    line={line}
+                    lang={lang}
+                    showCursor={isLast && !line.showOutput}
+                  />
+                );
+              })}
 
-          {/* ③ échanges interactifs (annoncés aux lecteurs d'écran) */}
-          <div aria-live="polite">
-            {history.map((h, i) => (
-              <div key={i} className="mb-3">
-                <p className="wrap-break-word">
-                  <Prompt path="~/portfolio" />
-                  <span className="text-ink">{h.cmd}</span>
-                </p>
-                {h.out.map((o, j) => (
-                  <p key={j} className="text-muted wrap-break-word">
-                    {o}
+            {/* ③ échanges interactifs (annoncés aux lecteurs d'écran) */}
+            <div aria-live="polite">
+              {history.map((h, i) => (
+                <div key={i} className="mb-3">
+                  <p className="wrap-break-word">
+                    <Prompt path="~/portfolio" />
+                    <span className="text-ink">{h.cmd}</span>
                   </p>
-                ))}
-              </div>
-            ))}
-          </div>
+                  {h.out.map((o, j) => (
+                    <p key={j} className="text-muted wrap-break-word">
+                      {o}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
 
-          {/* ④ invite réelle : le prompt et la saisie coulent dans un même <p>
-              (comme les lignes de l'intro) → ils reviennent à la ligne ensemble.
-              Le hint « tape help » s'affiche via ::before quand le span est vide
-              (cf. .term-input dans index.css). */}
-          {introDone && (
-            <p className="wrap-break-word">
-              <Prompt path="~/portfolio" />
-              <span
-                ref={editRef}
-                contentEditable
-                suppressContentEditableWarning
-                role="textbox"
-                aria-label={T.ariaInput}
-                data-hint={past.length ? "" : T.hint}
-                onKeyDown={onKeyDown}
-                onPaste={onPaste}
-                spellCheck={false}
-                className="term-input outline-none text-ink caret-accent"
-              />
-            </p>
-          )}
+            {/* ④ invite réelle : le prompt et la saisie coulent dans un même <p>
+                (comme les lignes de l'intro) → ils reviennent à la ligne ensemble.
+                Le hint « tape help » s'affiche via ::before quand le span est vide
+                (cf. .term-input dans index.css). */}
+            {introDone && (
+              <p className="wrap-break-word">
+                <Prompt path="~/portfolio" />
+                <span
+                  ref={editRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  role="textbox"
+                  aria-label={T.ariaInput}
+                  data-hint={past.length ? "" : T.hint}
+                  onKeyDown={onKeyDown}
+                  onPaste={onPaste}
+                  spellCheck={false}
+                  className="term-input outline-none text-ink caret-accent"
+                />
+              </p>
+            )}
+          </div>
         </div>
 
         {/* reflet spéculaire piloté en JS (suit le curseur) — clippé par les

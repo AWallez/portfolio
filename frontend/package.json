@@ -7,7 +7,7 @@
     "predev": "node scripts/copy-flags.mjs",
     "dev": "vite",
     "prebuild": "node scripts/copy-flags.mjs",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/prerender.ts --outDir dist-prerender --emptyOutDir && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest"

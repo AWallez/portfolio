@@ -52,7 +52,8 @@ function remplace(html: string, motif: RegExp, par: string, quoi: string) {
 function pagesStatiques(): Plugin {
   return {
     name: 'pages-statiques',
-    apply: 'build',
+    // pas pour la compilation du pré-rendu (`vite build --ssr`), sans index.html
+    apply: (_, { command, isSsrBuild }) => command === 'build' && !isSsrBuild,
     enforce: 'post', // index.html est alors déjà dans le bundle, transformé
     generateBundle(_, bundle) {
       const index = bundle['index.html']

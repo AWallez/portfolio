@@ -15,5 +15,9 @@ function abonner(rappel: () => void) {
 
 /** Vrai sur écran étroit ; suit la rotation du téléphone. */
 export function useEtroit() {
-  return useSyncExternalStore(abonner, () => requete()?.matches ?? false);
+  return useSyncExternalStore(
+    abonner,
+    () => requete()?.matches ?? false,
+    () => false, // pré-rendu : pas d'écran
+  );
 }

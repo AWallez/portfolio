@@ -161,9 +161,12 @@ export default function Header() {
               className="font-mono text-sm px-3 py-1 rounded border border-line hover:border-accent hover:text-accent transition"
             >
               {/* boîte de largeur fixe : ☀ et ☾ n'ont pas la même avance dans la
-                  police, ce qui décalait tout le header à chaque bascule */}
+                  police, ce qui décalait tout le header à chaque bascule.
+                  Choisi en CSS et non en JS : le premier écran pré-rendu au
+                  build montre ainsi le bon symbole avant le JavaScript. */}
               <span aria-hidden className="inline-block w-5 text-center">
-                {theme === "dark" ? "☀" : "☾"}
+                <span className="dark:hidden">☾</span>
+                <span className="hidden dark:inline">☀</span>
               </span>
             </button>
           </div>

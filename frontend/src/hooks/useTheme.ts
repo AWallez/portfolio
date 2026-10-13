@@ -5,13 +5,14 @@ type Theme = "light" | "dark";
 // par le script anti-flash d'index.html. Chaque composant s'y abonne au lieu de
 // garder sa propre copie (avant : la commande `theme` du terminal laissait
 // l'icône du header fausse, et son premier clic ne faisait rien).
-const root = document.documentElement;
+// (absent au pré-rendu, qui tourne dans Node : thème clair par défaut)
+const root = typeof document !== "undefined" ? document.documentElement : null;
 const listeners = new Set<() => void>();
 
-const read = (): Theme => (root.classList.contains("dark") ? "dark" : "light");
+const read = (): Theme => (root?.classList.contains("dark") ? "dark" : "light");
 
 function apply(theme: Theme) {
-  root.classList.toggle("dark", theme === "dark");
+  root?.classList.toggle("dark", theme === "dark");
   listeners.forEach((l) => l());
 }
 
@@ -67,6 +68,6 @@ export function toggleTheme() {
 }
 
 export function useTheme() {
-  const theme = useSyncExternalStore(subscribeTheme, read);
+  const theme = useSyncExternalStore(subscribeTheme, read, () => "light");
   return { theme, toggle: toggleTheme };
 }
