@@ -1,0 +1,11 @@
+{
+  // Les tests, vérifiés par `tsc -b` comme le reste (tsconfig.app.json les
+  // exclut pour ne pas mêler leurs types à ceux du site).
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src"],
+  "exclude": []
+}

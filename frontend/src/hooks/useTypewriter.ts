@@ -32,7 +32,7 @@ export function useTypewriter(lines: Line[]) {
     const timers: number[] = [];
     const wait = (ms: number) =>
       new Promise<void>((r) => {
-        timers.push(setTimeout(r, ms));
+        timers.push(window.setTimeout(r, ms));
       });
 
     const acc: Rendered[] = [];

@@ -77,7 +77,7 @@ jobs:
         run: npm audit --audit-level=high
 
   admin:
-    name: Admin (CRM) — typecheck & audit
+    name: Admin (CRM) — typecheck, tests & audit
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -97,6 +97,9 @@ jobs:
 
       - name: Typecheck (server)
         run: npm run typecheck
+
+      - name: Test (server)
+        run: npm test
 
       - name: Audit (server)
         run: npm audit --audit-level=high

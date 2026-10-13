@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "build": "esbuild src/server.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist/server.js",
     "typecheck": "tsc --noEmit",
-    "hash-password": "tsx src/hash-password.ts"
+    "hash-password": "tsx src/hash-password.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -24,6 +25,7 @@
     "@types/pg": "^8.20.0",
     "esbuild": "^0.28.1",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
   }
 }
