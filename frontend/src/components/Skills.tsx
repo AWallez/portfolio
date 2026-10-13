@@ -12,6 +12,7 @@ import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 import Tag from "./Tag";
+import BadgeGroup from "./BadgeGroup";
 import { TIPS } from "../lib/tips";
 import { SKILL_ICONS } from "../lib/skill-icons";
 import { GENERIC_ICONS } from "../lib/generic-icons";
@@ -128,7 +129,10 @@ export default function Skills() {
                   ×{group.items.length}
                 </span>
               </div>
-              <div className="flex flex-wrap justify-center gap-2.5">
+              <BadgeGroup
+                label={t("skills", group.key, lang)}
+                className="flex flex-wrap justify-center gap-2.5"
+              >
                 {group.items.map((item) => (
                   <Tag
                     key={item}
@@ -142,7 +146,7 @@ export default function Skills() {
                     {item}
                   </Tag>
                 ))}
-              </div>
+              </BadgeGroup>
             </div>
           </Reveal>
         ))}

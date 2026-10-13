@@ -130,6 +130,8 @@ export const translations = {
   },
   a11y: {
     skip: { fr: "Aller au contenu", en: "Skip to content" },
+    // groupe de badges d'une carte projet : « Technologies : <projet> »
+    techs: { fr: "Technologies", en: "Technologies" },
     backToTop: { fr: "Retour en haut", en: "Back to top" },
     openMenu: { fr: "Ouvrir le menu", en: "Open menu" },
     closeMenu: { fr: "Fermer le menu", en: "Close menu" },

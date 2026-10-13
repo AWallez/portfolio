@@ -7,6 +7,7 @@ import Reveal from "./Reveal";
 import ProjectVisual from "./ProjectVisual";
 import { useEtroit } from "../hooks/useEtroit";
 import Tag from "./Tag";
+import BadgeGroup from "./BadgeGroup";
 import { TIPS } from "../lib/tips";
 import { SKILL_ICONS } from "../lib/skill-icons";
 import { GENERIC_ICONS } from "../lib/generic-icons";
@@ -258,7 +259,10 @@ export default function Projects() {
               )}
 
               {/* badges étirés : chaque rangée occupe toute la largeur de la carte */}
-              <div className="flex flex-wrap gap-2 *:grow *:justify-center">
+              <BadgeGroup
+                label={`${t("a11y", "techs", lang)} : ${p.title[lang]}`}
+                className="flex flex-wrap gap-2 *:grow *:justify-center"
+              >
                 {p.tags.map((tag) => (
                   <Tag
                     key={tag}
@@ -269,7 +273,7 @@ export default function Projects() {
                     {tag}
                   </Tag>
                 ))}
-              </div>
+              </BadgeGroup>
             </article>
           </Reveal>
         ))}
