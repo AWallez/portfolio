@@ -5,6 +5,7 @@ import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { useZoomPan } from "../hooks/useZoomPan";
 import { useModal } from "../hooks/useModal";
+import { useEtroit } from "../hooks/useEtroit";
 import ZoomControls from "./ZoomControls";
 
 // Fichiers du CV selon la langue : PDF téléchargeable + SVG affiché (clair/sombre).
@@ -71,6 +72,17 @@ export default function CvModal({ onClose }: Props) {
   const [size, setSize] = useState(() => computeSizeFor(A4_RATIO));
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  // téléphone : boutons de zoom sur l'image plutôt qu'à côté du titre
+  const etroit = useEtroit();
+  const zoom = (
+    <ZoomControls
+      zoomByCenter={zoomByCenter}
+      reset={resetZoom}
+      canZoomIn={canZoomIn}
+      canZoomOut={canZoomOut}
+      isReset={isReset}
+    />
+  );
 
   // --- recalcule la taille au redimensionnement / zoom / rotation ---
   useEffect(() => {
@@ -105,10 +117,12 @@ export default function CvModal({ onClose }: Props) {
         className="relative flex max-h-[92dvh] max-w-[95vw] flex-col overflow-hidden
                    rounded-xl border border-line bg-base shadow-2xl sm:max-w-4xl"
       >
-        {/* barre d'outils : (titre + télécharger) à gauche, fermer plaqué à droite */}
+        {/* barre d'outils : (titre + télécharger) à gauche, fermer plaqué à droite.
+            Comme l'agrandissement des projets : le titre reste affiché sur
+            téléphone, et les boutons de zoom y passent par-dessus l'image. */}
         <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="hidden sm:inline font-mono text-sm text-muted truncate">
+            <span className="min-w-0 truncate text-sm font-medium text-ink sm:font-mono sm:font-normal sm:text-muted">
               {t("a11y", "cvTitle", lang)}
             </span>
             <a
@@ -123,15 +137,7 @@ export default function CvModal({ onClose }: Props) {
             </a>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {!error && (
-              <ZoomControls
-                zoomByCenter={zoomByCenter}
-                reset={resetZoom}
-                canZoomIn={canZoomIn}
-                canZoomOut={canZoomOut}
-                isReset={isReset}
-              />
-            )}
+            {!error && !etroit && zoom}
             <button
               ref={closeRef}
               type="button"
@@ -146,7 +152,7 @@ export default function CvModal({ onClose }: Props) {
         </div>
 
         {/* aperçu : zone A4 dimensionnée dès l'ouverture (pas de cadre vide) */}
-        <div className="p-3.5">
+        <div className="relative p-3.5">
           <div
             ref={viewerRef}
             {...zoomHandlers}
@@ -213,6 +219,14 @@ export default function CvModal({ onClose }: Props) {
             )}
 
           </div>
+
+          {/* posés sur l'image (coin haut droit), À CÔTÉ de la zone de zoom et
+              non dedans : elle capture le pointeur pour le déplacement */}
+          {!error && etroit && (
+            <div className="absolute right-5.5 top-5.5 rounded-lg bg-base/85 shadow-md backdrop-blur-sm">
+              {zoom}
+            </div>
+          )}
         </div>
       </div>
     </div>,
