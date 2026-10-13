@@ -97,8 +97,8 @@ export default function Contact() {
   }
 
   return (
+    // l'ancre #contact est portée par le conteneur (cf. QuandProche dans App)
     <section
-      id="contact"
       ref={sectionRef}
       className="max-w-300 container-page py-7"
     >

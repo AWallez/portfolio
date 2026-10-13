@@ -11,7 +11,8 @@ import Career from "./components/Career";
 import Services from "./components/Services";
 // Sous la ligne de flottaison → chargés à la demande, hors du bundle initial :
 // - Projects embarque 10 SVG inline (light+dark) via ?raw,
-// - Contact tire react-phone-number-input (~155 ko de métadonnées).
+// - Contact tire react-phone-number-input (~155 ko de métadonnées) ; il
+//   n'est même monté qu'à l'approche (cf. QuandProche).
 const Projects = lazy(() => import("./components/Projects"));
 const Contact = lazy(() => import("./components/Contact"));
 // - LegalPage embarque toute la prose juridique : hors du bundle de l'accueil,
@@ -20,6 +21,7 @@ const LegalPage = lazy(() => import("./components/LegalPage"));
 import Footer from "./components/Footer";
 import Background from "./components/Background";
 import Reveal from "./components/Reveal";
+import QuandProche from "./components/QuandProche";
 import BackToTop from "./components/BackToTop";
 import ScrollProgress from "./components/ScrollProgress";
 
@@ -100,11 +102,14 @@ export default function App() {
         <Services />
         <div className="min-h-[calc(100dvh-4rem)] flex flex-col">
           <div className="grow flex flex-col justify-center">
-            <Suspense fallback={<div className="min-h-125" />}>
-              <Reveal variant="up">
-                <Contact />
-              </Reveal>
-            </Suspense>
+            {/* monté seulement à l'approche (cf. QuandProche) */}
+            <QuandProche id="contact" reserve="min-h-125">
+              <Suspense fallback={<div className="min-h-125" />}>
+                <Reveal variant="up">
+                  <Contact />
+                </Reveal>
+              </Suspense>
+            </QuandProche>
           </div>
           <Footer />
         </div>

@@ -150,7 +150,7 @@ export default function Background() {
     // met l'animation en pause quand l'onglet est caché (économie CPU/batterie)
     const onVisibility = () => {
       cancelAnimationFrame(raf);
-      if (!document.hidden) raf = requestAnimationFrame(draw);
+      if (started && !document.hidden) raf = requestAnimationFrame(draw);
     };
 
     // bascule de thème → on relit la couleur et le clair/sombre (la bascule est
@@ -160,14 +160,38 @@ export default function Background() {
       color = readAccent();
     });
 
-    resize();
-    draw();
+    // Démarrage différé : une fois la page chargée et le navigateur au repos.
+    // Au chargement, le processeur a mieux à faire (afficher la page, exécuter
+    // son code) ; les particules arrivent une fraction de seconde plus tard.
+    let started = false;
+    let cancelStart = () => {};
+    const start = () => {
+      if (started) return;
+      started = true;
+      resize();
+      draw();
+    };
+    const whenIdle = () => {
+      // (Safari n'a pas requestIdleCallback : un court délai le remplace)
+      if (typeof window.requestIdleCallback === "function") {
+        const id = window.requestIdleCallback(start, { timeout: 2000 });
+        cancelStart = () => window.cancelIdleCallback(id);
+      } else {
+        const id = window.setTimeout(start, 500);
+        cancelStart = () => window.clearTimeout(id);
+      }
+    };
+    if (document.readyState === "complete") whenIdle();
+    else window.addEventListener("load", whenIdle, { once: true });
+
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMove, { passive: true });
     document.addEventListener("mouseleave", onLeave);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("load", whenIdle);
+      cancelStart();
       unsubscribeTheme();
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
