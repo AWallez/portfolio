@@ -42,12 +42,13 @@ alexiswallez.fr {
 		-Server
 	}
 	# Nginx (web) compresse déjà en gzip. On fait simplement TRAVERSER sa réponse :
-	# `compression off` désactive la décompression automatique du transport Go de
-	# Caddy, et on demande explicitement du gzip à l'upstream. Le navigateur reçoit
-	# donc bien du gzip (le `encode` de Caddy, lui, ne re-compressait pas la sortie
-	# du reverse_proxy dans cette version).
+	# `compression off` empêche le transport Go de Caddy de demander du gzip de
+	# lui-même puis de le décompresser. L'en-tête Accept-Encoding du visiteur
+	# passe tel quel : Nginx ne compresse que pour qui l'accepte. (Il était
+	# forcé à gzip, et un client qui refusait la compression la recevait quand
+	# même. Le `encode` de Caddy, lui, ne re-compressait pas la sortie du
+	# reverse_proxy dans cette version.)
 	reverse_proxy web:80 {
-		header_up Accept-Encoding gzip
 		transport http {
 			compression off
 		}
