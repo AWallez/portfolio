@@ -3,6 +3,7 @@ import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
+import SectionHeader from "./SectionHeader";
 
 type Service = {
   Icon: LucideIcon;
@@ -121,14 +122,7 @@ export default function Services() {
       id="services"
       className="section-screen max-w-300 container-page py-7"
     >
-      <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
-        <span className="text-muted">//</span> {t("services", "title", lang)}
-      </h2>
-      <p className="font-mono text-xs text-muted mb-8 text-readable w-fit">
-        <span className="text-accent">alexis@wallez</span>
-        <span className="text-muted">:~$ </span>
-        {t("services", "command", lang)}
-      </p>
+      <SectionHeader section="services" />
 
       <div className="flex flex-wrap justify-center gap-5">
         {SERVICES.map((s, i) => (

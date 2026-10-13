@@ -77,7 +77,9 @@ export default function LegalPage({ kind }: { kind: LegalKind }) {
           <time dateTime={doc.updated}>
             {new Date(doc.updated).toLocaleDateString(
               lang === "fr" ? "fr-FR" : "en-GB",
-              { year: "numeric", month: "long", day: "numeric" },
+              // date ISO sans heure = minuit UTC : affichée en UTC, sinon elle
+              // recule d'un jour à l'ouest de Greenwich
+              { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" },
             )}
           </time>
         </p>

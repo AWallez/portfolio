@@ -15,6 +15,7 @@ import Tag from "./Tag";
 import { TIPS } from "../lib/tips";
 import { SKILL_ICONS } from "../lib/skill-icons";
 import { GENERIC_ICONS } from "../lib/generic-icons";
+import SectionHeader from "./SectionHeader";
 
 // badges « doubles » (deux technos) → les deux logos côte à côte
 const DUAL_ICONS: Record<string, string[]> = {
@@ -103,14 +104,7 @@ export default function Skills() {
       id="skills"
       className="section-screen max-w-300 container-page py-7 "
     >
-      <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
-        <span className="text-muted">//</span> {t("skills", "title", lang)}
-      </h2>
-      <p className="font-mono text-xs text-muted mb-8 text-readable w-fit">
-        <span className="text-accent">alexis@wallez</span>
-        <span className="text-muted">:~$ </span>
-        {t("skills", "command", lang)}
-      </p>
+      <SectionHeader section="skills" />
 
       <div className="flex flex-wrap justify-center gap-6">
         {GROUPS.map((group, i) => (

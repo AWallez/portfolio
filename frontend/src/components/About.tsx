@@ -1,6 +1,7 @@
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { spotlight } from "../lib/spotlight";
+import SectionHeader from "./SectionHeader";
 
 // Logo ASCII « AW » (police ANSI Shadow) — donne l'aspect `neofetch` à la carte.
 // Chaque ligne fait 18 caractères → aligné en police mono (JetBrains Mono).
@@ -13,36 +14,25 @@ const ASCII = ` █████╗ ██╗    ██╗
 
 export default function About() {
   const { lang } = useLang();
-  const tr = (fr: string, en: string) => (lang === "fr" ? fr : en);
 
   // Bloc d'infos façon `neofetch` (libellés en anglais = universel, comme l'outil ;
   // valeurs localisées). 3ᵉ champ optionnel = lien cliquable.
   const info: [string, string, string?][] = [
-    ["Role", tr("Dév. Full-Stack & DevOps", "Full-Stack Dev & DevOps")],
+    ["Role", t("about", "infoRole", lang)],
     ["OS", "Linux"],
     ["Host", "Savigny-le-Temple (77)"],
-    ["Uptime", tr("~4 ans", "~4 yrs")],
+    ["Uptime", t("about", "infoUptime", lang)],
     ["Editor", "VS Code"],
     ["Stack", "React · TS · Node · Docker"],
     ["Lang", "FR · EN"],
-    ["Status", tr("Freelance · disponible", "Freelance · available")],
-    ["IRL", tr("Sapeur-pompier volontaire", "Volunteer firefighter")],
+    ["Status", t("about", "infoStatus", lang)],
+    ["IRL", t("about", "infoIrl", lang)],
     ["GitHub", "AWallez", "https://github.com/AWallez"],
   ];
 
   return (
     <section id="about" className="max-w-300 container-page py-7 w-full">
-      {/* titre de section, style commentaire de code */}
-      <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
-        <span className="text-muted">//</span> {t("about", "title", lang)}
-      </h2>
-
-      {/* rappel terminal : la "commande" qui a produit ce texte */}
-      <p className="font-mono text-xs text-muted mb-6 text-readable w-fit">
-        <span className="text-accent">alexis@wallez</span>
-        <span className="text-muted">:~$ </span>
-        {t("about", "command", lang)}
-      </p>
+      <SectionHeader section="about" className="mb-6" />
 
       <div
         {...spotlight}

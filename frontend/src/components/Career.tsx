@@ -3,6 +3,7 @@ import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { useScrollProgress } from "../hooks/useScrollProgress";
 import Reveal from "./Reveal";
+import SectionHeader from "./SectionHeader";
 
 type Item = {
   type: "exp" | "edu";
@@ -96,16 +97,9 @@ export default function Career() {
       id="career"
       className="section-screen max-w-300 container-page py-7 "
     >
-      <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
-        <span className="text-muted">//</span> {t("career", "title", lang)}
-      </h2>
-      <p className="font-mono text-xs text-muted mb-8 text-readable w-fit">
-        <span className="text-accent">alexis@wallez</span>
-        <span className="text-muted">:~$ </span>
-        {t("career", "command", lang)}
-      </p>
+      <SectionHeader section="career" />
 
-      <div className="lex justify-center items-center">
+      <div className="flex justify-center items-center">
         {/* wrapper relatif : porte les lignes déco (hors du <ol> pour garder une
             liste sémantiquement valide = uniquement des <li>) */}
         <div className="relative w-fit mx-auto">

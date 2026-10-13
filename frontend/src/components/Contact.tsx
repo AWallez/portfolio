@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import {
   User,
   IdCard,
@@ -7,93 +7,31 @@ import {
   ClipboardList,
   MessageSquare,
 } from "lucide-react";
-import PhoneInput, {
-  isValidPhoneNumber,
-  type Country,
-} from "react-phone-number-input";
+import PhoneInput, { type Country } from "react-phone-number-input";
 import { getExampleNumber } from "libphonenumber-js";
 import examples from "libphonenumber-js/examples.mobile.json";
 import { useLang } from "../i18n/LangContext";
 import { t } from "../i18n/translations";
 import { useTheme } from "../hooks/useTheme";
+import { useTurnstile } from "../hooks/useTurnstile";
 import { LEGAL_PATHS } from "../lib/routes";
+import {
+  CONTACT_EMAIL,
+  EMPTY,
+  FIELD_ORDER,
+  WITH_EMAIL,
+  sendContact,
+  validate,
+  type Errors,
+  type Fields,
+  type SendError,
+} from "../lib/contactForm";
 import Select from "./Select";
+import SectionHeader from "./SectionHeader";
+import FormField from "./contact/FormField";
+import { fieldClass } from "./contact/fieldClass";
 
 type Status = "idle" | "sending" | "sent" | "error";
-// Cause d'un échec d'envoi, chacune avec son message : le visiteur sait s'il
-// doit attendre, réessayer ou écrire directement.
-type SendError =
-  | "errCaptcha" // vérification anti-robot refusée par le serveur
-  | "errCaptchaBlocked" // script Cloudflare bloqué (bloqueur) : jamais de jeton
-  | "errRate" // 429 : trop d'envois en une minute
-  | "errServer" // 5xx, ou réponse inattendue
-  | "errNetwork"; // le serveur n'a pas répondu du tout
-type Fields = {
-  firstname: string;
-  lastname: string;
-  email: string;
-  type: string;
-  phone: string; // optionnel (non requis dans validate)
-  message: string;
-};
-// On garde la CLÉ de traduction, pas le texte : une erreur affichée suit
-// ainsi le changement de langue.
-type FieldError = "errRequired" | "errEmail" | "errType" | "errPhone";
-type Errors = Partial<Record<keyof Fields, FieldError>>;
-
-const CONTACT_EMAIL = "wallezalexis@gmail.com";
-// causes où réessayer ne suffira pas : le message se termine par l'adresse
-const WITH_EMAIL: SendError[] = ["errCaptchaBlocked", "errServer", "errNetwork"];
-
-const EMPTY: Fields = {
-  firstname: "",
-  lastname: "",
-  email: "",
-  type: "",
-  phone: "",
-  message: "",
-};
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// URL de l'API : vide en prod (même origine) ; http://localhost:3001 en dev (.env.development)
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
-
-// Clé de site Turnstile (publique) — widget anti-bot protégeant l'envoi du formulaire.
-const TURNSTILE_SITE_KEY = "0x4AAAAAADouXa_GUdi-_H_E";
-
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (el: HTMLElement, opts: Record<string, unknown>) => string;
-      remove: (id: string) => void;
-      reset: (id: string) => void;
-    };
-  }
-}
-
-// Charge le script Turnstile une seule fois (à la demande, quand Contact est monté).
-// Rejette si le script est bloqué (bloqueur de publicité, réseau filtré) : sans
-// ça, le visiteur réessayait en boucle sans jamais obtenir de jeton.
-let turnstileLoading: Promise<void> | null = null;
-function loadTurnstile(): Promise<void> {
-  if (window.turnstile) return Promise.resolve();
-  turnstileLoading ??= new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    s.async = true;
-    s.defer = true;
-    s.dataset.turnstile = "true";
-    s.addEventListener("load", () => resolve());
-    s.addEventListener("error", () => {
-      s.remove();
-      turnstileLoading = null; // une prochaine visite de la section retentera
-      reject(new Error("turnstile bloqué"));
-    });
-    document.head.appendChild(s);
-  });
-  return turnstileLoading;
-}
 
 export default function Contact() {
   const { lang } = useLang();
@@ -106,114 +44,28 @@ export default function Contact() {
   // pays courant du champ tél. → placeholder d'exemple correspondant à la région
   const [country, setCountry] = useState<Country>("FR");
   const phonePlaceholder = getExampleNumber(country, examples)?.formatNational();
-  // anti-bot Turnstile : token récupéré quand le widget se valide (managed → auto)
-  const [captchaToken, setCaptchaToken] = useState("");
-  // script Cloudflare introuvable : l'envoi part quand même (le serveur décide),
-  // mais un refus est alors expliqué par le blocage, avec l'adresse en secours
-  const [captchaBlocked, setCaptchaBlocked] = useState(false);
-  // Le widget affiche-t-il réellement quelque chose ? Turnstile injecte TOUJOURS un
-  // iframe (invisible en `interaction-only`), donc `:empty` ne suffit pas. On mesure
-  // la hauteur réelle du widget plutôt que de se fier aux callbacks
-  // `before/after-interactive` : au chargement, le widget entre puis ressort
-  // brièvement du mode interactif, ce qui faisait clignoter le cadre.
-  const [captchaVisible, setCaptchaVisible] = useState(false);
-  const widgetRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
-  // n'injecte Turnstile (script tiers Cloudflare) que lorsque la section contact
-  // approche du viewport → page initiale plus légère et console propre au démarrage
-  const [armed, setArmed] = useState(false);
+  // widget anti-robot, rendu clair ou sombre comme le site. Destructuré :
+  // react-hooks/refs interdit de lire une propriété d'un objet contenant un
+  // ref pendant le rendu.
+  const {
+    widgetRef: captchaRef,
+    token: captchaToken,
+    blocked: captchaBlocked,
+    visible: captchaVisible,
+    reset: resetCaptcha,
+  } = useTurnstile(sectionRef, lang, useTheme().theme === "dark");
 
-  // thème courant (le widget Turnstile est rendu clair ou sombre comme le site)
-  const dark = useTheme().theme === "dark";
-
-  // arme le chargement Turnstile quand la section approche (300 px avant) — une fois
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || armed) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setArmed(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [armed]);
-
-  // n'habille le widget que s'il occupe vraiment de la place à l'écran. On mesure
-  // l'ENFANT (l'iframe) et non le conteneur : sa hauteur ne dépend pas du cadre
-  // qu'on ajoute, donc pas de boucle observateur → style → observateur.
-  useEffect(() => {
-    const el = widgetRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => {
-      const child = el.firstElementChild;
-      setCaptchaVisible(
-        !!child && child.getBoundingClientRect().height > 20,
-      );
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // (re)rend le widget Turnstile en suivant la langue (i18n) et le thème du site
-  useEffect(() => {
-    if (!armed) return;
-    let cancelled = false;
-    loadTurnstile().then(() => {
-      if (cancelled || !widgetRef.current || !window.turnstile) return;
-      setCaptchaBlocked(false);
-      widgetIdRef.current = window.turnstile.render(widgetRef.current, {
-        sitekey: TURNSTILE_SITE_KEY,
-        theme: dark ? "dark" : "light", // calé sur le thème clair/sombre du site
-        language: lang, // FR/EN selon le sélecteur du header
-        appearance: "interaction-only", // discret : visible seulement si défi nécessaire
-        // `flexible` : le widget épouse la largeur du formulaire (aligné sur les
-        // champs). Son intérieur n'est pas stylable (iframe cross-origin).
-        size: "flexible",
-        callback: (token: string) => setCaptchaToken(token),
-        "expired-callback": () => setCaptchaToken(""),
-        "error-callback": () => setCaptchaToken(""),
-      });
-    }, () => {
-      if (!cancelled) setCaptchaBlocked(true);
-    });
-    return () => {
-      cancelled = true;
-      if (widgetIdRef.current && window.turnstile) {
-        window.turnstile.remove(widgetIdRef.current);
-        widgetIdRef.current = null;
-      }
-    };
-  }, [armed, lang, dark]);
-
-  // styles réutilisés pour les champs. Focus : contour de 2 px (la bordure de
-  // 1 px qui changeait de couleur ne se voyait presque pas, alors que la
-  // validation y envoie le focus). Exemple (placeholder) à 65 % et en italique :
-  // on voit que le champ est vide, sans descendre sous 3:1 (à 50 %, 2,2:1).
-  const field =
-    "w-full rounded-lg border bg-surface/70 px-3 py-2 text-ink " +
-    "placeholder:text-muted/65 placeholder:italic outline-none focus:outline-2 focus:outline-offset-1 transition";
-  // label avec petite icône lucide (raccord avec les badges du site)
-  const label = "font-mono text-xs text-muted mb-1 flex items-center gap-1.5";
-  const labelIcon = "text-accent shrink-0";
-
-  function validate(v: Fields): Errors {
-    const e: Errors = {};
-    if (!v.firstname.trim()) e.firstname = "errRequired";
-    if (!v.lastname.trim()) e.lastname = "errRequired";
-    if (!v.email.trim()) e.email = "errRequired";
-    else if (!EMAIL_RE.test(v.email)) e.email = "errEmail";
-    if (!v.type) e.type = "errType";
-    // téléphone optionnel : on ne valide que s'il est renseigné
-    if (v.phone && !isValidPhoneNumber(v.phone)) e.phone = "errPhone";
-    if (!v.message.trim()) e.message = "errRequired";
-    return e;
-  }
+  // message d'erreur traduit d'un champ (undefined s'il est valide)
+  const errorOf = (name: keyof Fields) => {
+    const key = errors[name];
+    return key && t("contact", key, lang);
+  };
+  // attributs ARIA d'un contrôle : invalide, relié à son message d'erreur
+  const aria = (name: keyof Fields) => ({
+    "aria-invalid": !!errors[name],
+    "aria-describedby": errors[name] ? `err-${name}` : undefined,
+  });
 
   function setField(name: keyof Fields, value: string) {
     setValues((v) => ({ ...v, [name]: value }));
@@ -232,57 +84,17 @@ export default function Contact() {
     if (Object.keys(found).length > 0) {
       setErrors(found);
       // focus le premier champ invalide (ordre visuel)
-      const order: (keyof Fields)[] = [
-        "firstname",
-        "lastname",
-        "email",
-        "phone",
-        "type",
-        "message",
-      ];
-      const first = order.find((k) => found[k]);
+      const first = FIELD_ORDER.find((k) => found[k]);
       if (first) document.getElementById(first)?.focus();
       return;
     }
     setStatus("sending");
-    let res: Response;
-    try {
-      res = await fetch(`${API_URL}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, cfTurnstileToken: captchaToken }),
-      });
-    } catch {
-      return fail("errNetwork");
-    }
-    if (res.ok) return setStatus("sent");
-    if (res.status === 429) return fail("errRate");
-    const body = (await res.json().catch(() => null)) as {
-      error?: string;
-    } | null;
-    if (res.status === 400 && body?.error === "captcha")
-      return fail(captchaBlocked ? "errCaptchaBlocked" : "errCaptcha");
-    fail("errServer");
-  }
-
-  function fail(cause: SendError) {
-    setSendError(cause);
+    const result = await sendContact(values, captchaToken, captchaBlocked);
+    if (result === "sent") return setStatus("sent");
+    setSendError(result);
     setStatus("error");
-    // réarme le widget anti-bot pour permettre une nouvelle tentative
-    if (widgetIdRef.current && window.turnstile)
-      window.turnstile.reset(widgetIdRef.current);
-    setCaptchaToken("");
+    resetCaptcha();
   }
-
-  const fieldClass = (name: keyof Fields, extra = "") =>
-    field +
-    (errors[name]
-      ? " border-red-500/70 focus:border-red-500 focus:outline-red-500"
-      : " border-line focus:border-accent focus:outline-accent") +
-    (extra ? ` ${extra}` : "");
-  // message d'erreur d'un champ : rouge foncé en thème clair (red-500 en 12 px
-  // ne faisait que 3,4:1)
-  const errText = "mt-1 text-xs text-red-700 dark:text-red-400";
 
   return (
     <section
@@ -290,14 +102,7 @@ export default function Contact() {
       ref={sectionRef}
       className="max-w-300 container-page py-7"
     >
-      <h2 className="font-mono text-sm text-accent mb-2 text-readable w-fit">
-        <span className="text-muted">//</span> {t("contact", "title", lang)}
-      </h2>
-      <p className="font-mono text-xs text-muted mb-8 text-readable w-fit">
-        <span className="text-accent">alexis@wallez</span>
-        <span className="text-muted">:~$ </span>
-        {t("contact", "command", lang)}
-      </p>
+      <SectionHeader section="contact" />
 
       <div className="min-h-125 flex flex-col justify-center">
         {/* annonces pour lecteurs d'écran (envoi / succès) */}
@@ -356,12 +161,13 @@ export default function Contact() {
 
             {/* Prénom + Nom côte à côte */}
             <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className={label} htmlFor="firstname">
-                  <User size={12} aria-hidden className={labelIcon} />
-                  {t("contact", "firstname", lang)}
-                  <span aria-hidden="true" className="text-accent"> *</span>
-                </label>
+              <FormField
+                id="firstname"
+                icon={User}
+                label={t("contact", "firstname", lang)}
+                required
+                error={errorOf("firstname")}
+              >
                 <input
                   id="firstname"
                   name="firstname"
@@ -372,26 +178,18 @@ export default function Contact() {
                   value={values.firstname}
                   onChange={(e) => setField("firstname", e.target.value)}
                   aria-required="true"
-                  aria-invalid={!!errors.firstname}
-                  aria-describedby={
-                    errors.firstname ? "err-firstname" : undefined
-                  }
-                  className={fieldClass("firstname")}
+                  {...aria("firstname")}
+                  className={fieldClass(!!errors.firstname)}
                 />
-                {errors.firstname && (
-                  <p id="err-firstname" className={errText}>
-                    {t("contact", errors.firstname, lang)}
-                  </p>
-                )}
-              </div>
+              </FormField>
 
-              {/* Type de demande */}
-              <div>
-                <label className={label} htmlFor="lastname">
-                  <IdCard size={12} aria-hidden className={labelIcon} />
-                  {t("contact", "lastname", lang)}
-                  <span aria-hidden="true" className="text-accent"> *</span>
-                </label>
+              <FormField
+                id="lastname"
+                icon={IdCard}
+                label={t("contact", "lastname", lang)}
+                required
+                error={errorOf("lastname")}
+              >
                 <input
                   id="lastname"
                   name="lastname"
@@ -402,28 +200,21 @@ export default function Contact() {
                   value={values.lastname}
                   onChange={(e) => setField("lastname", e.target.value)}
                   aria-required="true"
-                  aria-invalid={!!errors.lastname}
-                  aria-describedby={
-                    errors.lastname ? "err-lastname" : undefined
-                  }
-                  className={fieldClass("lastname")}
+                  {...aria("lastname")}
+                  className={fieldClass(!!errors.lastname)}
                 />
-                {errors.lastname && (
-                  <p id="err-lastname" className={errText}>
-                    {t("contact", errors.lastname, lang)}
-                  </p>
-                )}
-              </div>
+              </FormField>
             </div>
 
             {/* Email + Téléphone (optionnel) côte à côte */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={label} htmlFor="email">
-                  <Mail size={12} aria-hidden className={labelIcon} />
-                  {t("contact", "email", lang)}
-                  <span aria-hidden="true" className="text-accent"> *</span>
-                </label>
+              <FormField
+                id="email"
+                icon={Mail}
+                label={t("contact", "email", lang)}
+                required
+                error={errorOf("email")}
+              >
                 <input
                   id="email"
                   name="email"
@@ -435,21 +226,17 @@ export default function Contact() {
                   value={values.email}
                   onChange={(e) => setField("email", e.target.value)}
                   aria-required="true"
-                  aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? "err-email" : undefined}
-                  className={fieldClass("email")}
+                  {...aria("email")}
+                  className={fieldClass(!!errors.email)}
                 />
-                {errors.email && (
-                  <p id="err-email" className={errText}>
-                    {t("contact", errors.email, lang)}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className={label} htmlFor="phone">
-                  <Phone size={12} aria-hidden className={labelIcon} />
-                  {t("contact", "phone", lang)}
-                </label>
+              </FormField>
+
+              <FormField
+                id="phone"
+                icon={Phone}
+                label={t("contact", "phone", lang)}
+                error={errorOf("phone")}
+              >
                 <PhoneInput
                   defaultCountry="FR"
                   limitMaxLength
@@ -461,27 +248,20 @@ export default function Contact() {
                   value={values.phone || undefined}
                   onChange={(v) => setField("phone", v ?? "")}
                   onCountryChange={(c) => c && setCountry(c)}
-                  numberInputProps={{
-                    id: "phone",
-                    "aria-invalid": !!errors.phone,
-                    "aria-describedby": errors.phone ? "err-phone" : undefined,
-                  }}
+                  numberInputProps={{ id: "phone", ...aria("phone") }}
                   className={errors.phone ? "phone-invalid" : ""}
                 />
-                {errors.phone && (
-                  <p id="err-phone" className={errText}>
-                    {t("contact", errors.phone, lang)}
-                  </p>
-                )}
-              </div>
+              </FormField>
             </div>
 
-            <div>
-              <label className={label} htmlFor="type" id="type-label">
-                <ClipboardList size={12} aria-hidden className={labelIcon} />
-                {t("contact", "reqType", lang)}
-                <span aria-hidden="true" className="text-accent"> *</span>
-              </label>
+            <FormField
+              id="type"
+              labelId="type-label"
+              icon={ClipboardList}
+              label={t("contact", "reqType", lang)}
+              required
+              error={errorOf("type")}
+            >
               {/* liste déroulante maison (cf. Select.tsx) : rendue dans la page,
                   donc stylable — un <select> natif délègue son popup à l'OS */}
               <Select
@@ -497,22 +277,17 @@ export default function Contact() {
                 required
                 invalid={!!errors.type}
                 describedBy={errors.type ? "err-type" : undefined}
-                className={fieldClass("type", "min-h-10.5")}
+                className={fieldClass(!!errors.type, "min-h-10.5")}
               />
-              {errors.type && (
-                <p id="err-type" className={errText}>
-                  {t("contact", errors.type, lang)}
-                </p>
-              )}
-            </div>
+            </FormField>
 
-            {/* Message */}
-            <div>
-              <label className={label} htmlFor="message">
-                <MessageSquare size={12} aria-hidden className={labelIcon} />
-                {t("contact", "message", lang)}
-                <span aria-hidden="true" className="text-accent"> *</span>
-              </label>
+            <FormField
+              id="message"
+              icon={MessageSquare}
+              label={t("contact", "message", lang)}
+              required
+              error={errorOf("message")}
+            >
               <textarea
                 id="message"
                 name="message"
@@ -521,16 +296,10 @@ export default function Contact() {
                 value={values.message}
                 onChange={(e) => setField("message", e.target.value)}
                 aria-required="true"
-                aria-invalid={!!errors.message}
-                aria-describedby={errors.message ? "err-message" : undefined}
-                className={fieldClass("message") + " resize-y min-h-50"}
+                {...aria("message")}
+                className={fieldClass(!!errors.message, "resize-y min-h-50")}
               />
-              {errors.message && (
-                <p id="err-message" className={errText}>
-                  {t("contact", errors.message, lang)}
-                </p>
-              )}
-            </div>
+            </FormField>
 
             {/* Erreur d'envoi : un message par cause ; l'adresse en secours
                 quand réessayer ne suffira pas */}
@@ -559,10 +328,10 @@ export default function Contact() {
                 Quand il apparaît, il est encadré comme les autres champs pour
                 faire partie du formulaire (seul l'extérieur est stylable). */}
             <div
-              ref={widgetRef}
+              ref={captchaRef}
               className={
                 // Pleine largeur (widget en `size: flexible`), habillage identique
-                // aux champs (cf. `field`) quand le widget est visible.
+                // aux champs (cf. `fieldClass`) quand le widget est visible.
                 // `leading-[0]` : l'iframe du widget vit dans un shadow DOM (hors de
                 // portée de notre CSS) et s'aligne sur la ligne de base du texte →
                 // ~6 px d'espace fantôme sous elle (place des jambages) qui faisaient

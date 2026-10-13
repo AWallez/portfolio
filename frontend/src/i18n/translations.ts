@@ -13,12 +13,11 @@ export const translations = {
       fr: "Autodidacte avant tout : j'apprends vite et je creuse jusqu'à ce que ça marche. Sapeur-pompier volontaire depuis 2020, j'y ai appris le sang-froid et le travail d'équipe, sous pression. Ouvert à toute opportunité professionnelle comme aux missions freelance.",
       en: "Self-taught first and foremost: I learn fast and I dig until it works. I've been a volunteer firefighter since 2020, where I learned composure and teamwork under pressure. Open to any professional opportunity as well as freelance projects.",
     },
-    factExp: { fr: "~4 ans d'expérience", en: "~4 years of experience" },
-    factStatus: {
-      fr: "Opportunité pro & freelance",
-      en: "Open to work & freelance",
-    },
-    factLang: { fr: "Français / Anglais", en: "French / English" },
+    // valeurs du bloc neofetch (les libellés, eux, restent en anglais)
+    infoRole: { fr: "Dév. Full-Stack & DevOps", en: "Full-Stack Dev & DevOps" },
+    infoUptime: { fr: "~4 ans", en: "~4 yrs" },
+    infoStatus: { fr: "Freelance · disponible", en: "Freelance · available" },
+    infoIrl: { fr: "Sapeur-pompier volontaire", en: "Volunteer firefighter" },
   },
   skills: {
     title: { fr: "Compétences", en: "Skills" },
@@ -29,7 +28,6 @@ export const translations = {
     frontend: { fr: "Front-end", en: "Front-end" },
     backend: { fr: "Back-end & API", en: "Back-end & API" },
     data: { fr: "Bases de données", en: "Databases" },
-    learning: { fr: "En cours d'apprentissage", en: "Currently learning" },
   },
   career: {
     title: { fr: "Parcours", en: "Career" },

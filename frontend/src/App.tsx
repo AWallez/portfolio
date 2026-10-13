@@ -10,7 +10,7 @@ import Skills from "./components/Skills";
 import Career from "./components/Career";
 import Services from "./components/Services";
 // Sous la ligne de flottaison → chargés à la demande, hors du bundle initial :
-// - Projects embarque 10 SVG inline (light+dark) via ?raw,
+// - Projects (ses visuels, eux, arrivent un par un : cf. lib/projectSvgs),
 // - Contact tire react-phone-number-input (~155 ko de métadonnées).
 const Projects = lazy(() => import("./components/Projects"));
 const Contact = lazy(() => import("./components/Contact"));
