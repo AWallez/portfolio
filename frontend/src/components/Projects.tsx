@@ -6,8 +6,6 @@ import { spotlight } from "../lib/spotlight";
 import Reveal from "./Reveal";
 import ProjectVisual from "./ProjectVisual";
 import { useEtroit } from "../hooks/useEtroit";
-import { useProjectSvgs } from "../hooks/useProjectSvgs";
-import { proportion } from "../lib/projectSvgs";
 import Tag from "./Tag";
 import { TIPS } from "../lib/tips";
 import { SKILL_ICONS } from "../lib/skill-icons";
@@ -15,6 +13,27 @@ import { GENERIC_ICONS } from "../lib/generic-icons";
 import SectionHeader from "./SectionHeader";
 // chargée à la demande : seulement quand on agrandit une image
 const Lightbox = lazy(() => import("./Lightbox"));
+// Visuels inlinés (SVG bruts) : héritent des webfonts du site (JetBrains Mono / Inter).
+// Générés par branding/generate-projects.mjs (7 projets × clair/sombre × FR/EN).
+const SVGS = import.meta.glob("../assets/projects/**/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+// variante {thème}-{langue}, ou {thème} seul (perso : terminal pur, sans langue).
+// Sur écran étroit (téléphone en portrait), la version verticale :
+// {thème}-v-{langue}, ou {thème}-v pour perso.
+const svg = (
+  asset: string,
+  theme: "light" | "dark",
+  lang: "fr" | "en",
+  vertical = false,
+) =>
+  (vertical &&
+    (SVGS[`../assets/projects/${asset}/${theme}-v-${lang}.svg`] ||
+      SVGS[`../assets/projects/${asset}/${theme}-v.svg`])) ||
+  SVGS[`../assets/projects/${asset}/${theme}-${lang}.svg`] ||
+  SVGS[`../assets/projects/${asset}/${theme}.svg`];
 
 type Project = {
   name: string;
@@ -143,13 +162,9 @@ const PROJECTS: Project[] = [
   },
 ];
 
-const ASSETS = PROJECTS.flatMap((p) => (p.asset ? [p.asset] : []));
-
 export default function Projects() {
   const { lang } = useLang();
   const etroit = useEtroit();
-  // visuels chargés à la demande (thème, langue et format affichés)
-  const visuel = useProjectSvgs(ASSETS, etroit);
   const [zoomed, setZoomed] = useState<Project | null>(null);
   const closeZoom = useCallback(() => setZoomed(null), []);
 
@@ -184,8 +199,8 @@ export default function Projects() {
                     className="group/img relative block w-full cursor-zoom-in p-0"
                   >
                     <ProjectVisual
-                      svg={visuel(p.asset)}
-                      ratio={proportion(p.asset, etroit)}
+                      light={svg(p.asset, "light", lang, etroit)}
+                      dark={svg(p.asset, "dark", lang, etroit)}
                     />
                     {/* badge d'agrandissement : toujours visible, accentué au survol */}
                     <span
@@ -263,8 +278,8 @@ export default function Projects() {
       {zoomed?.asset && (
         <Suspense fallback={null}>
           <Lightbox
-            svg={visuel(zoomed.asset)}
-            ratio={proportion(zoomed.asset, etroit)}
+            light={svg(zoomed.asset, "light", lang, etroit)}
+            dark={svg(zoomed.asset, "dark", lang, etroit)}
             title={zoomed.mock ? `${zoomed.title[lang]} · ${t("projects", "mock", lang)}` : zoomed.title[lang]}
             onClose={closeZoom}
           />

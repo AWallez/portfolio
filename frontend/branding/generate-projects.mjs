@@ -10,7 +10,7 @@
 //
 // File name pattern: {name}-{theme}-{lang}.svg
 
-import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 
 /* ------------------------------------------------------------------ */
 /* Palettes: exact copy of the tokens in src/index.css (:root and .dark) */
@@ -1688,24 +1688,4 @@ for (const [name, build] of Object.entries(VERTICAUX)) {
     }
   }
 }
-// Proportions (largeur / hauteur) de chaque visuel, lues dans les viewBox :
-// la page réserve la place de l'image avant de la charger, rien ne saute.
-const PROPORTIONS = {};
-for (const name of Object.keys(BUILDERS)) {
-  const sfx = NO_LANG.has(name) ? "" : "-fr";
-  const ratio = (f) => {
-    const svg = readFileSync(`src/assets/projects/${name}/${f}`, "utf8");
-    const [, w, h] = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
-    return Number((w / h).toFixed(4));
-  };
-  PROPORTIONS[name] = {
-    paysage: ratio(`light${sfx}.svg`),
-    vertical: VERTICAUX[name] ? ratio(`light-v${sfx}.svg`) : undefined,
-  };
-}
-writeFileSync(
-  "src/assets/projects/proportions.json",
-  JSON.stringify(PROPORTIONS, null, 2) + "\n",
-);
-console.log("ok", "proportions.json");
 console.log("done");

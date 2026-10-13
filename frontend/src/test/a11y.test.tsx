@@ -33,8 +33,8 @@ describe("a11y (axe)", () => {
     render(
       <LangProvider>
         <Lightbox
-          svg="<svg></svg>"
-          ratio={16 / 9}
+          light="<svg></svg>"
+          dark="<svg></svg>"
           title="Projet"
           onClose={() => {}}
         />

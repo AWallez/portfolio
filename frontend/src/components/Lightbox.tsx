@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { RotateCw, X } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
@@ -10,16 +10,21 @@ import { useEtroit } from "../hooks/useEtroit";
 import ZoomControls from "./ZoomControls";
 
 type Props = {
-  /** SVG inline du thème courant (le même que la carte) */
-  svg?: string;
-  /** largeur / hauteur du visuel (cf. lib/projectSvgs) */
-  ratio: number;
+  /** SVG bruts inline (mêmes que la carte), une version par thème */
+  light: string;
+  dark: string;
   title: string;
   onClose: () => void;
 };
 
 // hauteur de la barre d'outils (py-2.5 + bouton de 36 px + bordure)
 const BARRE = 57;
+
+/** Proportions du visuel, lues dans son viewBox (1200 × 675 pour les projets). */
+function proportions(svg: string) {
+  const m = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+  return m ? Number(m[1]) / Number(m[2]) : 16 / 9;
+}
 
 /**
  * Hauteur de la zone d'affichage : celle du visuel en pleine largeur, dans la
@@ -54,7 +59,7 @@ const portraitTactile = () =>
  * (useZoomPan). Rendu via portail sur <body> pour échapper au transform de
  * <Reveal> et à l'overflow-clip de <main> (un position:fixed y serait rogné).
  */
-export default function Lightbox({ svg, ratio, title, onClose }: Props) {
+export default function Lightbox({ light, dark, title, onClose }: Props) {
   const { lang } = useLang();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -73,6 +78,7 @@ export default function Lightbox({ svg, ratio, title, onClose }: Props) {
     isReset,
   } = useZoomPan();
 
+  const ratio = useMemo(() => proportions(light), [light]);
   // téléphone : boutons de zoom sur l'image plutôt qu'à côté du titre
   const etroit = useEtroit();
   // Taille de la fenêtre en état, et hauteur DÉDUITE au rendu : à la rotation,
@@ -176,7 +182,7 @@ export default function Lightbox({ svg, ratio, title, onClose }: Props) {
             }}
           >
             <div data-zoom-content className="w-full shrink-0" style={transformStyle}>
-              <ProjectVisual svg={svg} ratio={ratio} />
+              <ProjectVisual light={light} dark={dark} />
             </div>
 
             {/* astuce réservée aux visuels en largeur : un visuel vertical

@@ -5,12 +5,13 @@ import userEvent from "@testing-library/user-event";
 import { LangProvider } from "../i18n/LangContext";
 import Lightbox from "./Lightbox";
 
-const SVG = "<svg><title>visuel</title></svg>";
+const LIGHT = "<svg><title>clair</title></svg>";
+const DARK = "<svg><title>sombre</title></svg>";
 
 function setup(onClose = vi.fn()) {
   render(
     <LangProvider>
-      <Lightbox svg={SVG} ratio={16 / 9} title="Mon projet" onClose={onClose} />
+      <Lightbox light={LIGHT} dark={DARK} title="Mon projet" onClose={onClose} />
     </LangProvider>,
   );
   return onClose;
@@ -78,7 +79,7 @@ describe("<Lightbox />", () => {
   it("verrouille puis restaure le scroll de l'arrière-plan", () => {
     const { unmount } = render(
       <LangProvider>
-        <Lightbox svg={SVG} ratio={16 / 9} title="X" onClose={() => {}} />
+        <Lightbox light={LIGHT} dark={DARK} title="X" onClose={() => {}} />
       </LangProvider>,
     );
     expect(document.documentElement.style.overflow).toBe("hidden");
