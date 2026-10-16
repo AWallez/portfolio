@@ -18,10 +18,11 @@ alexiswallez.fr {
 	# des assets, no-store d'index.html — ANNULE ceux hérités du bloc server :
 	# certaines réponses partaient sans en-têtes.)
 	#
-	# CSP, en mode RAPPORT SEUL pour l'instant : rien n'est bloqué, le
-	# navigateur signale à /api/csp-report ce qu'il aurait bloqué (journal de
-	# l'API, « violation CSP »). À passer en Content-Security-Policy une fois le
-	# journal resté vide. Ce qu'elle autorise, et pourquoi :
+	# CSP APPLIQUÉE depuis le 16/10/2026, après quatre jours en rapport seul sans
+	# une seule violation réelle. Le navigateur bloque tout le reste et le
+	# signale toujours à /api/csp-report (journal de l'API, « violation CSP ») :
+	# une violation y veut dire qu'une partie du site ne marche plus. Ce qu'elle
+	# autorise, et pourquoi :
 	#  - script : le site, le script anti-flash d'index.html PAR SON EMPREINTE
 	#    (à recalculer s'il change : frontend/src/test/csp.test.ts le vérifie),
 	#    Umami (stats.) et Turnstile (challenges.cloudflare.com) ;
@@ -38,7 +39,7 @@ alexiswallez.fr {
 		# fenêtre isolée des pages qu'elle ouvre ou qui l'ouvrent (Spectre, tabnabbing)
 		Cross-Origin-Opener-Policy "same-origin"
 		Reporting-Endpoints `csp="https://alexiswallez.fr/api/csp-report"`
-		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'sha256-ZjJeofEk2aSF6ybCcPTDYqHiomk43BUW+JdweNrN2r4=' https://stats.alexiswallez.fr https://challenges.cloudflare.com; style-src 'self' 'unsafe-hashes' 'sha256-S5B3VjwJFSnwO0iI5kac+oM0TYaZedw8L5z41rXCm2Y='; img-src 'self'; font-src 'self' data:; connect-src 'self' https://stats.alexiswallez.fr; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; report-uri /api/csp-report; report-to csp"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-ZjJeofEk2aSF6ybCcPTDYqHiomk43BUW+JdweNrN2r4=' https://stats.alexiswallez.fr https://challenges.cloudflare.com; style-src 'self' 'unsafe-hashes' 'sha256-S5B3VjwJFSnwO0iI5kac+oM0TYaZedw8L5z41rXCm2Y='; img-src 'self'; font-src 'self' data:; connect-src 'self' https://stats.alexiswallez.fr; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; report-uri /api/csp-report; report-to csp"
 		-Server
 	}
 	# Nginx (web) compresse déjà en gzip. On fait simplement TRAVERSER sa réponse :
