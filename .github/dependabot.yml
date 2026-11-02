@@ -12,6 +12,11 @@ updates:
     groups:
       dependances:
         patterns: ["*"]
+    # typescript-eslint exige encore TypeScript < 6.1 : le saut vers la 7 casse
+    # `npm ci` et bloque tout le groupe. À retirer dès qu'il sera supporté.
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 4
 
   - package-ecosystem: github-actions
