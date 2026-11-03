@@ -101,4 +101,34 @@ describe("requêtes de l'admin", { timeout: 20_000 }, () => {
     expect(() => getPool("constructor")).toThrow("Base inconnue");
     expect(faux.requetes).toEqual([]);
   });
+
+  it("mise à jour : un email vide part en NULL (le formulaire l'envoie pour un contact sans email)", async () => {
+    // corps exact de LeadForm.tsx en édition d'un contact joignable par téléphone seulement
+    const res = await (await monter()).inject({
+      method: "PATCH",
+      url: "/api/contacts/1",
+      payload: {
+        firstname: "A",
+        lastname: "B",
+        email: "",
+        phone: "0600000000",
+        type: "Malt",
+        message: "",
+        note: "",
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const r = requete("UPDATE contacts");
+    expect(r.sql).toContain("email = $3");
+    expect(r.params).toEqual(["A", "B", null, "0600000000", "Malt", null, null, "1"]);
+  });
+
+  it("mise à jour : un email non vide doit rester bien formé", async () => {
+    const app = await monter();
+    for (const email of [" ", "a@b", "a b@c.fr", "@c.fr"]) {
+      const res = await app.inject({ method: "PATCH", url: "/api/contacts/1", payload: { email } });
+      expect(res.statusCode, email).toBe(400);
+    }
+    expect(faux.requetes).toEqual([]);
+  });
 });
