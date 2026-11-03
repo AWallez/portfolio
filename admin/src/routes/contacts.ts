@@ -91,8 +91,8 @@ export async function contactRoutes(app: FastifyInstance) {
                   status, note, created_at, updated_at, manual, ip
              FROM contacts ${whereSql}
             ORDER BY created_at DESC
-            LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
-          params,
+            LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          [...params, limit, (page - 1) * limit],
         ),
         pool.query(`SELECT count(*)::int AS n FROM contacts ${whereSql}`, params),
         // compteurs globaux par statut (badges), indépendants du filtre courant

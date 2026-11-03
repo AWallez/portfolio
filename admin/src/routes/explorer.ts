@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { config } from "../config";
-import { queryReadOnly } from "../db";
+import { baseDeclaree, queryReadOnly } from "../db";
 
 // Explorateur générique : LECTURE SEULE, quelle que soit la base.
 // Double garde-fou : requêtes construites uniquement côté serveur (le client ne
@@ -42,7 +42,7 @@ export async function explorerRoutes(app: FastifyInstance) {
     "/api/explorer/dbs/:db/tables",
     { schema: { params: dbParam } },
     async (req: FastifyRequest<{ Params: { db: string } }>, reply) => {
-      if (!config.databases[req.params.db]) {
+      if (!baseDeclaree(req.params.db)) {
         return reply.code(404).send({ ok: false, error: "unknown_db" });
       }
       const res = await queryReadOnly(
@@ -76,7 +76,9 @@ export async function explorerRoutes(app: FastifyInstance) {
           type: "object",
           additionalProperties: false,
           properties: {
-            page: { type: "integer", minimum: 1, default: 1 },
+            // borné comme la liste des contacts : une page démesurée faisait
+            // calculer à PostgreSQL un OFFSET gigantesque pour rien
+            page: { type: "integer", minimum: 1, maximum: 10000, default: 1 },
             limit: { type: "integer", minimum: 1, maximum: 100, default: 25 },
             q: { type: "string", maxLength: 200 },
           },
@@ -92,7 +94,7 @@ export async function explorerRoutes(app: FastifyInstance) {
     ) => {
       const { db, table } = req.params;
       const { page = 1, limit = 25, q } = req.query;
-      if (!config.databases[db]) {
+      if (!baseDeclaree(db)) {
         return reply.code(404).send({ ok: false, error: "unknown_db" });
       }
       const safeTable = await resolveTable(db, table);
@@ -128,8 +130,8 @@ export async function explorerRoutes(app: FastifyInstance) {
           db,
           `SELECT t.* FROM ${safeTable} t${where}
             ORDER BY 1 DESC
-            LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
-          params,
+            LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+          [...params, limit, (page - 1) * limit],
         ),
       ]);
 

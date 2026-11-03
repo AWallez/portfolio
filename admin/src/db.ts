@@ -6,9 +6,12 @@ const { Pool } = pg;
 // Un pool par base déclarée (créé paresseusement au premier accès).
 const pools = new Map<string, pg.Pool>();
 
+// Object.hasOwn : `config.databases[nom]` prendrait aussi « constructor » pour une base.
+export const baseDeclaree = (dbName: string) => Object.hasOwn(config.databases, dbName);
+
 export function getPool(dbName: string): pg.Pool {
+  if (!baseDeclaree(dbName)) throw new Error(`Base inconnue : ${dbName}`);
   const entry = config.databases[dbName];
-  if (!entry) throw new Error(`Base inconnue : ${dbName}`);
   let pool = pools.get(dbName);
   if (!pool) {
     // max:3 — outil mono-utilisateur, inutile d'ouvrir plus de connexions
@@ -20,7 +23,7 @@ export function getPool(dbName: string): pg.Pool {
     // sans écouteur, une connexion inactive coupée par PostgreSQL (redémarrage
     // du conteneur) fait tomber tout le process ; le pool la remplace seul
     pool.on("error", (err) => {
-      console.error(`PostgreSQL (${dbName}) : connexion inactive perdue :`, err.message);
+      console.error("PostgreSQL (%s) : connexion inactive perdue : %s", dbName, err.message);
     });
     pools.set(dbName, pool);
   }
