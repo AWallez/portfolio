@@ -155,10 +155,12 @@ export async function contactRoutes(app: FastifyInstance) {
             firstname: { type: "string", minLength: 1, maxLength: 100 },
             lastname: { type: "string", minLength: 1, maxLength: 100 },
             // pattern JSON Schema : ignoré quand la valeur est null → un email
-            // effacé (null) reste valide, un email non vide doit être bien formé
+            // effacé (null) reste valide, un email non vide doit être bien formé.
+            // `^$|` : le formulaire d'édition envoie "" pour un contact sans
+            // email ; refusé, toute modification de ce contact échouait.
             email: {
               type: ["string", "null"],
-              pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+              pattern: "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
               maxLength: 200,
             },
             phone: { type: ["string", "null"], maxLength: 40 },

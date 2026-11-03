@@ -142,6 +142,22 @@ describe("contacts : validation des entrées", { timeout: 20_000 }, () => {
     expect(faux.requetes[0].params).toEqual([null, null, null, "1"]);
   });
 
+  it("mise à jour : un email vide efface l'email (le formulaire envoie \"\" pour un contact sans email)", async () => {
+    // corps exact de LeadForm.tsx en édition d'un contact joignable par téléphone seulement
+    const res = await appeler("PATCH", "/api/contacts/1", {
+      firstname: "A",
+      lastname: "B",
+      email: "",
+      phone: "0600000000",
+      type: "Malt",
+      message: "",
+      note: "",
+    });
+    expect(res.statusCode).toBe(200);
+    expect(faux.requetes[0].sql).toContain("email = $3");
+    expect(faux.requetes[0].params).toEqual(["A", "B", null, "0600000000", "Malt", null, null, "1"]);
+  });
+
   it("mise à jour : un email non vide doit rester bien formé", async () => {
     for (const email of [" ", "a@b", "a b@c.fr", "@c.fr"]) {
       expect((await appeler("PATCH", "/api/contacts/1", { email })).statusCode, email).toBe(400);
