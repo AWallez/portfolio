@@ -61,6 +61,16 @@ alexiswallez.fr {
 # côté ntfy : seuls les comptes autorisés lisent/publient.
 ntfy.alexiswallez.fr {
 	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	# Interface web réservée au réseau local (port 8080 du NAS). Depuis
+	# internet, une lecture ne passe que vers l'API : /v1/ (santé, comptes)
+	# et les abonnements de l'appli (json, sse, raw, ws, auth). Le reste
+	# répond 404. Les écritures passent toutes : ntfy les filtre par compte.
+	@interface {
+		method GET HEAD
+		not path /v1/*
+		not path_regexp ^/[-_A-Za-z0-9]{1,64}(,[-_A-Za-z0-9]{1,64})*/(json|sse|raw|ws|auth)$
+	}
+	respond @interface 404
 	reverse_proxy ntfy:80
 }
 
