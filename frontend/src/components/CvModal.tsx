@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Download, Loader2 } from "lucide-react";
 import { useLang } from "../i18n/LangContext";
@@ -6,6 +6,7 @@ import { t } from "../i18n/translations";
 import { useZoomPan } from "../hooks/useZoomPan";
 import { useModal } from "../hooks/useModal";
 import { useEtroit } from "../hooks/useEtroit";
+import { dimensionsCv, type Fenetre } from "../lib/cvDimensions";
 import ZoomControls from "./ZoomControls";
 
 // Fichiers du CV selon la langue : PDF téléchargeable + SVG affiché (clair/sombre).
@@ -23,37 +24,28 @@ const CV_FILES = {
 } as const;
 const A4_RATIO = 0.7071; // largeur / hauteur, avant lecture du ratio réel du SVG
 
-// Dimensions d'affichage (px CSS) calculées depuis la fenêtre + un ratio donné.
-function computeSizeFor(ratio: number) {
-  const vw = window.innerWidth;
-  const vh = window.visualViewport?.height ?? window.innerHeight;
-  const availW = Math.min(vw * 0.95, 896) - 28; // - padding (p-3.5)
-  const availH = Math.min(vh * 0.92, 1200) - 56 - 28; // - barre - padding
-  let h = Math.max(availH, 0);
-  let w = h * ratio;
-  if (w > availW) {
-    w = Math.max(availW, 0);
-    h = w / ratio;
-  }
-  return { w: Math.floor(w), h: Math.floor(h) };
-}
+const fenetre = (): Fenetre => ({
+  w: window.innerWidth,
+  h: window.visualViewport?.height ?? window.innerHeight,
+});
 
 type Props = { onClose: () => void };
 
 /**
  * Aperçu plein écran du CV en SVG (vectoriel) : zoom net à l'infini, sans pdfjs.
- * Zoom à la molette / au pinch / aux boutons, déplacement au drag. La taille de la
- * modale épouse le format A4 (ratio réel du SVG) et s'adapte à l'écran en temps réel.
- * Même mécanique de modale que <Lightbox> (portail, focus-trap, Échap, scroll-lock).
+ * Le CV prend toute la largeur de la fenêtre, et ce qui dépasse de l'écran se
+ * fait défiler : molette ou glisser. Ctrl + molette, pincement, double-clic et
+ * boutons zooment. Même mécanique de modale que <Lightbox> (portail,
+ * focus-trap, Échap, scroll-lock), dimensions dans lib/cvDimensions.
  */
 export default function CvModal({ onClose }: Props) {
   const { lang } = useLang();
   const cv = CV_FILES[lang]; // CV de la langue courante (FR/EN)
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const ratioRef = useRef(A4_RATIO);
   const pressedBackdrop = useRef(false);
-  // zoom / déplacement (molette, pinch, drag, double-clic) — partagé avec Lightbox.
+  // zoom / déplacement — partagé avec Lightbox. Un document se lit depuis le
+  // haut et se parcourt à la molette, là où un visuel s'ouvre centré et zoome.
   // Destructuré (et non gardé en objet) : la règle react-hooks/refs interdit de lire
   // une propriété d'un objet qui contient un ref pendant le rendu.
   const {
@@ -66,10 +58,12 @@ export default function CvModal({ onClose }: Props) {
     canZoomIn,
     canZoomOut,
     isReset,
-  } = useZoomPan();
+  } = useZoomPan({ molette: "defiler", repos: "haut" });
 
-  const computeSize = useCallback(() => computeSizeFor(ratioRef.current), []);
-  const [size, setSize] = useState(() => computeSizeFor(A4_RATIO));
+  // Taille de la fenêtre en état, dimensions DÉDUITES au rendu (comme Lightbox)
+  const [ratio, setRatio] = useState(A4_RATIO);
+  const [vp, setVp] = useState(fenetre);
+  const { largeur, hauteur, zone } = dimensionsCv(ratio, vp);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   // téléphone : boutons de zoom sur l'image plutôt qu'à côté du titre
@@ -84,16 +78,22 @@ export default function CvModal({ onClose }: Props) {
     />
   );
 
-  // --- recalcule la taille au redimensionnement / zoom / rotation ---
   useEffect(() => {
-    const onResize = () => setSize(computeSize());
-    window.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
+    const maj = () => setVp(fenetre());
+    window.addEventListener("resize", maj);
+    window.visualViewport?.addEventListener("resize", maj);
     return () => {
-      window.removeEventListener("resize", onResize);
-      window.visualViewport?.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", maj);
+      window.visualViewport?.removeEventListener("resize", maj);
     };
-  }, [computeSize]);
+  }, []);
+
+  // Ouverture, rotation, ratio réel lu au chargement : retour en haut, sans
+  // zoom. Après la mise en page, car les bornes se mesurent dessus, mais avant
+  // l'affichage, sinon le CV apparaîtrait centré, le haut coupé, une image.
+  useLayoutEffect(() => {
+    resetZoom();
+  }, [largeur, hauteur, zone, resetZoom]);
 
   // focus initial sur « fermer », Échap, piège du focus, scroll bloqué
   useModal(dialogRef, closeRef, onClose);
@@ -114,7 +114,7 @@ export default function CvModal({ onClose }: Props) {
                  touch-manipulation bg-base/80 backdrop-blur-sm p-3 sm:p-8"
     >
       <div
-        className="relative flex max-h-[92dvh] max-w-[95vw] flex-col overflow-hidden
+        className="relative flex max-w-full flex-col overflow-hidden
                    rounded-xl border border-line bg-base shadow-2xl sm:max-w-4xl"
       >
         {/* barre d'outils : (titre + télécharger) à gauche, fermer plaqué à droite.
@@ -151,31 +151,35 @@ export default function CvModal({ onClose }: Props) {
           </div>
         </div>
 
-        {/* aperçu : zone A4 dimensionnée dès l'ouverture (pas de cadre vide) */}
+        {/* aperçu : le CV en pleine largeur, centré dans une zone qui s'arrête
+            à l'écran ; plus haut qu'elle, il se fait défiler. Dimensionné dès
+            l'ouverture, donc pas de cadre vide. */}
         <div className="relative p-3.5">
           <div
             ref={viewerRef}
             {...zoomHandlers}
-            className="relative touch-none select-none overflow-hidden rounded shadow-md
-                       bg-white dark:bg-[#0d1418]"
+            className="relative flex touch-none select-none items-center overflow-hidden
+                       rounded shadow-md bg-white dark:bg-[#0d1418]"
             style={{
-              width: size.w,
-              height: size.h,
+              width: largeur,
+              height: zone,
               cursor: transform.scale > 1 ? "grab" : "auto",
             }}
           >
             {!error && (
-              <>
+              <div
+                data-zoom-content
+                className="relative w-full shrink-0"
+                style={{ ...transformStyle, height: hauteur }}
+              >
                 <img
                   src={cv.light}
                   alt={t("a11y", "cvTitle", lang)}
                   draggable={false}
                   onLoad={(e) => {
                     const img = e.currentTarget;
-                    if (img.naturalWidth && img.naturalHeight) {
-                      ratioRef.current = img.naturalWidth / img.naturalHeight;
-                      setSize(computeSize());
-                    }
+                    if (img.naturalWidth && img.naturalHeight)
+                      setRatio(img.naturalWidth / img.naturalHeight);
                     setLoaded(true);
                   }}
                   onError={() => {
@@ -183,8 +187,6 @@ export default function CvModal({ onClose }: Props) {
                     setLoaded(true);
                   }}
                   className="absolute inset-0 h-full w-full object-contain dark:hidden"
-                  data-zoom-content
-                  style={transformStyle}
                 />
                 <img
                   src={cv.dark}
@@ -192,10 +194,8 @@ export default function CvModal({ onClose }: Props) {
                   aria-hidden
                   draggable={false}
                   className="absolute inset-0 hidden h-full w-full object-contain dark:block"
-                  data-zoom-content
-                  style={transformStyle}
                 />
-              </>
+              </div>
             )}
 
             {/* chargement */}
@@ -217,7 +217,6 @@ export default function CvModal({ onClose }: Props) {
                 </p>
               </div>
             )}
-
           </div>
 
           {/* posés sur l'image (coin haut droit), À CÔTÉ de la zone de zoom et

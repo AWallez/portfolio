@@ -5,13 +5,15 @@ export const MAX_SCALE = 5;
 
 type Transform = { scale: number; tx: number; ty: number };
 const IDENTITY: Transform = { scale: 1, tx: 0, ty: 0 };
+// repos « en haut » : un ty infini, que les bornes ramènent au bord supérieur
+const HAUT: Transform = { scale: 1, tx: 0, ty: Infinity };
 
 const clampScale = (s: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
 const borne = (v: number, max: number) => Math.min(max, Math.max(-max, v));
 const css = (t: Transform) =>
   `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
 
-// les éléments transformés, marqués data-zoom-content (deux images pour le CV)
+// les éléments transformés, marqués data-zoom-content
 const contenus = (zone: HTMLElement | null) =>
   zone?.querySelectorAll<HTMLElement>("[data-zoom-content]") ?? [];
 
@@ -19,13 +21,28 @@ const contenus = (zone: HTMLElement | null) =>
 const DOUBLE_TAP_MS = 300;
 const DOUBLE_TAP_PX = 30;
 
+type Options = {
+  /**
+   * « zoom » (par défaut) : la molette zoome, pour un visuel qui tient dans la
+   * zone. « defiler » : la molette fait défiler, Ctrl + molette et le
+   * pincement du pavé tactile zooment, comme dans tout lecteur de documents.
+   */
+  molette?: "zoom" | "defiler";
+  /**
+   * Position de repos (ouverture, bouton « réinitialiser ») : « centre », ou
+   * « haut » pour un document plus haut que la zone, qu'on lit depuis le début.
+   */
+  repos?: "centre" | "haut";
+};
+
 /**
  * Zoom + déplacement pour les aperçus plein écran (CV, visuels projets) :
  * molette, pinch tactile, drag, double-clic, double-tap, et boutons via
  * `zoomByCenter`.
  *
- * Usage : poser `ref` sur la zone d'affichage, y étaler `handlers`, et sur le
- * contenu à transformer, appliquer `style` ET l'attribut `data-zoom-content`.
+ * Usage : poser `ref` sur la zone d'affichage, présente dès le premier rendu
+ * (la molette s'y branche au montage), y étaler `handlers`, et sur le contenu
+ * à transformer, appliquer `style` ET l'attribut `data-zoom-content`.
  *
  * ⚠️ Pendant un geste, le transform est écrit DIRECTEMENT dans le DOM, une fois
  * par image (requestAnimationFrame), sans passer par React. Avant, chaque
@@ -40,13 +57,16 @@ const DOUBLE_TAP_PX = 30;
  * zoom : un visuel plus haut que l'écran (téléphone en paysage) se fait
  * glisser pour en voir le bas.
  */
-export function useZoomPan() {
+export function useZoomPan({ molette = "zoom", repos = "centre" }: Options = {}) {
   const ref = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState<Transform>(IDENTITY);
+  // `auRepos` grise « réinitialiser ». Calculé à la validation et non au
+  // rendu : en mode « haut », la position de repos dépend de la mise en page.
+  const [etat, setEtat] = useState({ t: IDENTITY, auRepos: true });
   const transformRef = useRef<Transform>(IDENTITY);
   const frame = useRef(0);
   const finMolette = useRef(0);
   const enGeste = useRef(false);
+  const cibleRepos = repos === "haut" ? HAUT : IDENTITY;
 
   // Bornes : l'image ne sort jamais du cadre. Elle se déplace tant qu'elle
   // dépasse de la zone, zoomée ou non.
@@ -89,14 +109,21 @@ export function useZoomPan() {
     });
   }, []);
 
-  /** `valider` : met aussi à jour l'état React (fin de geste, bouton) */
+  // état React à jour (fin de geste, bouton) : curseur et boutons de zoom
+  const valider = useCallback(() => {
+    const t = transformRef.current;
+    const r = borner(cibleRepos);
+    setEtat({ t, auRepos: t.scale === r.scale && t.tx === r.tx && t.ty === r.ty });
+  }, [borner, cibleRepos]);
+
+  /** `valide` : met aussi à jour l'état React (fin de geste, bouton) */
   const appliquer = useCallback(
-    (next: Transform, valider: boolean) => {
+    (next: Transform, valide: boolean) => {
       transformRef.current = borner(next);
-      if (valider) setTransform(transformRef.current);
+      if (valide) valider();
       else peindre();
     },
-    [borner, peindre],
+    [borner, peindre, valider],
   );
 
   useEffect(
@@ -107,11 +134,11 @@ export function useZoomPan() {
     [],
   );
 
-  const reset = useCallback(() => appliquer(IDENTITY, true), [appliquer]);
+  const reset = useCallback(() => appliquer(cibleRepos, true), [appliquer, cibleRepos]);
 
   // zoom centré sur un point (coords écran) en le gardant fixe
   const zoomAt = useCallback(
-    (clientX: number, clientY: number, factor: number, valider: boolean) => {
+    (clientX: number, clientY: number, factor: number, valide: boolean) => {
       const el = ref.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -123,7 +150,7 @@ export function useZoomPan() {
       const r = ns / cur.scale;
       appliquer(
         { scale: ns, tx: px - r * (px - cur.tx), ty: py - r * (py - cur.ty) },
-        valider,
+        valide,
       );
     },
     [appliquer],
@@ -139,25 +166,40 @@ export function useZoomPan() {
     [zoomAt],
   );
 
-  // --- gestes : molette (zoom), drag (déplacement), pinch (zoom tactile) ---
+  // --- molette : peinte tout de suite, état validé quand elle s'arrête ---
+  // Écouteur natif NON PASSIF : React pose les siens en passif, où
+  // preventDefault reste sans effet. Or sans lui, Ctrl + molette (et le
+  // pincement du pavé tactile, que Chrome et Firefox traduisent ainsi)
+  // zoomait aussi toute la page derrière la fenêtre.
+  useEffect(() => {
+    const zone = ref.current;
+    if (!zone) return;
+    const surMolette = (e: WheelEvent) => {
+      e.preventDefault();
+      debutGeste();
+      if (molette === "defiler" && !e.ctrlKey && !e.metaKey) {
+        // deltaMode : 0 en pixels, 1 en lignes (Firefox), 2 en pages
+        const k = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? zone.clientHeight : 1;
+        const cur = transformRef.current;
+        appliquer({ ...cur, tx: cur.tx - e.deltaX * k, ty: cur.ty - e.deltaY * k }, false);
+      } else {
+        zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12, false);
+      }
+      window.clearTimeout(finMolette.current);
+      finMolette.current = window.setTimeout(() => {
+        valider();
+        finGeste();
+      }, 150);
+    };
+    zone.addEventListener("wheel", surMolette, { passive: false });
+    return () => zone.removeEventListener("wheel", surMolette);
+  }, [molette, appliquer, zoomAt, debutGeste, finGeste, valider]);
+
+  // --- gestes : drag (déplacement), pinch (zoom tactile) ---
   type Doigt = { x: number; y: number; x0: number; y0: number; t0: number };
   const pointers = useRef(new Map<number, Doigt>());
   const pinchDist = useRef(0);
   const derniereTape = useRef({ t: 0, x: 0, y: 0 });
-
-  // molette : peinte tout de suite, état validé quand elle s'arrête
-  const onWheel = useCallback(
-    (e: React.WheelEvent) => {
-      debutGeste();
-      zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12, false);
-      window.clearTimeout(finMolette.current);
-      finMolette.current = window.setTimeout(() => {
-        setTransform(transformRef.current);
-        finGeste();
-      }, 150);
-    },
-    [debutGeste, finGeste, zoomAt],
-  );
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -209,7 +251,7 @@ export function useZoomPan() {
       if (pointers.current.size > 0) return;
 
       // fin du geste : état React à jour, rendu net
-      setTransform(transformRef.current);
+      valider();
       finGeste();
 
       // Double-tap au doigt : le navigateur n'émet pas de dblclick quand la
@@ -229,7 +271,7 @@ export function useZoomPan() {
         derniereTape.current = { t: e.timeStamp, x: e.clientX, y: e.clientY };
       }
     },
-    [finGeste, zoomAt],
+    [finGeste, valider, zoomAt],
   );
 
   // double-clic à la souris : zoome, ou revient à l'échelle 1 si déjà zoomé
@@ -243,15 +285,14 @@ export function useZoomPan() {
 
   return {
     ref,
-    transform,
+    transform: etat.t,
     /** à appliquer sur le contenu transformé (avec l'attribut data-zoom-content) */
     style: {
-      transform: css(transform),
+      transform: css(etat.t),
       transformOrigin: "center" as const,
     },
     /** à étaler sur la zone d'affichage (celle qui porte `ref`) */
     handlers: {
-      onWheel,
       onPointerDown,
       onPointerMove,
       onPointerUp,
@@ -260,8 +301,8 @@ export function useZoomPan() {
     },
     zoomByCenter,
     reset,
-    canZoomIn: transform.scale < MAX_SCALE,
-    canZoomOut: transform.scale > MIN_SCALE,
-    isReset: transform.scale === 1 && transform.tx === 0 && transform.ty === 0,
+    canZoomIn: etat.t.scale < MAX_SCALE,
+    canZoomOut: etat.t.scale > MIN_SCALE,
+    isReset: etat.auRepos,
   };
 }
