@@ -83,6 +83,10 @@ services:
       # anti-abus. Une trentaine de mauvais mots de passe venus de n'importe où
       # suffisaient à couper les notifications du téléphone hors de la maison.
       NTFY_BEHIND_PROXY: "true"
+      # Sans interface web : la page publique ne servait à rien, le téléphone
+      # passe par l'appli iOS. Seuls la page et ses fichiers répondent 404 ;
+      # santé, publication, abonnements et comptes restent ouverts.
+      NTFY_WEB_ROOT: disable
     ports:
       - "8080:80"
     volumes:
